@@ -1,0 +1,12 @@
+## Interface: 11507
+## Title: Group Loot Helper
+## Notes: Helping groups with better loot rolls
+## Author: Pump19
+## Version: 1.0.1
+## SavedVariables: GLH_Log, GroupLootHelperDB
+## OptionalDeps: Pawn, Gargul
+
+embeds.xml
+Locales\Locales.xml
+
+GroupLootHelper.lua
