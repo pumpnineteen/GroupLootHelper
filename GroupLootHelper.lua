@@ -1029,8 +1029,6 @@ function GLH:OnEnable()
         end
     end 
 
-
-
     self:SpawnAllTooltipContainers()
 end
 
@@ -1051,7 +1049,7 @@ function GLH:OnEvent(event, ...)
     end
 end
 
--- This function updates the class data (and placeholder spec) for every member in your group.
+
 function GLH:UpdatePlayerCacheGroup()
     local _, instanceType = IsInInstance()
     if instanceType == "pvp" or instanceType == "arena" then 
@@ -1174,7 +1172,7 @@ function GLH:RequestPlayerInspect(playerName)
                 NotifyInspect(unit)
                 Log("Inspecting", playerName, "immediately.")
             else
-                pendingInspectRequests[playerName] = true
+                pendingInspectRequests[playerName] = unit
             end
             -- Debug output:
             Log("Inspecting", playerName, " couldn't be done immediately.")
@@ -1198,7 +1196,13 @@ function GLH:CancelInspectTicker()
 end
 
 function GLH:OnInspectTick()
-
+    for playerName, unit in pairs(pendingInspectRequests) do
+        if UnitName(unit) == playerName then
+            if CanInspect(unit, true) then
+                NotifyInspect(unit)
+            end
+        end
+    end
 end
 
 function GLH:PLAYER_REGEN_ENABLED()
