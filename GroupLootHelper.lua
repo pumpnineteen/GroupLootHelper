@@ -120,6 +120,12 @@ local function cleanName(name)
     return nametbl[#nametbl]
 end
 
+local function ensure(tbl, key, default)
+    tbl[key] = tbl[key] or default
+    return tbl[key]
+end
+
+
 GLH_Log = GLH_Log or {}
 local Gargul_L
 
@@ -357,8 +363,9 @@ end
 
 ]]--
 
-function GLH:CreateChildScrollList(frameWidget, parentWidget, childName)
-    local listFrame = AceGUI:Create("ScrollFrame")
+function GLH:CreateChildScrollList(frameWidget, parentWidget, childName, frameType)
+    frameType = frameType or "ScrollFrame"
+    local listFrame = AceGUI:Create(frameType)
     listFrame:SetLayout("List")
     listFrame:SetFullWidth(true)
     listFrame:SetFullHeight(true)
@@ -389,7 +396,7 @@ function GLH:CreateLootWindow()
     frame:AddChild(tabGroup)
 
     self.activeContainer = self:CreateChildScrollList(frame, tabGroup, "lootList")
-    self.historyContainer = self:CreateChildScrollList(frame, tabGroup, "lootHistory")
+    self.historyContainer = self:CreateChildScrollList(frame, tabGroup, "lootHistory", "SimpleGroup")
     self.rolesContainer = self:CreateChildScrollList(frame, tabGroup, "partyRoles")
     self.partyContainer = self:CreateChildScrollList(frame, tabGroup, "partyHistory")
 
@@ -494,12 +501,11 @@ function GLH:RefreshHistoryTab()
     ]]--
 
     -- Create scrolling table for history
-    local scrollFrame = AceGUI:Create("ScrollFrame")
-    scrollFrame:SetLayout("Table")
+    local headerGroup = AceGUI:Create("SimpleGroup")
+    headerGroup:SetLayout("Table")
     -- Initialize table layout data
-    scrollFrame:SetUserData("table", {
+    headerGroup:SetUserData("table", {
         columns = {
-            100,  -- Date column width
             250,  -- Item column width 
             150,  -- Zone column width
             100,  -- Looter column width
@@ -510,13 +516,12 @@ function GLH:RefreshHistoryTab()
         alignH = "LEFT",
         space = DEFAULT_SPACING or 5,
     })
-    scrollFrame:SetFullWidth(true)
-    scrollFrame:SetFullHeight(true)
-    self.historyContainer:AddChild(scrollFrame)
+    headerGroup:SetFullWidth(true)
+    headerGroup:SetFullHeight(true)
+    self.historyContainer:AddChild(headerGroup)
 
     -- Define table headers
     local headers = {
-        { text = "Date", width = 100, sort = "date" },
         { text = "Item", width = 250, sort = "item" },
         { text = "Zone", width = 150, sort = "zone" },
         { text = "Looter", width = 100, sort = "looter" },
@@ -533,27 +538,34 @@ function GLH:RefreshHistoryTab()
             self.historySortField = header.sort
             self:ApplyHistoryFilters()
         end)
-        scrollFrame:AddChild(headerButton)
+        headerGroup:AddChild(headerButton)
     end
+
+    local itemsScrollFrame = AceGUI:Create("ScrollFrame")
+    itemsScrollFrame:SetLayout("List")
+    itemsScrollFrame:SetFullWidth(true)
+    itemsScrollFrame:SetFullHeight(true)
+
+    self.historyContainer:AddChild(itemsScrollFrame)
+    self.historyContainer:SetUserData("itemsScrollFrame", itemsScrollFrame)
 
     -- Initial load of filtered data
     self:ApplyHistoryFilters()
 end
 
 function GLH:ApplyHistoryFilters()
-    local scrollFrame = self.historyContainer.children[2] -- Second child after filter group
+    local scrollFrame = self.historyContainer:GetUserData("itemsScrollFrame")
     scrollFrame:ReleaseChildren()
 
     -- Get all history items and sort them
     local items = {}
-    for date, links in pairs(db.global.historyRolls) do
+    for dateKey, links in pairs(historyRolls) do
         for link, entry in pairs(links) do
-            debugmsg(date, link, entry)
-            entry.link = link 
-            debugmsg("Processing", date, link)
-            if self:PassesHistoryFilters(entry) then
-                items[date] = items[date] or {}
-                items[date][link] = entry
+            debugmsg(dateKey, link, entry)
+            debugmsg("Processing", dateKey, link)
+            if self:PassesHistoryFilters(entry, dateKey, link) then
+                items[dateKey] = items[dateKey] or {}
+                items[dateKey][link] = entry
                 debugmsg("Accepted...")
             end
         end
@@ -592,14 +604,14 @@ function GLH:ApplyHistoryFilters()
         
         while currentDateIndex <= #sortedDates and count < batchSize do
             local dateKey = sortedDates[currentDateIndex]
-            
+            print("Processing date:", dateKey)
             -- If we're starting a new date
             if dateKey ~= currentDate then
                 currentDate = dateKey
                 currentDateItems = {}
                 -- Get all items for this date that pass filters
-                for link, entry in pairs(db.global.historyRolls[dateKey]) do
-                    if self:PassesHistoryFilters(entry) then
+                for link, entry in pairs(historyRolls[dateKey]) do
+                    if self:PassesHistoryFilters(entry, dateKey, link) then
                         entry.link = link -- Store link in entry for reference
                         table.insert(currentDateItems, entry)
                     end
@@ -649,7 +661,7 @@ function GLH:ApplyHistoryFilters()
     ProcessBatch()
 end
 
-function GLH:PassesHistoryFilters(entry)
+function GLH:PassesHistoryFilters(entry, dateKey, link)
     if not self.historyFilters then return true end
     local filters = self.historyFilters
 
@@ -670,21 +682,18 @@ function GLH:PassesHistoryFilters(entry)
 
     -- Date range filter
     if filters.dateStart then
-        local startTime = time(filters.dateStart)
-        local entryTime = time(entry.date)
-        if entryTime < startTime then return false end
+        if dateKey < filters.dateStart then return false end
     end
     
     if filters.dateEnd then
-        local endTime = time(filters.dateEnd)
-        local entryTime = time(entry.date)
-        if entryTime > endTime then return false end
+        if dateKey > filters.dateEnd then return false end
     end
 
     return true
 end
 
 function GLH:CreateHistoryItemRow(scrollFrame, entry)
+    print("Creating history item row for:", entry.link)
     -- Date column (hidden but used for layout)
     local dateLabel = AceGUI:Create("Label")
     dateLabel:SetText("")
@@ -696,10 +705,17 @@ function GLH:CreateHistoryItemRow(scrollFrame, entry)
     itemGroup:SetLayout("Flow")
     itemGroup:SetWidth(250)
     
-    local itemIcon = AceGUI:Create("Icon")
-    itemIcon:SetImage(entry.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
-    itemIcon:SetImageSize(24, 24)
-    itemGroup:AddChild(itemIcon)
+    
+    if entry.texture then
+        local itemIcon = AceGUI:Create("Icon")
+        itemIcon:SetImage(entry.texture)
+        itemIcon:SetImageSize(24, 24)
+        itemGroup:AddChild(itemIcon)
+    else
+        local placeHolder = AceGUI:Create("Label")
+        placeHolder:SetText("")
+        itemGroup:AddChild(placeHolder)
+    end
     
     local itemLabel = AceGUI:Create("InteractiveLabel")
     itemLabel:SetText(entry.link or "Unknown Item")
@@ -1478,11 +1494,14 @@ local eventHandlers = {
     PLAYER_ROLES_ASSIGNED = "PLAYER_ROLES_ASSIGNED",
 }
 
-function GLH:GetDateKey(date)
+function GLH:GetDateKey(currDate)
+    if not currDate then
+        currDate = date("*t")
+    end
     return string.format("%d-%02d-%02d", 
-        date.year,
-        date.month, 
-        date.day)
+        currDate.year,
+        currDate.month, 
+        currDate.day)
 end
 
 function GLH:QueueTooltip(uid, entry)
@@ -1543,12 +1562,22 @@ function GLH:SpawnAllTooltipContainers()
     self:_ProcessTooltipQueue(now)
 end
 
-function GLH:AddEntryToHistory(history, entry, dateKey, link, winner)
-    dateKey = dateKey or (entry.date and GLH:GetDateKey(entry.date)) or (entry.timeEnd and GLH:GetDateKey(dateKey("*t", entry.timeEnd))) or GLH:GetDateKey(dateKey("*t"))
-    link = link or entry.link
+function GLH:GetAmount(link)
     local captures = { string.match(link, "|rx(%d+)") }
     local link_amount = captures[1] or nil
-    link = string.gsub(link, "|rx%d+$", "|r")
+    if link_amount then
+        -- print("Found link amount:", link_amount, "for link:", link)
+        link = string.gsub(link, "|rx%d+$", "|r")
+        -- print("Updated link:", link)
+    end
+    return link, tonumber(link_amount) or 1
+end
+
+function GLH:AddEntryToHistory(history, entry, dateKey, link, winner)
+    dateKey = dateKey or (entry.date and GLH:GetDateKey(entry.date)) or (entry.timeEnd and GLH:GetDateKey(date("*t", entry.timeEnd))) or GLH:GetDateKey()
+    link = link or entry.link
+    local link_amount
+    link, link_amount = GLH:GetAmount(link)
     winner = winner or entry.winner or youName
     history[dateKey] = history[dateKey] or {}
     history[dateKey][link] = history[dateKey][link] or {}
@@ -1943,6 +1972,7 @@ function GLH:CHAT_MSG_LOOT(event, msg, ...)
 end
 
 function GLH:ProcessLootMessage(patternkey, payloadData)
+    print("Processing loot message:", patternkey, payloadData.looter, payloadData.loot)
     local looter = payloadData.looter or youName
     local loot   = payloadData.loot
 
@@ -1958,13 +1988,18 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
        patternkey == "PATTERN_LOOT_ITEM_SELF_MULTIPLE" then
         print("Item looted: ", looter, loot)
 
+
         local timeEnd = time()
-        local dateKey = self:GetDateKey(dateKey("*t"))
-        historyRolls[dateKey] = historyRolls[dateKey] or {}
-        historyRolls[dateKey][loot] = historyRolls[dateKey][loot] or {timeEnd=timeEnd, amount=amount, winner=looter}
-        local amount = historyRolls[dateKey][loot].amount or 0
-        amount = amount + 1
-        print(historyRolls[dateKey][loot], loot, historyRolls[dateKey][loot].winner, historyRolls[dateKey][loot].amount)
+        local dateKey = self:GetDateKey()
+        local dateTbl   = ensure(historyRolls, dateKey, {})
+        local lootTbl   = ensure(dateTbl, loot, {timeEnd = timeEnd})
+        local winners   = ensure(lootTbl, "winners", {})
+        local looterTbl = ensure(winners, looter, {})
+        local loot_amount
+        loot, loot_amount = self:GetAmount(loot)
+        looterTbl.amount = (looterTbl.amount or 0) + loot_amount
+
+        print("Storing:", loot, looter, historyRolls[dateKey][loot].winners[looter].amount)
     else
         print("Not storing loot:", loot, looter)
     end
@@ -2080,7 +2115,7 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
         rolls = {},
         timeStart = time(),
         timeEnd = timeEnd,
-        date = dateKey("*t"),
+        date = date("*t"),
         active = true,
     }
     uid_to_rollid[uid] = rollID
