@@ -1573,19 +1573,34 @@ function GLH:GetAmount(link)
     return link, tonumber(link_amount) or 1
 end
 
-function GLH:AddEntryToHistory(history, entry, dateKey, link, winner)
+function GLH:AddEntryToHistory(history, entry, dateKey, link, winner, location)
     dateKey = dateKey or (entry.date and GLH:GetDateKey(entry.date)) or (entry.timeEnd and GLH:GetDateKey(date("*t", entry.timeEnd))) or GLH:GetDateKey()
+    location = location or entry.location or self:GetLocation() or {}
+    
+    if type(dateKey) == "table" then
+        dateKey = GLH:GetDateKey(dateKey)
+    end
+
     link = link or entry.link
     local link_amount
     link, link_amount = GLH:GetAmount(link)
+
     winner = winner or entry.winner or youName
-    history[dateKey] = history[dateKey] or {}
-    history[dateKey][link] = history[dateKey][link] or {}
-    history[dateKey][link]["winners"] = history[dateKey][link]["winners"] or {}
-    local amount = history[dateKey][link]["winners"] and history[dateKey][link]["winners"][winner] and history[dateKey][link]["winners"][winner].amount or 0
-    amount = amount + (link_amount or entry.amount or 1)
-    history[dateKey][link]["winners"][winner] = history[dateKey][link]["winners"][winner] or {}
-    history[dateKey][link]["winners"][winner].amount = amount
+
+    local dateTbl = ensure(history, dateKey, {})
+    local linkTbl = ensure(dateTbl, link, {})
+    local winnersTbl = ensure(linkTbl, "winners", {})
+    local locations = ensure(linkTbl, "locations", {})
+    locations[location] = true
+
+    local amount = winnersTbl and winnersTbl[winner] and winnersTbl[winner].amount or 0
+    amount = amount + link_amount
+
+    local winnerTbl = ensure(winnersTbl, winner, {})
+    winnerTbl.amount = amount
+    winnerTbl.player = entry.player or winner
+
+    print("Storing:", link, winner, historyRolls[dateKey][link].winners[winner].amount)
 end
 
 
@@ -1625,6 +1640,9 @@ function GLH:ConvertHistoryRollsFormat()
                                 winnerData.amount = link_amount
                                 break
                             end
+                            for winner, winnerData in pairs(entry.winners) do
+                                winnerData.player = winnerData.player or winner
+                            end
                         end
                     end
 
@@ -1635,6 +1653,7 @@ function GLH:ConvertHistoryRollsFormat()
                     entry.timeStart = nil
                     entry.winner = nil
                     entry.amount = nil
+                    entry.player = nil
 
                     newFormat[dateKey][link] = entry
                 end       
@@ -1932,12 +1951,14 @@ function GLH:GetUID()
     return uid
 end
 
-function GLH:CHAT_MSG_LOOT(event, msg, ...)
+function GLH:_ChatMsgLoot(event, msg, ...)
     -- Don’t do anything in battlegrounds/arenas
-    local _, instanceType = IsInInstance()
-    if instanceType == "pvp" or instanceType == "arena" then
-        return
-    end
+    -- local _, instanceType = IsInInstance()
+    -- if instanceType == "pvp" or instanceType == "arena" then
+    --     return
+    -- end
+    local instance, instanceType = IsInInstance()
+    print("Instance:", instance, "Type:", instanceType)
 
     for _, key in ipairs(rollTypeChanged) do
         if msg == key then
@@ -1964,15 +1985,33 @@ function GLH:CHAT_MSG_LOOT(event, msg, ...)
                 debugmsg(payloadData.loot, " -  couldn't find rollID")
                 self:ProcessLootMessage(key, payloadData)
             end
-
             return
-
         end
     end
+    
+end
+
+function GLH:CHAT_MSG_LOOT(event, msg, ...)
+    C_Timer.After(0.5, function()
+        self:_ChatMsgLoot(event, msg, ...)
+    end)
+end
+
+function GLH:GetLocation()
+    local instance, instanceType = IsInInstance()
+    local realZone = GetRealZoneText()
+    local zone = GetZoneText()
+    return {
+        instance = instance,
+        instanceType = instanceType,
+        realZone = realZone,
+        zone = zone,
+    }
 end
 
 function GLH:ProcessLootMessage(patternkey, payloadData)
     print("Processing loot message:", patternkey, payloadData.looter, payloadData.loot)
+    local location = self:GetLocation()
     local looter = payloadData.looter or youName
     local loot   = payloadData.loot
 
@@ -1988,18 +2027,8 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
        patternkey == "PATTERN_LOOT_ITEM_SELF_MULTIPLE" then
         print("Item looted: ", looter, loot)
 
-
-        local timeEnd = time()
-        local dateKey = self:GetDateKey()
-        local dateTbl   = ensure(historyRolls, dateKey, {})
-        local lootTbl   = ensure(dateTbl, loot, {timeEnd = timeEnd})
-        local winners   = ensure(lootTbl, "winners", {})
-        local looterTbl = ensure(winners, looter, {})
-        local loot_amount
-        loot, loot_amount = self:GetAmount(loot)
-        looterTbl.amount = (looterTbl.amount or 0) + loot_amount
-
-        print("Storing:", loot, looter, historyRolls[dateKey][loot].winners[looter].amount)
+        
+        GLH:AddEntryToHistory(historyRolls, {}, nil, loot, looter, location)
     else
         print("Not storing loot:", loot, looter)
     end
@@ -2117,6 +2146,8 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
         timeEnd = timeEnd,
         date = date("*t"),
         active = true,
+        player = youName,
+        location = self:GetLocation(),
     }
     uid_to_rollid[uid] = rollID
     rollid_to_uid[rollID] = uid
