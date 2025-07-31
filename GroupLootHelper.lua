@@ -47,11 +47,23 @@ local ITEM_TOOLTIP_WIDTH
 local PLAYER_NAME_WIDTH
 local ROLL_VALUE_WIDTH
 
+local LOOT_EXPIRATION = 4 * 60 * 60
+
 local GROW_UP
 local log
 
 local youName
+local realmName
 local loot_container_cache = {}
+
+local qualities = {
+        [0] = "|cff9d9d9dPoor|r",
+        [1] = "|cffffffffCommon|r",
+        [2] = "|cff1eff00Uncommon|r", 
+        [3] = "|cff0070ddRare|r",
+        [4] = "|cffa335eeEpic|r",
+        [5] = "|cffff8000Legendary|r"
+    }
 
 local function split(inputstr, delimiter)
     if delimiter == nil then
@@ -297,18 +309,19 @@ end
 
 local function AddBackdropToFrame(frame, backdrop, colour)
     if not frame.SetBackdrop then
-        print("Adding backdop...")
+        -- print("Adding backdop...")
         Mixin(frame, BackdropTemplateMixin)
     end
     if backdrop then
         frame:SetBackdrop(backdrop)
-        print("Setting backdrop for frame: ", frame:GetName())
+        -- print("Setting backdrop for frame: ", frame:GetName())
         if colour then
             frame:SetBackdropColor(colour[1] or 0, colour[2] or 0, colour[3] or 0, colour[4] or 1)
         end
     end
 end
 
+--[[
 local function CreateLootWindow()
     local frameWidget = AceGUI:Create("Frame")
     local frame = frameWidget.frame
@@ -342,6 +355,547 @@ local function CreateLootWindow()
     return frameWidget
 end
 
+]]--
+
+function GLH:CreateChildScrollList(frameWidget, parentWidget, childName)
+    local listFrame = AceGUI:Create("ScrollFrame")
+    listFrame:SetLayout("List")
+    listFrame:SetFullWidth(true)
+    listFrame:SetFullHeight(true)
+    listFrame:SetAutoAdjustHeight(true)
+    parentWidget:AddChild(listFrame)
+    frameWidget:SetUserData(childName, listFrame)
+
+    return listFrame
+end
+
+-- Add “Roles & Specs” as the 3rd tab in CreateLootWindow
+function GLH:CreateLootWindow()
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("Group Loot Helper")
+    frame:SetLayout("Fill")
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Flow")
+    tabGroup:SetTabs({
+        { text = "Active Loot",    value = "active" },
+        { text = "History",        value = "history" },
+        { text = "Roles & Specs",  value = "roles" },
+        { text = "Party History",  value = "party" },
+    })
+    tabGroup:SetCallback("OnGroupSelected", function(_, _, group)
+        self:ShowTab(group)
+    end)
+    frame:AddChild(tabGroup)
+
+    self.activeContainer = self:CreateChildScrollList(frame, tabGroup, "lootList")
+    self.historyContainer = self:CreateChildScrollList(frame, tabGroup, "lootHistory")
+    self.rolesContainer = self:CreateChildScrollList(frame, tabGroup, "partyRoles")
+    self.partyContainer = self:CreateChildScrollList(frame, tabGroup, "partyHistory")
+
+    tabGroup:SelectTab("active")
+    return frame
+end
+
+function GLH:ShowTab(group)
+    self.activeContainer.frame:Hide()
+    self.historyContainer.frame:Hide()
+    self.rolesContainer.frame:Hide()
+    self.partyContainer.frame:Hide()
+
+    if group == "active" then
+        self:RefreshActiveTab()
+        self.activeContainer.frame:Show()
+
+    elseif group == "history" then
+        self:RefreshHistoryTab()
+        self.historyContainer.frame:Show()
+
+    elseif group == "roles" then
+        self:RefreshRolesTab()
+        self.rolesContainer.frame:Show()
+    elseif group == "party" then
+        self:RefreshPartyTab()
+        self.partyContainer.frame:Show()
+    else
+        print("Unkown tab!", group)
+    end
+end
+
+function GLH:RefreshHistoryTab()
+    -- Clear existing content
+    self.historyContainer:ReleaseChildren()
+
+    -- Create filter controls group
+    local filterGroup = AceGUI:Create("SimpleGroup")
+    filterGroup:SetFullWidth(true)
+    filterGroup:SetLayout("Flow")
+    self.historyContainer:AddChild(filterGroup)
+
+    -- Player name filter with auto-complete
+    local playerFilter = AceGUI:Create("EditBox")
+    playerFilter:SetLabel("Player Name")
+    playerFilter:SetWidth(150)
+    playerFilter:SetCallback("OnTextChanged", function(_, _, text)
+        -- Store filter value
+        self.historyFilters = self.historyFilters or {}
+        self.historyFilters.player = text
+        
+        -- Update suggestions list
+        if #text >= 2 then
+            local suggestions = {}
+            for name in pairs(db.global.playerCache) do
+                if name:lower():find(text:lower(), 1, true) then
+                    table.insert(suggestions, name)
+                end
+            end
+            -- TODO: Show suggestions dropdown
+        end
+        
+        self:ApplyHistoryFilters()
+    end)
+    filterGroup:AddChild(playerFilter)
+
+    -- Quality filter (multiple selection)
+    local qualityFilter = AceGUI:Create("Dropdown")
+    qualityFilter:SetLabel("Quality")
+    qualityFilter:SetWidth(150)
+    qualityFilter:SetMultiselect(true)
+    qualityFilter:SetList(qualities)
+    qualityFilter:SetCallback("OnValueChanged", function(_, _, value, checked)
+        self.historyFilters = self.historyFilters or {}
+        self.historyFilters.qualities = self.historyFilters.qualities or {}
+        self.historyFilters.qualities[value] = checked
+        self:ApplyHistoryFilters()
+    end)
+    filterGroup:AddChild(qualityFilter)
+
+    --[[
+    -- Date range filters
+    local dateStartPicker = AceGUI:Create("DatePicker") -- You'll need to create this custom widget
+    dateStartPicker:SetLabel("From Date")
+    dateStartPicker:SetWidth(150)
+    dateStartPicker:SetCallback("OnValueChanged", function(_, _, date)
+        self.historyFilters = self.historyFilters or {}
+        self.historyFilters.dateStart = date
+        self:ApplyHistoryFilters()
+    end)
+    filterGroup:AddChild(dateStartPicker)
+
+    local dateEndPicker = AceGUI:Create("DatePicker") -- You'll need to create this custom widget
+    dateEndPicker:SetLabel("To Date")
+    dateEndPicker:SetWidth(150)
+    dateEndPicker:SetCallback("OnValueChanged", function(_, _, date)
+        self.historyFilters = self.historyFilters or {}
+        self.historyFilters.dateEnd = date
+        self:ApplyHistoryFilters()
+    end)
+    filterGroup:AddChild(dateEndPicker)
+    ]]--
+
+    -- Create scrolling table for history
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("Table")
+    -- Initialize table layout data
+    scrollFrame:SetUserData("table", {
+        columns = {
+            100,  -- Date column width
+            250,  -- Item column width 
+            150,  -- Zone column width
+            100,  -- Looter column width
+            80,   -- Type column width
+            100,  -- Slot column width
+        },
+        alignV = "TOP",
+        alignH = "LEFT",
+        space = DEFAULT_SPACING or 5,
+    })
+    scrollFrame:SetFullWidth(true)
+    scrollFrame:SetFullHeight(true)
+    self.historyContainer:AddChild(scrollFrame)
+
+    -- Define table headers
+    local headers = {
+        { text = "Date", width = 100, sort = "date" },
+        { text = "Item", width = 250, sort = "item" },
+        { text = "Zone", width = 150, sort = "zone" },
+        { text = "Looter", width = 100, sort = "looter" },
+        { text = "Type", width = 80, sort = "type" },
+        { text = "Slot", width = 100, sort = "slot" }
+    }
+
+    -- Create header row
+    for _, header in ipairs(headers) do
+        local headerButton = AceGUI:Create("InteractiveLabel")
+        headerButton:SetText(header.text)
+        headerButton:SetWidth(header.width)
+        headerButton:SetCallback("OnClick", function()
+            self.historySortField = header.sort
+            self:ApplyHistoryFilters()
+        end)
+        scrollFrame:AddChild(headerButton)
+    end
+
+    -- Initial load of filtered data
+    self:ApplyHistoryFilters()
+end
+
+function GLH:ApplyHistoryFilters()
+    local scrollFrame = self.historyContainer.children[2] -- Second child after filter group
+    scrollFrame:ReleaseChildren()
+
+    -- Get all history items and sort them
+    local items = {}
+    for date, links in pairs(db.global.historyRolls) do
+        for link, entry in pairs(links) do
+            debugmsg(date, link, entry)
+            entry.link = link 
+            debugmsg("Processing", date, link)
+            if self:PassesHistoryFilters(entry) then
+                items[date] = items[date] or {}
+                items[date][link] = entry
+                debugmsg("Accepted...")
+            end
+        end
+    end
+
+    -- Sort items by date first, then by secondary sort field
+    for date, dateItems in pairs(items) do
+        if self.historySortField then
+            table.sort(dateItems, function(a, b)
+                -- Secondary sort
+                if self.historySortField then
+                    -- Add sort logic here based on self.historySortField
+                    return false
+                end
+                return false
+            end)
+        end
+    end
+
+    -- Process items in batches
+    local batchSize = 10
+    local currentDateIndex = 1
+    local currentItemIndex = 1
+    local currentDate = nil
+    local currentDateItems = nil
+
+    -- Get all history items and sort them by date
+    local sortedDates = {}
+    for dateKey in pairs(db.global.historyRolls) do
+        table.insert(sortedDates, dateKey)
+    end
+    table.sort(sortedDates, function(a, b) return a > b end) -- Sort newest to oldest
+
+    local function ProcessBatch()
+        local count = 0
+        
+        while currentDateIndex <= #sortedDates and count < batchSize do
+            local dateKey = sortedDates[currentDateIndex]
+            
+            -- If we're starting a new date
+            if dateKey ~= currentDate then
+                currentDate = dateKey
+                currentDateItems = {}
+                -- Get all items for this date that pass filters
+                for link, entry in pairs(db.global.historyRolls[dateKey]) do
+                    if self:PassesHistoryFilters(entry) then
+                        entry.link = link -- Store link in entry for reference
+                        table.insert(currentDateItems, entry)
+                    end
+                end
+                -- Sort items for this date if needed
+                if self.historySortField then
+                    table.sort(currentDateItems, function(a, b)
+                        -- Add sort logic here based on self.historySortField
+                        return false
+                    end)
+                end
+                
+                -- Add date separator
+                local dateSeparator = AceGUI:Create("Heading")
+                dateSeparator:SetText(dateKey)
+                dateSeparator:SetFullWidth(true)
+                scrollFrame:AddChild(dateSeparator)
+                
+                currentItemIndex = 1
+            end
+
+            -- Process items for current date
+            while currentItemIndex <= #currentDateItems and count < batchSize do
+                local entry = currentDateItems[currentItemIndex]
+                self:CreateHistoryItemRow(scrollFrame, entry)
+                currentItemIndex = currentItemIndex + 1
+                count = count + 1
+            end
+
+            -- Move to next date if we've processed all items for current date
+            if currentItemIndex > #currentDateItems then
+                currentDateIndex = currentDateIndex + 1
+                currentDate = nil -- Reset current date to trigger new date processing
+            end
+        end
+
+        -- If there are more items to process, schedule next batch
+        if currentDateIndex <= #sortedDates or 
+           (currentDate and currentItemIndex <= #currentDateItems) then
+            C_Timer.After(0, ProcessBatch)
+        else
+            scrollFrame:DoLayout()
+        end
+    end
+
+    -- Start processing the first batch
+    ProcessBatch()
+end
+
+function GLH:PassesHistoryFilters(entry)
+    if not self.historyFilters then return true end
+    local filters = self.historyFilters
+
+    -- Player filter
+    if filters.player and #filters.player >= 2 then
+        if not entry.looter or not entry.looter:lower():find(filters.player:lower(), 1, true) then
+            return false
+        end
+    end
+
+    -- Quality filter
+    if filters.qualities and next(filters.qualities) then
+        local quality = entry.quality
+        if not quality or not filters.qualities[quality] then
+            return false
+        end
+    end
+
+    -- Date range filter
+    if filters.dateStart then
+        local startTime = time(filters.dateStart)
+        local entryTime = time(entry.date)
+        if entryTime < startTime then return false end
+    end
+    
+    if filters.dateEnd then
+        local endTime = time(filters.dateEnd)
+        local entryTime = time(entry.date)
+        if entryTime > endTime then return false end
+    end
+
+    return true
+end
+
+function GLH:CreateHistoryItemRow(scrollFrame, entry)
+    -- Date column (hidden but used for layout)
+    local dateLabel = AceGUI:Create("Label")
+    dateLabel:SetText("")
+    dateLabel:SetWidth(100)
+    scrollFrame:AddChild(dateLabel)
+
+    -- Item column (icon + link)
+    local itemGroup = AceGUI:Create("SimpleGroup")
+    itemGroup:SetLayout("Flow")
+    itemGroup:SetWidth(250)
+    
+    local itemIcon = AceGUI:Create("Icon")
+    itemIcon:SetImage(entry.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
+    itemIcon:SetImageSize(24, 24)
+    itemGroup:AddChild(itemIcon)
+    
+    local itemLabel = AceGUI:Create("InteractiveLabel")
+    itemLabel:SetText(entry.link or "Unknown Item")
+    itemGroup:AddChild(itemLabel)
+    scrollFrame:AddChild(itemGroup)
+
+    -- Zone column
+    local zoneLabel = AceGUI:Create("Label")
+    zoneLabel:SetText(entry.zone or "Unknown")
+    zoneLabel:SetWidth(150)
+    scrollFrame:AddChild(zoneLabel)
+
+    -- Looter column
+    local looterLabel = AceGUI:Create("Label")
+    looterLabel:SetText(entry.looter or "Unknown")
+    looterLabel:SetWidth(100)
+    scrollFrame:AddChild(looterLabel)
+
+    -- Type column
+    local typeLabel = AceGUI:Create("Label")
+    typeLabel:SetText(entry.rollType or "")
+    typeLabel:SetWidth(80)
+    scrollFrame:AddChild(typeLabel)
+
+    -- Slot column
+    local slotLabel = AceGUI:Create("Label")
+    slotLabel:SetText(entry.equipSlot or "")
+    slotLabel:SetWidth(100)
+    scrollFrame:AddChild(slotLabel)
+end
+
+-- Re-draw the Roles & Specs tab
+function GLH:RefreshRolesTab()
+    self.rolesContainer:ReleaseChildren()
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("Table")
+    scrollFrame:SetUserData("table", {
+        columns = {
+            0,    -- Name (auto)
+            0,    -- Role buttons
+            0,    -- Primary stat
+            0,    -- Current spec / talent points
+            0,    -- Assign spec dropdown
+        },
+        space  = DEFAULT_SPACING,
+        alignH = "LEFT",
+    })
+    scrollFrame:SetFullWidth(true)
+    scrollFrame:SetFullHeight(true)
+    self.rolesContainer:AddChild(scrollFrame)
+
+    -- Header row
+    local headerTitles = { "Name", "Role", "Stat", "Current", "Assign Spec" }
+    for _, title in ipairs(headerTitles) do
+        local headerLabel = AceGUI:Create("Label")
+        headerLabel:SetText("|cff00ffff" .. title .. "|r")
+        headerLabel:SetFontObject(GameFontNormalSmall)
+        headerLabel:SetUserData("cell", { alignH = "CENTER" })
+        scrollFrame:AddChild(headerLabel)
+    end
+
+    -- One row per group member
+    local numMembers = GetNumGroupMembers()
+    for index = 1, numMembers do
+        local unit = IsInRaid() and ("raid" .. index)
+                     or (index == numMembers and "player" or "party" .. index)
+        if UnitExists(unit) then
+            self:CreateRoleSpecRow(scrollFrame, unit)
+        end
+    end
+
+    scrollFrame:DoLayout()
+    self.rolesContainer:DoLayout()
+end
+
+-- Factory for each player’s row
+function GLH:CreateRoleSpecRow(parent, unit)
+    local playerName = UnitName(unit)
+    local cacheInfo  = db.global.playerCache[playerName] or {}
+
+    -- Column 1: Name (highlight & click-to-target)
+    local nameLabel = AceGUI:Create("Label")
+    nameLabel:SetText(cacheInfo.cname or playerName)
+    nameLabel:SetUserData("cell", { alignH = "LEFT" })
+    parent:AddChild(nameLabel)
+
+    local nameFrame = nameLabel.frame
+    nameFrame:EnableMouse(true)
+
+    -- Highlight on hover
+    nameFrame:SetScript("OnEnter", function()
+        nameLabel:SetColor(1, 1, 0)  -- yellow
+    end)
+    nameFrame:SetScript("OnLeave", function()
+        nameLabel:SetColor(1, 1, 1)  -- white
+    end)
+
+    -- Target unit on click
+    nameFrame:SetScript("OnMouseUp", function()
+        if UnitExists(unit) then
+            TargetUnit(unit)
+        end
+    end)
+
+    -- Column 2: Role buttons
+    local roleGroup = AceGUI:Create("SimpleGroup")
+    roleGroup:SetLayout("Flow")
+    roleGroup:SetUserData("cell", { alignH = "CENTER" })
+    roleGroup:SetWidth(90)
+    parent:AddChild(roleGroup)
+
+    for _, role in ipairs({ "TANK", "HEALER", "DAMAGE" }) do
+        local roleButton = AceGUI:Create("Button")
+        roleButton:SetText(role:sub(1,1))
+        roleButton:SetWidth(25)
+        roleButton:SetCallback("OnClick", function()
+            cacheInfo.role = role
+            db.global.playerCache[playerName].role = role
+        end)
+        roleGroup:AddChild(roleButton)
+    end
+
+    -- Column 3: Highest primary stat
+    local statValue = cacheInfo.bestStat or "-"
+    local statLabel = AceGUI:Create("Label")
+    statLabel:SetText(statValue)
+    statLabel:SetUserData("cell", { alignH = "CENTER" })
+    parent:AddChild(statLabel)
+
+    -- Column 4: Current spec (Cata+) or Talent Points (pre-Mists)
+    local specOrPointsFrame = AceGUI:Create("SimpleGroup")
+    specOrPointsFrame:SetLayout("Flow")
+    specOrPointsFrame:SetUserData("cell", { alignH = "CENTER" })
+    specOrPointsFrame:SetWidth(100)
+    parent:AddChild(specOrPointsFrame)
+
+    local buildNumber = select(4, GetBuildInfo())
+    if buildNumber >= 40000 then
+        -- Post-Cataclysm: show live spec icon+name
+        local specID = GetInspectSpecialization(unit)
+        local specName, _, specIcon = GetSpecializationInfoByID(specID, UnitSex(unit))
+        local specIconWidget = AceGUI:Create("Icon")
+        specIconWidget:SetImage(specIcon)
+        specIconWidget:SetImageSize(16, 16)
+        specIconWidget:SetUserData("cell", { alignH = "CENTER" })
+        specOrPointsFrame:AddChild(specIconWidget)
+
+        local specNameLabel = AceGUI:Create("Label")
+        specNameLabel:SetText(specName or "Unknown")
+        specNameLabel:SetUserData("cell", { alignH = "LEFT" })
+        specOrPointsFrame:AddChild(specNameLabel)
+
+    else
+        -- Pre-Mists: editable talent points
+        local pointsBox = AceGUI:Create("EditBox")
+        pointsBox:SetWidth(75)
+        pointsBox:SetText(cacheInfo.talentPoints or "")
+        pointsBox:SetUserData("cell", { alignH = "CENTER" })
+        pointsBox:SetCallback("OnEnterPressed", function(_, _, text)
+            cacheInfo.talentPoints = tonumber(text) or 0
+            db.global.playerCache[playerName].talentPoints = cacheInfo.talentPoints
+        end)
+        specOrPointsFrame:AddChild(pointsBox)
+    end
+
+    -- Column 5: Assign Spec dropdown (always editable)
+    local specDropdown = AceGUI:Create("Dropdown")
+    specDropdown:SetUserData("cell", { alignH = "LEFT" })
+    specDropdown:SetWidth(150)
+
+    -- Build list of all specs
+    local availableSpecs = {}
+    local numSpecs = GetNumSpecializations and GetNumSpecializations() or GetNumTalentTabs()
+    for specIndex = 1, numSpecs do
+        local specInfoName, _, specInfoIcon =
+            (GetSpecializationInfo and GetSpecializationInfo(specIndex))
+            or GetTalentTabInfo(specIndex)
+        availableSpecs[specIndex] = ("|T%s:0|t %s"):format(specInfoIcon, specInfoName)
+    end
+
+    specDropdown:SetList(availableSpecs)
+    specDropdown:SetValue(cacheInfo.specID or 1)
+    specDropdown:SetCallback("OnValueChanged", function(_, _, selected)
+        cacheInfo.specID = selected
+        db.global.playerCache[playerName].specID = selected
+    end)
+
+    parent:AddChild(specDropdown)
+end
+
+function GLH:RefreshActiveTab()
+    -- Refresh the layout after adding all rolls
+    self.activeContainer:DoLayout()
+end
+
 function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     if not itemLink then
         print("Error - AddTooltipContainer: itemLink is nil")
@@ -359,7 +913,7 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     -- Create the main container using Table Layout
     -----------------------------------------
     local mainContainer = AceGUI:Create("SimpleGroup")
-    print("Creating main container for item: " , itemLink)
+    -- print("Creating main container for item: " , itemLink)
     -- AddBackdropToFrame(mainContainer.frame, backdrop, {1, 1, 1, 0.4})
     mainContainer:SetUserData("itemLink", itemLink)
     mainContainer:SetUserData("rollIntentions", {})
@@ -403,7 +957,7 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
         local tooltip = tooltipWidget.frame
     
         AddBackdropToFrame(tooltip, edgelessBackdrop, {0, 0, 0, 0.6})
-        print("Clearing tooltip frame backdrop for item: ", itemLink)
+        -- print("Clearing tooltip frame backdrop for item: ", itemLink)
         
         -- Re-anchor the native tooltip frame within this column’s frame.
         -- tooltip:ClearAllPoints()
@@ -418,8 +972,8 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
         -- end)
         tooltip:SetClampedToScreen(false)
         tooltip:Show()
-        print("Tooltip:", tooltip:GetWidth(), tooltip:GetHeight())
-        print("Widget:", tooltipWidget.frame:GetWidth(), tooltipWidget.frame:GetHeight())
+        -- print("Tooltip:", tooltip:GetWidth(), tooltip:GetHeight())
+        -- print("Widget:", tooltipWidget.frame:GetWidth(), tooltipWidget.frame:GetHeight())
 
         colTooltip:AddChild(tooltipWidget)
     end
@@ -924,26 +1478,44 @@ local eventHandlers = {
     PLAYER_ROLES_ASSIGNED = "PLAYER_ROLES_ASSIGNED",
 }
 
-function GLH:QueueTooltip(rollID, entry)
-    tinsert(self._tooltipQueue, { id = rollID, data = entry })
+function GLH:GetDateKey(date)
+    return string.format("%d-%02d-%02d", 
+        date.year,
+        date.month, 
+        date.day)
 end
 
-function GLH:_ProcessTooltipQueue()
+function GLH:QueueTooltip(uid, entry)
+    tinsert(self._tooltipQueue, { id = uid, data = entry })
+end
+
+function GLH:_ProcessTooltipQueue(now)
     local batchSize = 5
     for i=1, batchSize do
         local item = tremove(self._tooltipQueue, 1)
         if not item then break end
     
-        local rollID = item.id
+        local uid = item.id
         local entry  = item.data
-  
-        if not entry.loot_container then
-            entry.loot_container = self:AddTooltipContainer(
+        local timeStart = entry.timeStart
+        local timeEnd = entry.timeEnd
+        if timeEnd - timeStart > 120 then timeEnd = timeStart + 120 end
+        local delta = now - timeEnd
+        print(now, timeEnd, delta)
+        if delta > LOOT_EXPIRATION then
+            print("Moving", entry.link, "to history...")
+            self:AddEntryToHistory(historyRolls, entry)
+            activeRolls[uid] = nil
+        else
+            local loot_container = self:AddTooltipContainer(
             entry.link,
             entry.texture,
             entry.timeEnd
             )
+            loot_container_cache[uid] = loot_container
         end
+        
+        
     end
   
     if #self._tooltipQueue > 0 then
@@ -954,16 +1526,107 @@ function GLH:_ProcessTooltipQueue()
 end
 
 function GLH:SpawnAllTooltipContainers()
+    local now = time()
     if self._tooltipRunning then return end
     wipe(self._tooltipQueue)
   
     -- enqueue everything from activeRolls
-    for rollID, entry in pairs(db.global.activeRolls) do
-        self:QueueTooltip(rollID, entry)
+    for uid, entry in pairs(db.global.activeRolls) do
+        -- print("processing:",uid)
+        if not  entry["date"] then
+            entry["date"] = date("*t")
+        end
+        self:QueueTooltip(uid, entry)
     end
   
     self._tooltipRunning = true
-    self:_ProcessTooltipQueue()
+    self:_ProcessTooltipQueue(now)
+end
+
+function GLH:AddEntryToHistory(history, entry, dateKey, link, winner)
+    dateKey = dateKey or (entry.date and GLH:GetDateKey(entry.date)) or (entry.timeEnd and GLH:GetDateKey(dateKey("*t", entry.timeEnd))) or GLH:GetDateKey(dateKey("*t"))
+    link = link or entry.link
+    local captures = { string.match(link, "|rx(%d+)") }
+    local link_amount = captures[1] or nil
+    link = string.gsub(link, "|rx%d+$", "|r")
+    winner = winner or entry.winner or youName
+    history[dateKey] = history[dateKey] or {}
+    history[dateKey][link] = history[dateKey][link] or {}
+    history[dateKey][link]["winners"] = history[dateKey][link]["winners"] or {}
+    local amount = history[dateKey][link]["winners"] and history[dateKey][link]["winners"][winner] and history[dateKey][link]["winners"][winner].amount or 0
+    amount = amount + (link_amount or entry.amount or 1)
+    history[dateKey][link]["winners"][winner] = history[dateKey][link]["winners"][winner] or {}
+    history[dateKey][link]["winners"][winner].amount = amount
+end
+
+
+
+function GLH:ConvertHistoryRollsFormat()
+    -- Create temporary table for new format
+    local newFormat = {}
+    
+    for uid, entry in pairs(historyRolls) do
+        -- debugmsg("Converting history:", uid, type(uid))
+        if type(uid) ~= "number" then
+            -- entry should be the new forat table here, uid is actually dateKey
+            local dateKey = uid
+            if entry and type(entry) == "table" then
+                if not newFormat[dateKey] then
+                    newFormat[dateKey] = {}
+                end
+                for link, entry in pairs(historyRolls[uid]) do
+                    local captures = { string.match(link, "|rx(%d+)") }
+                    local link_amount = captures[1] or nil
+                    if link_amount then
+                        -- print("Found link amount:", link_amount, "for link:", link)
+                        link = string.gsub(link, "|rx%d+$", "|r")
+                        -- print("Updated link:", link)
+                    end
+                    if not entry.winners then
+                        entry.winners = {}
+                        local winner = entry.winner or youName
+                        if not string.find(winner, "-", 1, true) then
+                            winner = winner .. "-" .. realmName
+                        end
+                        entry.winners[winner] = entry.winners[winner] or {}
+                        entry.winners[winner].amount = link_amount or entry.amount or 1
+                    else
+                        if link_amount then
+                            for winner, winnerData in pairs(entry.winners) do
+                                winnerData.amount = link_amount
+                                break
+                            end
+                        end
+                    end
+
+                    entry.link = nil
+                    entry.active = nil
+                    entry.name = nil
+                    entry.rollID = nil
+                    entry.timeStart = nil
+                    entry.winner = nil
+                    entry.amount = nil
+
+                    newFormat[dateKey][link] = entry
+                end       
+            end
+        end
+        if type(uid) == "number" then 
+            -- print("Converting:", entry.link)
+            GLH:AddEntryToHistory(newFormat, entry)
+        end
+    end
+
+    -- Replace old format with new
+    db.global.historyRolls = newFormat
+    
+    -- Debug output
+    for dateKey, items in pairs(newFormat) do
+        for link, entry in pairs(items) do
+            Log(string.format("Converted history entry: %s >%s< x%d", 
+                dateKey, link, entry.amount))
+        end
+    end
 end
 
 function GLH:OnEnable()
@@ -972,13 +1635,16 @@ function GLH:OnEnable()
     GLH._tooltipQueue   = {}
     GLH._tooltipRunning = false
 
-    GLH.LootWindow = CreateLootWindow()
-    for k,v in pairs(eventHandlers) do
-        self:RegisterEvent(v)
+    GLH.LootWindow = GLH:CreateLootWindow()
+    for event, func in pairs(eventHandlers) do
+        -- self:RegisterEvent(event, func) -- not using direct binding to keep the logging inject
+        self:RegisterEvent(event)
     end
 
     youName = GetUnitName("player")
     print(youName)
+    realmName = GetRealmName()
+    youName = youName .. "-" .. realmName
 
     uniqueID = db.global.uniqueID or 0
 
@@ -1003,6 +1669,8 @@ function GLH:OnEnable()
     db.global.historyRolls = historyRolls
     db.global.playerCache  = playerCache
     db.global.uniqueID = uniqueID
+
+    self:ConvertHistoryRollsFormat()
 
 
     for uID, activeRoll in pairs(activeRolls) do
@@ -1229,6 +1897,12 @@ function GLH:FillPlayerInfo(playerName)
   return info
 end
 
+function GLH:GetUID()
+    local uid = uniqueID
+    uniqueID = uniqueID + 1
+    return uid
+end
+
 function GLH:CHAT_MSG_LOOT(event, msg, ...)
     -- Don’t do anything in battlegrounds/arenas
     local _, instanceType = IsInInstance()
@@ -1254,11 +1928,12 @@ function GLH:CHAT_MSG_LOOT(event, msg, ...)
             
             local rollID = itemNameToRollID[payloadData.loot] or itemLinkToRollID[payloadData.loot]
             local uid = rollid_to_uid[rollID]
+            print(key, rollID, uid)
             if rollID and activeRolls[uid] then
                 self:ProcessLootRollMessage(rollID, key, payloadData)
             else
-                -- TODO add to loot history
                 debugmsg(payloadData.loot, " -  couldn't find rollID")
+                self:ProcessLootMessage(key, payloadData)
             end
 
             return
@@ -1267,11 +1942,42 @@ function GLH:CHAT_MSG_LOOT(event, msg, ...)
     end
 end
 
+function GLH:ProcessLootMessage(patternkey, payloadData)
+    local looter = payloadData.looter or youName
+    local loot   = payloadData.loot
+
+    looter = cleanName(looter)
+
+    if patternkey == "PATTERN_LOOT_ITEM" or 
+       patternkey == "PATTERN_LOOT_ITEM_MULTIPLE" or 
+       patternkey == "PATTERN_LOOT_ITEM_PUSHED" or 
+       patternkey == "PATTERN_LOOT_ITEM_PUSHED_MULTIPLE" or 
+       patternkey == "PATTERN_LOOT_ITEM_PUSHED_SELF" or 
+       patternkey == "PATTERN_LOOT_ITEM_PUSHED_SELF_MULTIPLE" or 
+       patternkey == "PATTERN_LOOT_ITEM_SELF" or 
+       patternkey == "PATTERN_LOOT_ITEM_SELF_MULTIPLE" then
+        print("Item looted: ", looter, loot)
+
+        local timeEnd = time()
+        local dateKey = self:GetDateKey(dateKey("*t"))
+        historyRolls[dateKey] = historyRolls[dateKey] or {}
+        historyRolls[dateKey][loot] = historyRolls[dateKey][loot] or {timeEnd=timeEnd, amount=amount, winner=looter}
+        local amount = historyRolls[dateKey][loot].amount or 0
+        amount = amount + 1
+        print(historyRolls[dateKey][loot], loot, historyRolls[dateKey][loot].winner, historyRolls[dateKey][loot].amount)
+    else
+        print("Not storing loot:", loot, looter)
+    end
+        
+
+end
+
 function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     local looter = payloadData.looter
     local loot   = payloadData.loot
 
     looter = looter or UnitName("player")  -- Default to player if looter is not specified.
+    local loot_winner = nil
   
     if patternkey == "PATTERN_LOOT_ITEM" or 
        patternkey == "PATTERN_LOOT_ITEM_MULTIPLE" or 
@@ -1282,7 +1988,8 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
        patternkey == "PATTERN_LOOT_ITEM_SELF" or 
        patternkey == "PATTERN_LOOT_ITEM_SELF_MULTIPLE" then
         Log("Item looted: ", looter, loot)
-        -- (Additional handling for received loot can be placed here.)
+        loot_winner = looter  -- The looter is the one who won the item.
+
     
     elseif patternkey == "PATTERN_LOOT_ROLL_NEED" or 
            patternkey == "PATTERN_LOOT_ROLL_NEED_SELF" then
@@ -1323,25 +2030,32 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     
     -- Build a player info table for UI purposes.
     local playerInfoData = {
-      name     = looter,
-      roleIcon = info.roleIcon,  -- You might update this based on class or spec via additional logic.
-      specIcon = info.specIcon,
-      rollType = (patternkey:find("NEED") and "NEED") or 
-                 (patternkey:find("GREED") and "GREED") or
-                 (patternkey:find("DISENCHANT") and "DISENCHANT") or 
-                 (patternkey:find("PASSED") and "PASSED") or 
-                 "UNKNOWN",
-      rollIcon = (patternkey:find("NEED") and "Interface\\Buttons\\UI-GroupLoot-Dice-Up") or 
-                 (patternkey:find("GREED") and "Interface\\Buttons\\UI-GroupLoot-Coin-Up") or 
-                 (patternkey:find("DISENCHANT") and "Interface\\Buttons\\UI-GroupLoot-Disenchant-Up") or
-                 (patternkey:find("PASSED") and "Interface\\Buttons\\UI-GroupLoot-Pass-Up") or 
-                 "Interface\\Buttons\\UI-GroupLoot-Dice-Up",
-      rollValue = "",  -- Set default; you can update this as roll values become known.
-    }
+        name     = looter,
+        roleIcon = info.roleIcon,  -- You might update this based on class or spec via additional logic.
+        specIcon = info.specIcon,
+        rollType = (patternkey:find("NEED") and "NEED") or 
+                    (patternkey:find("GREED") and "GREED") or
+                    (patternkey:find("DISENCHANT") and "DISENCHANT") or 
+                    (patternkey:find("PASSED") and "PASSED") or 
+                    "UNKNOWN",
+        rollIcon = (patternkey:find("NEED") and "Interface\\Buttons\\UI-GroupLoot-Dice-Up") or 
+                    (patternkey:find("GREED") and "Interface\\Buttons\\UI-GroupLoot-Coin-Up") or 
+                    (patternkey:find("DISENCHANT") and "Interface\\Buttons\\UI-GroupLoot-Disenchant-Up") or
+                    (patternkey:find("PASSED") and "Interface\\Buttons\\UI-GroupLoot-Pass-Up") or 
+                    "Interface\\Buttons\\UI-GroupLoot-Dice-Up",
+        rollValue = "",  -- Set default; you can update this as roll values become known.
+        }
     
     -- Update the UI row for this player’s roll.
     self:AddRollInfo(rollID, playerInfoData)
-  end
+    if loot_winner then
+        local uid = rollid_to_uid[rollID]
+        if uid and activeRolls[uid] then
+            activeRolls[uid].winner = loot_winner
+            -- TODO: add loot trading handling
+        end
+    end
+end
 
 
 function GLH:START_LOOT_ROLL(event, rollID, rollTime)
@@ -1354,7 +2068,7 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
 
     local texture, name, count, quality, bindOnPickUp = GetLootRollItemInfo(rollID)
     local itemlink = GetLootRollItemLink(rollID)
-    local timeEnd = GetTime() + rollTime
+    local timeEnd = time() + rollTime
     local uid = uniqueID
     uniqueID = uniqueID + 1
     activeRolls[uid] = {
@@ -1364,8 +2078,9 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
         quality = quality,
         link = itemlink,
         rolls = {},
-        timeStart = GetTime(),
+        timeStart = time(),
         timeEnd = timeEnd,
+        date = dateKey("*t"),
         active = true,
     }
     uid_to_rollid[uid] = rollID

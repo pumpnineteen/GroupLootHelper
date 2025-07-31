@@ -29,7 +29,7 @@ local methods = {
 	end,
 
     ["OnRelease"] = function(self)
-        print("OnRelease...")
+        -- print("OnRelease...")
         self:SetHyperlink(nil)
         self:SetUserData("layoutParent", nil)
         self:SetUserData("Hyperlink_set", nil)
@@ -54,7 +54,7 @@ local methods = {
 
     ["ToggleExpansion"] = function(self)
         local expanded = self:GetUserData("expanded")
-        print("expanded", expanded)
+        -- print("expanded", expanded)
         if expanded then
             self:CollapseTooltip()
         else
@@ -109,7 +109,7 @@ local methods = {
                 else 
                     width = self.frame.width
                 end
-                print("condensed width", width)
+                -- print("condensed width", width)
 
                 self:SetUserData("condensedWidth", width)
             end)
@@ -161,7 +161,7 @@ local methods = {
             -- Create the item icon
             -----------------------------------------------------------------------------
             local icon = self:GetUserData("itemButton") or CreateFrame("Button", nil, frame)
-            print("Setting item icon texture:", texture)
+            -- print("Setting item icon texture:", texture)
             icon:SetNormalTexture(texture)
             icon:SetSize(LOOT_ICON_SIZE, LOOT_ICON_SIZE)
             icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -5)
@@ -187,7 +187,7 @@ local methods = {
             icon:EnableMouse(true)
             self:SetUserData("itemButton", icon)
 
-            print("icon", icon, self:GetUserData("itemButton"), self)
+            -- print("icon", icon, self:GetUserData("itemButton"), self)
 
             if not self.tooltipTextFrame then
 
@@ -276,7 +276,7 @@ local methods = {
                     text:SetJustifyV(region:GetJustifyV())
                     if not nameFontString and text:GetText() then
                         nameFontString = text
-                        print("nameFontString", text:GetText())
+                        -- print("nameFontString", text:GetText())
                     end
                     
                     text:SetAllPoints(region)
@@ -298,7 +298,7 @@ local methods = {
         if icon then
             local fullHeight = (-1 * topTextOffset) + icon:GetHeight() + 5
             local fullWidth = sourceFrame:GetWidth()
-            print("Height:", sourceFrame:GetHeight(), "Full Height:", fullHeight)
+            -- print("Height:", sourceFrame:GetHeight(), "Full Height:", fullHeight)
             self:SetWidth(fullWidth)
             self:SetHeight(fullHeight)
 
@@ -310,7 +310,7 @@ local methods = {
     end,
 
     ["OnShow"] = function(self)
-        print("OnShow")
+        -- print("OnShow")
         self.frame:Show()
     end,
 
