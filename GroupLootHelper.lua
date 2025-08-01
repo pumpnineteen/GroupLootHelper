@@ -13,6 +13,7 @@ local type = type
 local string = string
 local tonumber = tonumber
 local tostring = tostring
+local C_Timer = C_Timer
 
 local defaults = {
     profile = {
