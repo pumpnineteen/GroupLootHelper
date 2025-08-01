@@ -5,6 +5,14 @@ local AceTimer = LibStub("AceTimer-3.0")
 
 local dummyFunc = function() end
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned or dummyFunc
+local pairs = pairs
+local ipairs = ipairs
+local unpack = unpack
+local table = table
+local type = type
+local string = string
+local tonumber = tonumber
+local tostring = tostring
 
 local defaults = {
     profile = {
@@ -57,12 +65,12 @@ local realmName
 local loot_container_cache = {}
 
 local qualities = {
-        [0] = "|cff9d9d9dPoor|r",
-        [1] = "|cffffffffCommon|r",
-        [2] = "|cff1eff00Uncommon|r", 
-        [3] = "|cff0070ddRare|r",
-        [4] = "|cffa335eeEpic|r",
-        [5] = "|cffff8000Legendary|r"
+        poor = "|cff9d9d9d",
+        common = "|cffffffff",
+        uncommon = "|cff1eff00", 
+        rare = "|cff0070dd",
+        epic = "|cffa335ee",
+        legendary = "|cffff8000",
     }
 
 local function split(inputstr, delimiter)
@@ -125,10 +133,89 @@ local function ensure(tbl, key, default)
     return tbl[key]
 end
 
+local function inject_autovivify(tbl)
+    setmetatable(tbl, {
+        __index = function(t, k)
+            local new = {}
+            inject_autovivify(new)
+            rawset(t, k, new)
+            return new
+        end
+    })
+    return tbl
+end
+
+local GetItemInfo = GetItemInfo
+
+local function GetItemData(itemLink)
+    local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc,
+        texture, sellPrice, classID, subclassID, bindType, expacID, setID, isCraftingReagent =
+        GetItemInfo(itemLink)
+
+    return {
+        name = name,
+        link = link,
+        quality = quality,
+        itemLevel = level,
+        minLevel = minLevel,
+        type = type,
+        subType = subType,
+        stackCount = stackCount,
+        equipLoc = equipLoc,
+        texture = texture,
+        sellPrice = sellPrice,
+        classID = classID,
+        subclassID = subclassID,
+        bindType = bindType,
+        expacID = expacID,
+        setID = setID,
+        isCraftingReagent = isCraftingReagent,
+    }
+end
+
+local zoneID_list
+local instanceID_list
+local MAP_TYPE_ZONE = MAP_TYPE_ZONE
+local MAP_TYPE_DUNGEON = MAP_TYPE_DUNGEON
+local C_Map = C_Map
+local math = math
+local GetBuildInfo = GetBuildInfo
+
+local buildID
+
+local function GetZoneID()
+    local FINAL_MAPID = 5000
+    local BATCH_SIZE = 100
+    local mapID
+
+    local function _GetZoneID(start)
+        local count = 0
+        while mapID <= FINAL_MAPID and count < BATCH_SIZE do
+            local info = C_Map.GetMapInfo(mapID)
+            if info and info.name then
+                local mapType = info.mapType or 0
+                if mapType == MAP_TYPE_ZONE or mapType == MAP_TYPE_DUNGEON then
+                    zoneID_list[info.name] = {mapID=mapID, mapType=mapType}
+                end
+            end
+            count = count + 1
+            mapID = mapID + 1
+        end
+
+        if mapID <= FINAL_MAPID then
+            C_Timer.After(0, _GetZoneID)
+        else
+            db.global.zonesChecked = buildID
+        end
+    end
+
+    mapID = 1
+    _GetZoneID()
+    
+end
+
 
 GLH_Log = GLH_Log or {}
-local Gargul_L
-
 -- Initialize localization
 local L = LibStub("AceLocale-3.0"):GetLocale("GroupLootHelper")
 
@@ -253,6 +340,13 @@ local rollpatternKeys  = {
     "PATTERN_LOOT_ROLL_ROLLED_NEED",
     "PATTERN_LOOT_ROLL_ROLLED_NEED_ROLE_BONUS",
 }
+
+local LOOT_MASTER_LOOTER = LOOT_MASTER_LOOTER
+local LOOT_GROUP_LOOT = LOOT_GROUP_LOOT
+local LOOT_PERSONAL_LOOT = LOOT_PERSONAL_LOOT
+local LOOT_FREE_FOR_ALL = LOOT_FREE_FOR_ALL
+local LOOT_NEED_BEFORE_GREED = LOOT_NEED_BEFORE_GREED
+local LOOT_ROUND_ROBIN = LOOT_ROUND_ROBIN
 
 local rollTypeChanged = {
     LOOT_MASTER_LOOTER,
@@ -1683,6 +1777,17 @@ function GLH:OnEnable()
     GLH._tooltipQueue   = {}
     GLH._tooltipRunning = false
 
+    zoneID_list = db.global.zoneID_list or {}
+
+    buildID = select(4, GetBuildInfo())
+    if db.global.zonesChecked and db.global.zonesChecked ~= buildID or not db.global.zonesChecked then
+        zoneID_list = {}
+        GetZoneID()
+    end
+
+    db.global.zoneID_list = zoneID_list
+    
+
     GLH.LootWindow = GLH:CreateLootWindow()
     for event, func in pairs(eventHandlers) do
         -- self:RegisterEvent(event, func) -- not using direct binding to keep the logging inject
@@ -1993,7 +2098,7 @@ end
 
 function GLH:CHAT_MSG_LOOT(event, msg, ...)
     C_Timer.After(0.5, function()
-        self:_ChatMsgLoot(event, msg, ...)
+        self:_ChatMsgLoot(event, msg)
     end)
 end
 
