@@ -174,10 +174,26 @@ local function GetItemData(itemLink)
     }
 end
 
+local GetInstanceInfo = GetInstanceInfo
+
+local function _GetInstanceInfo()
+    local name, instanceType, diffID, diffName, maxPlayers, dynamicDiff,
+      isDynamic, instanceID, instanceGroupSize, lfgDungeonID = GetInstanceInfo()
+
+    return {
+        name = name,
+        instanceType = instanceType,
+        difficultyID = diffID,
+        difficultyName = diffName,
+        maxPlayers = maxPlayers,
+        instanceID = instanceID,
+        lfgDungeonID = lfgDungeonID,
+    }
+end
+
 local zoneID_list
 local instanceID_list
-local MAP_TYPE_ZONE = MAP_TYPE_ZONE
-local MAP_TYPE_DUNGEON = MAP_TYPE_DUNGEON
+local MAP_TYPE = Enum.UIMapType
 local C_Map = C_Map
 local math = math
 local GetBuildInfo = GetBuildInfo
@@ -193,10 +209,14 @@ local function GetZoneID()
         local count = 0
         while mapID <= FINAL_MAPID and count < BATCH_SIZE do
             local info = C_Map.GetMapInfo(mapID)
+            -- if info then 
+            --     print("Checking mapID:", mapID, info.name, info.mapType, MAP_TYPE_ZONE, info.mapType == MAP_TYPE_ZONE, info.mapType == MAP_TYPE_DUNGEON)
+            -- end
             if info and info.name then
                 local mapType = info.mapType or 0
-                if mapType == MAP_TYPE_ZONE or mapType == MAP_TYPE_DUNGEON then
+                if mapType == MAP_TYPE.Zone or mapType == MAP_TYPE.Dungeon then
                     zoneID_list[info.name] = {mapID=mapID, mapType=mapType}
+                    print("Found zone:", info.name, "ID:", mapID, "Type:", mapType)
                 end
             end
             count = count + 1
@@ -1564,6 +1584,10 @@ local function HandleSlashCommand(msg)
 
     elseif msg == "show" or msg == "" then
         GLH.LootWindow:Show()
+    elseif msg == "zones" then
+        zoneID_list = {}
+        GetZoneID()    
+        db.global.zoneID_list = zoneID_list
     else
         print("Unknown command. Use /glh to open the loot window.")
     end
@@ -1779,6 +1803,7 @@ function GLH:OnEnable()
     GLH._tooltipRunning = false
 
     zoneID_list = db.global.zoneID_list or {}
+    instanceID_list = db.global.instanceID_list or {}
 
     buildID = select(4, GetBuildInfo())
     if db.global.zonesChecked and db.global.zonesChecked ~= buildID or not db.global.zonesChecked then
@@ -1787,7 +1812,7 @@ function GLH:OnEnable()
     end
 
     db.global.zoneID_list = zoneID_list
-    
+    db.global.instanceID_list = instanceID_list
 
     GLH.LootWindow = GLH:CreateLootWindow()
     for event, func in pairs(eventHandlers) do
@@ -2107,9 +2132,20 @@ function GLH:GetLocation()
     local instance, instanceType = IsInInstance()
     local realZone = GetRealZoneText()
     local zone = GetZoneText()
+    local instanceInfo = nil
+    local mapID = C_Map.GetBestMapForUnit("player")
+    local mapInfo = nil
+    if mapID then
+        mapInfo = C_Map.GetMapInfo(mapID)
+    end
+    if instance then
+        instanceInfo = _GetInstanceInfo()
+        print("Instance Info:", instanceInfo.name, "Type:", instanceInfo.instanceType, "ID:", instanceInfo.instanceID)
+        instanceID_list[instanceInfo.name] = instanceInfo.instanceID -- Not sure we need this anymore
+    end
     return {
-        instance = instance,
-        instanceType = instanceType,
+        instanceInfo = instanceInfo,
+        mapInfo = mapInfo,
         realZone = realZone,
         zone = zone,
     }
