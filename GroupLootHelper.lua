@@ -14,6 +14,9 @@ local string = string
 local tonumber = tonumber
 local tostring = tostring
 local C_Timer = C_Timer
+local print = print
+local date = date
+local YOU = YOU
 
 local defaults = {
     profile = {
@@ -146,32 +149,88 @@ local function inject_autovivify(tbl)
     return tbl
 end
 
+local function PrintTable(tbl, indent, visited)
+    indent  = indent or 0
+    visited = visited or {}
+
+    if visited[tbl] then
+        print(string.rep("  ", indent) .. "*circular*")
+        return
+    end
+    visited[tbl] = true
+
+    for k, v in pairs(tbl) do
+        local prefix = string.rep("  ", indent) .. tostring(k) .. ": "
+        if type(v) == "table" then
+            print(prefix .. "{")
+            PrintTable(v, indent + 1, visited)
+            print(string.rep("  ", indent) .. "}")
+        else
+            print(prefix .. tostring(v))
+        end
+    end
+end
+
+local itemLinkCache
+local itemIDCache
+
+local function GetItemID(itemLink)
+    if not itemLink then
+        return nil
+    end
+    if itemLinkCache[itemLink] then
+        return itemLinkCache[itemLink]
+    end
+    local itemID = tonumber(string.match(itemLink, "item:(%d+)"))
+    if not itemID then
+        return nil
+    end
+    itemLinkCache[itemLink] = itemID
+    itemIDCache[itemID] = itemLink
+    return itemID
+end
+
 local GetItemInfo = GetItemInfo
+local itemDataCache
 
 local function GetItemData(itemLink)
+    local itemID = GetItemID(itemLink)
+
+    if itemDataCache[itemID] then
+        return itemDataCache[itemID]
+    end
+
     local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc,
         texture, sellPrice, classID, subclassID, bindType, expacID, setID, isCraftingReagent =
         GetItemInfo(itemLink)
 
-    return {
-        name = name,
-        link = link,
-        quality = quality,
-        itemLevel = level,
-        minLevel = minLevel,
-        type = type,
-        subType = subType,
-        stackCount = stackCount,
-        equipLoc = equipLoc,
-        texture = texture,
-        sellPrice = sellPrice,
-        classID = classID,
-        subclassID = subclassID,
-        bindType = bindType,
-        expacID = expacID,
-        setID = setID,
-        isCraftingReagent = isCraftingReagent,
-    }
+    if not name or not itemID then
+        return nil
+    end
+
+    itemDataCache[itemID] = {name=name, quality=quality, equipLoc=equipLoc, setID=setID, texture=texture, type=type}
+    
+    -- local itemTable = {
+    --     name = name,
+    --     link = link,
+    --     quality = quality,
+    --     itemLevel = level,
+    --     minLevel = minLevel,
+    --     type = type,
+    --     subType = subType,
+    --     stackCount = stackCount,
+    --     equipLoc = equipLoc,
+    --     texture = texture,
+    --     sellPrice = sellPrice,
+    --     classID = classID,
+    --     subclassID = subclassID,
+    --     bindType = bindType,
+    --     expacID = expacID,
+    --     setID = setID,
+    --     isCraftingReagent = isCraftingReagent,
+    -- }
+    -- PrintTable(itemTable)
+    return itemDataCache[itemID]
 end
 
 local GetInstanceInfo = GetInstanceInfo
@@ -246,12 +305,10 @@ local LibSpec = LibStub("LibClassicSpecs", true) or LibStub("LibSpec")
 local activeRolls
 local historyRolls
 local playerCache
-local uniqueID
 local uid_to_rollid = {}
 local rollid_to_uid = {}
 local itemNameToRollID = {} -- Map item names to roll IDs
 local itemLinkToRollID = {} -- Map item links to roll IDs
-local playerCache = {} -- Cache player information
 local pendingInspectRequests = {} -- Global table for caching pending inspect requests (keyed by player name)
 local tooltipIndex = 1
 
@@ -1507,58 +1564,6 @@ local testLinks = {
     ["Green Boots"] = {"\124cff1eff00\124Hitem:7524:0:0:0:0:0:0:0:0\124h[Gossamer Boots]\124h\124r", 133766}
 }
 
-local function CreateLootWidget(parent, item)
-    local widget = CreateFrame("Frame", nil, parent)
-    widget:SetSize(400, 40)
-    
-    local lootIcon = CreateLootButton(item)
-    lootIcon:SetPoint("LEFT", widget, "LEFT", 4, 4)
-
-    
-    local intended_MS = CreateMSNeedButton(widget)
-    intended_MS:SetPoint("TOPLEFT", lootIcon, "TOPRIGHT", 4, 0)
-
-    local intended_OS = CreateOSNeedButton(widget)
-    intended_OS:SetPoint("LEFT", intended_MS, "RIGHT", 4, 0)
-
-    local intended_Disenchant = CreateDisenchantButton(widget)
-    intended_Disenchant:SetPoint("TOP", intended_MS, "BOTTOM", 0, -4)
-
-    local intended_Greed = CreateGreedButton(widget)
-    intended_Greed:SetPoint("TOP", intended_OS, "BOTTOM", 0, -4)
-    
-    local highestRollIcon = widget:CreateTexture(nil, "ARTWORK")
-    highestRollIcon:SetTexture("Interface\\Icons\\INV_Misc_Coin_01")
-    highestRollIcon:SetSize(32, 32)
-    highestRollIcon:SetPoint("LEFT", intended_OS, "RIGHT", 0, 0)
-    
-    local needButton = CreateOSNeedButton(widget)
-    needButton:SetPoint("LEFT", highestRollIcon, "RIGHT", 0, 0)
-    
-    local greedButton = CreateGreedButton(widget)
-    greedButton:SetPoint("LEFT", needButton, "RIGHT", 0, 0)
-    
-    local disenchantButton = CreateDisenchantButton(widget)
-    disenchantButton:SetPoint("LEFT", greedButton, "RIGHT", 0, 0)
-    
-    local passButton = CreatePassButton(widget)
-    passButton:SetPoint("LEFT", disenchantButton, "RIGHT", 0, 0)
-    
-    local playerName = widget:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    playerName:SetText("Player Name")
-    playerName:SetPoint("LEFT", passButton, "RIGHT", 0, 0)
-    
-    local rollType = widget:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    rollType:SetText("Roll Type")
-    rollType:SetPoint("LEFT", playerName, "RIGHT", 0, 0)
-    
-    local rollValue = widget:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    rollValue:SetText("Roll Value")
-    rollValue:SetPoint("LEFT", rollType, "RIGHT", 0, 0)
-    
-    return widget
-end
-
 function GLH:ShowLog()
     if logWindow == nil then
         logWindow = AceGUI:Create("Window")
@@ -1588,6 +1593,8 @@ local function HandleSlashCommand(msg)
         zoneID_list = {}
         GetZoneID()    
         db.global.zoneID_list = zoneID_list
+    elseif msg == "history" then    
+        PrintTable(historyRolls)
     else
         print("Unknown command. Use /glh to open the loot window.")
     end
@@ -1710,7 +1717,7 @@ function GLH:AddEntryToHistory(history, entry, dateKey, link, winner, location)
     local linkTbl = ensure(dateTbl, link, {})
     local winnersTbl = ensure(linkTbl, "winners", {})
     local locations = ensure(linkTbl, "locations", {})
-    locations[location] = true
+    table.insert(locations, location)
 
     local amount = winnersTbl and winnersTbl[winner] and winnersTbl[winner].amount or 0
     amount = amount + link_amount
@@ -1790,8 +1797,8 @@ function GLH:ConvertHistoryRollsFormat()
     -- Debug output
     for dateKey, items in pairs(newFormat) do
         for link, entry in pairs(items) do
-            Log(string.format("Converted history entry: %s >%s< x%d", 
-                dateKey, link, entry.amount))
+            Log(string.format("Converted history entry: %s >%s< x%d", dateKey, link, entry.amount))
+            GetItemData(link)
         end
     end
 end
@@ -1825,8 +1832,6 @@ function GLH:OnEnable()
     realmName = GetRealmName()
     youName = youName .. "-" .. realmName
 
-    uniqueID = db.global.uniqueID or 0
-
     DEFAULT_SPACING    = db.global.spacing or 5
     ROLE_ICON_SIZE     = db.global.role_icon_size or 16
     SPEC_ICON_SIZE     = db.global.spec_icon_size or 16
@@ -1842,12 +1847,18 @@ function GLH:OnEnable()
     activeRolls = db.global.activeRolls or {} -- Store active roll information
     historyRolls = db.global.historyRolls or {}-- Store history of rolls
     playerCache = db.global.playerCache or {}
+    itemDataCache = db.global.itemDataCache or {} -- Cache for item data
+    itemLinkCache = db.global.itemLinkCache or {} -- Cache for item links
+    itemIDCache = db.global.itemIDCache or {} -- Cache for item IDs
 
     -- Make sure DB tables exist
     db.global.activeRolls  = activeRolls
     db.global.historyRolls = historyRolls
     db.global.playerCache  = playerCache
-    db.global.uniqueID = uniqueID
+    db.global.itemDataCache = itemDataCache
+    db.global.itemLinkCache = itemLinkCache
+    db.global.itemIDCache = itemIDCache
+
 
     self:ConvertHistoryRollsFormat()
 
@@ -1965,6 +1976,7 @@ end
 --------------------------------------------------------------------------------
 function GLH:INSPECT_READY(unit)
     local name = UnitName(unit)
+    local guid = UnitGUID(unit)
     if not name then return end
 
     local specID = GetInspectSpecialization(unit)
@@ -2043,9 +2055,11 @@ function GLH:CancelInspectTicker()
 end
 
 function GLH:OnInspectTick()
+    print("Inspect ticker:", #pendingInspectRequests)
     for playerName, unit in pairs(pendingInspectRequests) do
         if UnitName(unit) == playerName then
             if CanInspect(unit, true) then
+                print("Inspecting", playerName, unit)
                 NotifyInspect(unit)
             end
         end
@@ -2077,8 +2091,8 @@ function GLH:FillPlayerInfo(playerName)
 end
 
 function GLH:GetUID()
-    local uid = uniqueID
-    uniqueID = uniqueID + 1
+    local uid = db.global.uniqueID
+    db.global.uniqueID = db.global.uniqueID + 1
     return uid
 end
 
@@ -2089,7 +2103,7 @@ function GLH:_ChatMsgLoot(event, msg, ...)
     --     return
     -- end
     local instance, instanceType = IsInInstance()
-    print("Instance:", instance, "Type:", instanceType)
+    -- print("Instance:", instance, "Type:", instanceType)
 
     for _, key in ipairs(rollTypeChanged) do
         if msg == key then
@@ -2144,6 +2158,7 @@ function GLH:GetLocation()
         instanceID_list[instanceInfo.name] = instanceInfo.instanceID -- Not sure we need this anymore
     end
     return {
+        mapID = mapID,
         instanceInfo = instanceInfo,
         mapInfo = mapInfo,
         realZone = realZone,
@@ -2156,6 +2171,8 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
     local location = self:GetLocation()
     local looter = payloadData.looter or youName
     local loot   = payloadData.loot
+
+    GetItemData(loot)
 
     looter = cleanName(looter)
 
@@ -2171,6 +2188,7 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
 
         
         GLH:AddEntryToHistory(historyRolls, {}, nil, loot, looter, location)
+        db.global.historyRolls = historyRolls
     else
         print("Not storing loot:", loot, looter)
     end
@@ -2275,8 +2293,7 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
     local texture, name, count, quality, bindOnPickUp = GetLootRollItemInfo(rollID)
     local itemlink = GetLootRollItemLink(rollID)
     local timeEnd = time() + rollTime
-    local uid = uniqueID
-    uniqueID = uniqueID + 1
+    local uid = self:GetUID()
     activeRolls[uid] = {
         rollID = rollID,
         name = name,
