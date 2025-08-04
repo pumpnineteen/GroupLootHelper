@@ -65,6 +65,8 @@ local GROW_UP
 local log
 
 local youName
+local playerGUID
+local guidCache
 local realmName
 local loot_container_cache = {}
 
@@ -186,7 +188,6 @@ local function GetItemID(itemLink)
         return nil
     end
     itemLinkCache[itemLink] = itemID
-    itemIDCache[itemID] = itemLink
     return itemID
 end
 
@@ -234,11 +235,14 @@ local function GetItemData(itemLink)
 end
 
 local GetInstanceInfo = GetInstanceInfo
+local instanceCache
 
-local function _GetInstanceInfo()
+local function _GetInstanceInfo(mapID)
     local name, instanceType, diffID, diffName, maxPlayers, dynamicDiff,
       isDynamic, instanceID, instanceGroupSize, lfgDungeonID = GetInstanceInfo()
 
+    print("Instance Info:", mapID, name, "Type:", instanceType, "ID:", instanceID, "LFG Dungeon ID:", lfgDungeonID)
+    instanceCache[instanceID] = {mapID=mapID, name=name}
     return {
         name = name,
         instanceType = instanceType,
@@ -252,6 +256,7 @@ end
 
 local zoneID_list
 local instanceID_list
+local mapCache
 local MAP_TYPE = Enum.UIMapType
 local C_Map = C_Map
 local math = math
@@ -294,6 +299,30 @@ local function GetZoneID()
     
 end
 
+local function GetUnit(name)
+    if not numGroupMembers then
+        return "player"
+    end
+
+    for i = 1, numGroupMembers do
+        local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
+        if UnitName(unit) == playerName then
+            return unit
+        end
+    end
+end
+
+local function GetGUID(name, unit)
+    local guid = guidCache[name]
+    if not guid then
+        if not unit then
+            unit = GetUnit(playerName)
+        end
+        guid = UnitGUID(unit)
+    end
+    return guid
+end
+
 
 GLH_Log = GLH_Log or {}
 -- Initialize localization
@@ -305,6 +334,7 @@ local LibSpec = LibStub("LibClassicSpecs", true) or LibStub("LibSpec")
 local activeRolls
 local historyRolls
 local playerCache
+local playerGCache
 local uid_to_rollid = {}
 local rollid_to_uid = {}
 local itemNameToRollID = {} -- Map item names to roll IDs
@@ -1717,7 +1747,16 @@ function GLH:AddEntryToHistory(history, entry, dateKey, link, winner, location)
     local linkTbl = ensure(dateTbl, link, {})
     local winnersTbl = ensure(linkTbl, "winners", {})
     local locations = ensure(linkTbl, "locations", {})
-    table.insert(locations, location)
+    
+    if location.mapID then
+        local maps = ensure(locations, "maps", {})
+        maps[location.mapID] = true
+    elseif location.instanceID then
+        local instances = ensure(locations, "instances", {})
+        instances[location.instanceID] = true
+    else
+        print("Warning: No mapID or instanceID found in location for link:", link)
+    end
 
     local amount = winnersTbl and winnersTbl[winner] and winnersTbl[winner].amount or 0
     amount = amount + link_amount
@@ -1803,6 +1842,29 @@ function GLH:ConvertHistoryRollsFormat()
     end
 end
 
+function GLH:ConsolidateItemIDCache()
+    local newCache = {}
+    for itemID, itemData in pairs(itemDataCache) do
+        itemData.itemLink = itemIDCache[itemID]
+        if not itemData.itemLink then
+            print("Error: itemLink is nil for itemID:", itemID, itemData.name)
+        end
+        newCache[itemID] = itemData
+    end
+    itemDataCache = newCache
+end
+
+function GLH:AddInstanceIDtoCache()
+    for name, id in pairs(instanceID_list) do
+        instanceCache[id] = instanceCache[id] or {}
+        instanceCache[id].name = name
+    end
+end
+
+function GLH:HistoryRollsTableFormat() 
+
+end
+
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
 
@@ -1811,6 +1873,10 @@ function GLH:OnEnable()
 
     zoneID_list = db.global.zoneID_list or {}
     instanceID_list = db.global.instanceID_list or {}
+    instanceCache = db.global.instanceCache or {}
+    mapCache = db.global.mapCache or {}
+
+    GLH:AddInstanceIDtoCache()
 
     buildID = select(4, GetBuildInfo())
     if db.global.zonesChecked and db.global.zonesChecked ~= buildID or not db.global.zonesChecked then
@@ -1828,6 +1894,7 @@ function GLH:OnEnable()
     end
 
     youName = GetUnitName("player")
+    playerGUID = UnitGUID("player")
     print(youName)
     realmName = GetRealmName()
     youName = youName .. "-" .. realmName
@@ -1847,21 +1914,27 @@ function GLH:OnEnable()
     activeRolls = db.global.activeRolls or {} -- Store active roll information
     historyRolls = db.global.historyRolls or {}-- Store history of rolls
     playerCache = db.global.playerCache or {}
+    playerGCache = db.global.playerGCache or {}
     itemDataCache = db.global.itemDataCache or {} -- Cache for item data
     itemLinkCache = db.global.itemLinkCache or {} -- Cache for item links
     itemIDCache = db.global.itemIDCache or {} -- Cache for item IDs
+
+    self:ConsolidateItemIDCache()
 
     -- Make sure DB tables exist
     db.global.activeRolls  = activeRolls
     db.global.historyRolls = historyRolls
     db.global.playerCache  = playerCache
+    db.global.playerGCache  = playerGCache
     db.global.itemDataCache = itemDataCache
     db.global.itemLinkCache = itemLinkCache
-    db.global.itemIDCache = itemIDCache
+    db.global.itemIDCache = nil
+    db.global.instanceCache = instanceCache
+    db.global.mapCache = mapCache
 
 
     self:ConvertHistoryRollsFormat()
-
+    self:HistoryRollsTableFormat()
 
     for uID, activeRoll in pairs(activeRolls) do
         if activeRoll.rollID then
@@ -1885,6 +1958,9 @@ function GLH:OnEnable()
                 playerCache[name] = tbl
             end
         end
+        playerCache[name].roleIcon = nil
+        playerCache[name].specIcon = nil
+        playerCache[name].classIcon = nil
     end 
 
     self:SpawnAllTooltipContainers()
@@ -1920,13 +1996,13 @@ function GLH:UpdatePlayerCacheGroup()
         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
         local name = UnitName(unit)
         if name and not playerCache[name] then
-            self:FillPlayerInfo(name)
+            self:FillPlayerInfo(name, unit)
             -- We can get class info via UnitClass.
             local _, class = UnitClass(unit)
             Log("Updating player cache for:", name, "Class:", class)
 
-            local classIcon = classIcons[class] or "Interface\\Icons\\INV_Misc_QuestionMark"
-            local specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
+            -- local classIcon = classIcons[class] or "Interface\\Icons\\INV_Misc_QuestionMark"
+            -- local specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
             
             -- Update or create an entry in the cache.
             if not playerCache[name] then
@@ -1935,12 +2011,12 @@ function GLH:UpdatePlayerCacheGroup()
             local classColour = self:GetClassColour(class)
             playerCache[name].cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
             playerCache[name].class = class or "Unknown"
-            playerCache[name].classIcon = classIcon
-            playerCache[name].roleIcon = "Interface\\Icons\\INV_Misc_QuestionMark"  -- You may later update this when you learn a player’s actual role.
+            -- playerCache[name].classIcon = classIcon
+            -- playerCache[name].roleIcon = "Interface\\Icons\\INV_Misc_QuestionMark"  -- You may later update this when you learn a player’s actual role.
             -- Keep existing spec info if available; otherwise set defaults.
             if not playerCache[name].spec then
                 playerCache[name].spec = "Unknown"
-                playerCache[name].specIcon = specIcon
+                -- playerCache[name].specIcon = specIcon
             end
         end
     end
@@ -1991,7 +2067,7 @@ function GLH:INSPECT_READY(unit)
     local classIcon = classIcons[class] or "Interface\\Icons\\INV_Misc_QuestionMark"
 
     if not playerCache[name] then
-        self:FillPlayerInfo(name)
+        self:FillPlayerInfo(name, unit)
     end
 
     playerCache[name].spec = specName
@@ -2074,20 +2150,24 @@ function GLH:PLAYER_REGEN_ENABLED()
 end
 
 -- Retrieve info for a player; if not known, request an inspect and use default values.
-function GLH:FillPlayerInfo(playerName)
-  local info = playerCache[playerName]
-  if not info then
-    self:RequestPlayerInspect(playerName)
-    info = {
-      class = "Unknown",
-      spec = "Unknown",
-      classIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
-      specIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
-      roleIcon = "",
-    }
-    playerCache[playerName] = info
-  end
-  return info
+function GLH:FillPlayerInfo(playerName, unit)
+    local guid = GetGUID(playerName, unit)
+    
+    local info = playerGCache[guid] or playerCache[playerName]
+    if not info then
+        self:RequestPlayerInspect(playerName)
+        info = {
+        class = "Unknown",
+        spec = "Unknown",
+        --   classIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
+        --   specIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
+        roleIcon = "",
+        guid = UnitGUID(unit)
+        }
+        playerGCache[guid] = info
+
+    end
+    return info
 end
 
 function GLH:GetUID()
@@ -2151,19 +2231,16 @@ function GLH:GetLocation()
     local mapInfo = nil
     if mapID then
         mapInfo = C_Map.GetMapInfo(mapID)
+        mapCache[mapID] = mapInfo
+        return {mapID = mapID}
     end
     if instance then
-        instanceInfo = _GetInstanceInfo()
-        print("Instance Info:", instanceInfo.name, "Type:", instanceInfo.instanceType, "ID:", instanceInfo.instanceID)
+        instanceInfo = _GetInstanceInfo(mapID)
+        -- print("Instance Info:", instanceInfo.name, "Type:", instanceInfo.instanceType, "ID:", instanceInfo.instanceID)
         instanceID_list[instanceInfo.name] = instanceInfo.instanceID -- Not sure we need this anymore
+        return {instanceID = instanceInfo.instanceID}
     end
-    return {
-        mapID = mapID,
-        instanceInfo = instanceInfo,
-        mapInfo = mapInfo,
-        realZone = realZone,
-        zone = zone,
-    }
+    print("Maybe invalid location?")
 end
 
 function GLH:ProcessLootMessage(patternkey, payloadData)
@@ -2255,7 +2332,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     -- Build a player info table for UI purposes.
     local playerInfoData = {
         name     = looter,
-        roleIcon = info.roleIcon,  -- You might update this based on class or spec via additional logic.
+        roleIcon = info.roleIcon,
         specIcon = info.specIcon,
         rollType = (patternkey:find("NEED") and "NEED") or 
                     (patternkey:find("GREED") and "GREED") or
@@ -2292,6 +2369,7 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
 
     local texture, name, count, quality, bindOnPickUp = GetLootRollItemInfo(rollID)
     local itemlink = GetLootRollItemLink(rollID)
+    GetItemData(itemlink)
     local timeEnd = time() + rollTime
     local uid = self:GetUID()
     activeRolls[uid] = {
