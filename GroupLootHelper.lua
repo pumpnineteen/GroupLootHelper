@@ -65,8 +65,9 @@ local GROW_UP
 local log
 
 local youName
-local playerGUID
-local guidCache
+local youFullName
+local youGUID
+local guidCache = {}
 local realmName
 local loot_container_cache = {}
 
@@ -306,7 +307,7 @@ local function GetUnit(name)
 
     for i = 1, numGroupMembers do
         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-        if UnitName(unit) == playerName then
+        if UnitName(unit) == name or UnitFullName(unit) == name then
             return unit
         end
     end
@@ -319,6 +320,8 @@ local function GetGUID(name, unit)
             unit = GetUnit(playerName)
         end
         guid = UnitGUID(unit)
+        local fullName = UnitFullName(unit)
+        guidCache[fullName] = guid
     end
     return guid
 end
@@ -333,6 +336,7 @@ local LibSpec = LibStub("LibClassicSpecs", true) or LibStub("LibSpec")
 
 local activeRolls
 local historyRolls
+local historyTable
 local playerCache
 local playerGCache
 local uid_to_rollid = {}
@@ -1648,6 +1652,7 @@ local eventHandlers = {
     RAID_ROSTER_UPDATE = "RAID_ROSTER_UPDATE",
     PLAYER_ENTERING_WORLD = "PLAYER_ENTERING_WORLD",
     PLAYER_ROLES_ASSIGNED = "PLAYER_ROLES_ASSIGNED",
+    UPDATE_MOUSEOVER_UNIT = "UPDATE_MOUSEOVER_UNIT"
 }
 
 function GLH:GetDateKey(currDate)
@@ -1664,7 +1669,30 @@ function GLH:QueueTooltip(uid, entry)
     tinsert(self._tooltipQueue, { id = uid, data = entry })
 end
 
+function GLH:UPDATE_MOUSEOVER_UNIT()
+    if not UnitExists("mouseover") then
+        return
+    end
+
+    if not UnitIsPlayer("mouseover") or not UnitIsFriend("player", "mouseover") then
+        return
+    end
+
+    local guid = UnitGUID("mouseover")
+    local fullName = UnitFullName("mouseover")
+    local class = UnitClass("mouseover")
+    print("Mouseover unit:", fullName, "GUID:", guid, "Class:", class)
+    playerGCache[guid] = playerGCache[guid] or {}
+    playerGCache[guid].name = fullName
+    playerGCache[guid].class = class
+    guidCache[fullName] = guid
+
+end
+
 function GLH:_ProcessTooltipQueue(now)
+    if not now then
+        now = time()
+    end
     local batchSize = 5
     for i=1, batchSize do
         local item = tremove(self._tooltipQueue, 1)
@@ -1770,77 +1798,80 @@ end
 
 
 
-function GLH:ConvertHistoryRollsFormat()
-    -- Create temporary table for new format
-    local newFormat = {}
+-- function GLH:ConvertHistoryRollsFormat()
+--     -- Create temporary table for new format
+--     local newFormat = {}
     
-    for uid, entry in pairs(historyRolls) do
-        -- debugmsg("Converting history:", uid, type(uid))
-        if type(uid) ~= "number" then
-            -- entry should be the new forat table here, uid is actually dateKey
-            local dateKey = uid
-            if entry and type(entry) == "table" then
-                if not newFormat[dateKey] then
-                    newFormat[dateKey] = {}
-                end
-                for link, entry in pairs(historyRolls[uid]) do
-                    local captures = { string.match(link, "|rx(%d+)") }
-                    local link_amount = captures[1] or nil
-                    if link_amount then
-                        -- print("Found link amount:", link_amount, "for link:", link)
-                        link = string.gsub(link, "|rx%d+$", "|r")
-                        -- print("Updated link:", link)
-                    end
-                    if not entry.winners then
-                        entry.winners = {}
-                        local winner = entry.winner or youName
-                        if not string.find(winner, "-", 1, true) then
-                            winner = winner .. "-" .. realmName
-                        end
-                        entry.winners[winner] = entry.winners[winner] or {}
-                        entry.winners[winner].amount = link_amount or entry.amount or 1
-                    else
-                        if link_amount then
-                            for winner, winnerData in pairs(entry.winners) do
-                                winnerData.amount = link_amount
-                                break
-                            end
-                            for winner, winnerData in pairs(entry.winners) do
-                                winnerData.player = winnerData.player or winner
-                            end
-                        end
-                    end
+--     for uid, entry in pairs(historyRolls) do
+--         if type(uid) == "number" then
+            
+        
+--         end
+--         if type(uid) ~= "number" then
+--             -- entry should be the new forat table here, uid is actually dateKey
+--             local dateKey = uid
+--             if entry and type(entry) == "table" then
+--                 if not newFormat[dateKey] then
+--                     newFormat[dateKey] = {}
+--                 end
+--                 for link, entry in pairs(historyRolls[uid]) do
+--                     local captures = { string.match(link, "|rx(%d+)") }
+--                     local link_amount = captures[1] or nil
+--                     if link_amount then
+--                         -- print("Found link amount:", link_amount, "for link:", link)
+--                         link = string.gsub(link, "|rx%d+$", "|r")
+--                         -- print("Updated link:", link)
+--                     end
+--                     if not entry.winners then
+--                         entry.winners = {}
+--                         local winner = entry.winner or youName
+--                         if not string.find(winner, "-", 1, true) then
+--                             winner = winner .. "-" .. realmName
+--                         end
+--                         entry.winners[winner] = entry.winners[winner] or {}
+--                         entry.winners[winner].amount = link_amount or entry.amount or 1
+--                     else
+--                         if link_amount then
+--                             for winner, winnerData in pairs(entry.winners) do
+--                                 winnerData.amount = link_amount
+--                                 break
+--                             end
+--                             for winner, winnerData in pairs(entry.winners) do
+--                                 winnerData.player = winnerData.player or winner
+--                             end
+--                         end
+--                     end
 
-                    entry.link = nil
-                    entry.active = nil
-                    entry.name = nil
-                    entry.rollID = nil
-                    entry.timeStart = nil
-                    entry.winner = nil
-                    entry.amount = nil
-                    entry.player = nil
+--                     entry.link = nil
+--                     entry.active = nil
+--                     entry.name = nil
+--                     entry.rollID = nil
+--                     entry.timeStart = nil
+--                     entry.winner = nil
+--                     entry.amount = nil
+--                     entry.player = nil
 
-                    newFormat[dateKey][link] = entry
-                end       
-            end
-        end
-        if type(uid) == "number" then 
-            -- print("Converting:", entry.link)
-            GLH:AddEntryToHistory(newFormat, entry)
-        end
-    end
+--                     newFormat[dateKey][link] = entry
+--                 end       
+--             end
+--         end
+--         if type(uid) == "number" then 
+--             -- print("Converting:", entry.link)
+--             GLH:AddEntryToHistory(newFormat, entry)
+--         end
+--     end
 
-    -- Replace old format with new
-    db.global.historyRolls = newFormat
+--     -- Replace old format with new
+--     db.global.historyRolls = newFormat
     
-    -- Debug output
-    for dateKey, items in pairs(newFormat) do
-        for link, entry in pairs(items) do
-            Log(string.format("Converted history entry: %s >%s< x%d", dateKey, link, entry.amount))
-            GetItemData(link)
-        end
-    end
-end
+--     -- Debug output
+--     for dateKey, items in pairs(newFormat) do
+--         for link, entry in pairs(items) do
+--             Log(string.format("Converted history entry: %s >%s< x%d", dateKey, link, entry.amount))
+--             GetItemData(link)
+--         end
+--     end
+-- end
 
 function GLH:ConsolidateItemIDCache()
     local newCache = {}
@@ -1861,8 +1892,75 @@ function GLH:AddInstanceIDtoCache()
     end
 end
 
-function GLH:HistoryRollsTableFormat() 
+function GLH:HistoryRollsTableFormat()
+    local playerNames = {
+        ["Maratha-Spineshatter"] = true,
+        ["Brinna-Spineshatter"] = true,
+        ["Maratha"] = true,
+        ["Brinna"] = true,
+    } 
+    local playerFullNames = {
+        ["Maratha-Spineshatter"] = "Maratha-Spineshatter",
+        ["Brinna-Spineshatter"] = "Brinna-Spineshatter",
+        ["Maratha"] = "Maratha-Spineshatter",
+        ["Brinna"] = "Brinna-Spineshatter",
+    } 
+    local defaultPlayer = "Maratha-Spineshatter"
+    local newHistory = {}
 
+    local function IsValidPlayerName(name)
+        return name and type(name) == "string" and name ~= "" and playerNames[name]
+    end
+
+    for dateKey, items in pairs(historyRolls) do
+        for link, entry in pairs(items) do
+            local itemID = GetItemID(link)
+            if itemID then
+                local mapIDs = {}
+                local instanceIDs = {}
+                local playerName
+                if entry.locations then
+                    for key, location in pairs(entry.locations) do
+                        if key == "mapID" then
+                            mapIDs[location] = true
+                        elseif key == "instanceID" then
+                            instanceIDs[location] = true
+                        elseif location.mapID then
+                            mapIDs[location.mapID] = true
+                        elseif location.instanceID then
+                            instanceIDs[location.instanceID] = true
+                        end
+                    end
+                end
+                if not IsValidPlayerName(entry.player) then
+                    entry.player = youFullName
+                else
+                    entry.player = playerFullNames[entry.player]
+                end
+                if entry.winners then
+                    
+                end
+            end
+            if not entry.winners then
+                entry.winners = {}
+            end
+            if not entry.locations then
+                entry.locations = {}
+            end
+            if not entry.maps then
+                entry.maps = {}
+            end
+            if not entry.instances then
+                entry.instances = {}
+            end
+
+            -- Ensure itemLink is set correctly
+            if not entry.itemLink then
+                entry.itemLink = itemLinkCache[link] or link
+            end
+
+        end
+    end
 end
 
 function GLH:OnEnable()
@@ -1894,7 +1992,8 @@ function GLH:OnEnable()
     end
 
     youName = GetUnitName("player")
-    playerGUID = UnitGUID("player")
+    youFullName = GetUnitFullName("player")
+    youGUID = UnitGUID("player")
     print(youName)
     realmName = GetRealmName()
     youName = youName .. "-" .. realmName
@@ -1913,17 +2012,21 @@ function GLH:OnEnable()
 
     activeRolls = db.global.activeRolls or {} -- Store active roll information
     historyRolls = db.global.historyRolls or {}-- Store history of rolls
+    historyTable = db.global.historyTable or {} -- Store history of rolls in a table format
     playerCache = db.global.playerCache or {}
     playerGCache = db.global.playerGCache or {}
     itemDataCache = db.global.itemDataCache or {} -- Cache for item data
     itemLinkCache = db.global.itemLinkCache or {} -- Cache for item links
     itemIDCache = db.global.itemIDCache or {} -- Cache for item IDs
 
+    self:FillPlayerInfo(youName, "player")
+    
     self:ConsolidateItemIDCache()
 
     -- Make sure DB tables exist
     db.global.activeRolls  = activeRolls
     db.global.historyRolls = historyRolls
+    db.global.historyTable = historyTable
     db.global.playerCache  = playerCache
     db.global.playerGCache  = playerGCache
     db.global.itemDataCache = itemDataCache
@@ -1933,7 +2036,7 @@ function GLH:OnEnable()
     db.global.mapCache = mapCache
 
 
-    self:ConvertHistoryRollsFormat()
+    -- self:ConvertHistoryRollsFormat()
     self:HistoryRollsTableFormat()
 
     for uID, activeRoll in pairs(activeRolls) do
@@ -1949,19 +2052,19 @@ function GLH:OnEnable()
         end
     end
 
-    for playerName, tbl in pairs(playerCache) do
-        name = cleanName(playerName)
-        if name ~= playerName then
-            print(name, "<<<", playerName)
-            if name then
-                playerCache[playerName] = nil
-                playerCache[name] = tbl
-            end
-        end
-        playerCache[name].roleIcon = nil
-        playerCache[name].specIcon = nil
-        playerCache[name].classIcon = nil
-    end 
+    -- for playerName, tbl in pairs(playerCache) do
+    --     name = cleanName(playerName)
+    --     if name ~= playerName then
+    --         print(name, "<<<", playerName)
+    --         if name then
+    --             playerCache[playerName] = nil
+    --             playerCache[name] = tbl
+    --         end
+    --     end
+    --     playerCache[name].roleIcon = nil
+    --     playerCache[name].specIcon = nil
+    --     playerCache[name].classIcon = nil
+    -- end 
 
     self:SpawnAllTooltipContainers()
 end
@@ -2066,16 +2169,14 @@ function GLH:INSPECT_READY(unit)
     local _, class = UnitClass(unit)
     local classIcon = classIcons[class] or "Interface\\Icons\\INV_Misc_QuestionMark"
 
-    if not playerCache[name] then
+    if not playerGCache[guid] then
         self:FillPlayerInfo(name, unit)
     end
 
-    playerCache[name].spec = specName
-    playerCache[name].specIcon = specIcon
-    playerCache[name].class = class or "Unknown"
-    playerCache[name].classIcon = classIcon
+    playerGCache[guid].spec = specName
+    playerGCache[guid].class = class or "Unknown"
 
-    Log("Player:", name,"is", playerCache[name].class)
+    Log("Player:", name,"is", playerGCache[guid].class)
 
 end
 
@@ -2115,7 +2216,7 @@ function GLH:RequestPlayerInspect(playerName)
         end
     end
     if #pendingInspectRequests > 0 then
-        self.inspectTicker = AceTimer:NewTicker(0.5, self.OnInspectTick, false)
+        self.inspectTicker = AceTimer:NewTicker(0.1, self.OnInspectTick, false)
     else
         self:CancelInspectTicker()
     end
@@ -2152,17 +2253,18 @@ end
 -- Retrieve info for a player; if not known, request an inspect and use default values.
 function GLH:FillPlayerInfo(playerName, unit)
     local guid = GetGUID(playerName, unit)
-    
+    print("Filling player info for:", playerName, "GUID:", guid)
     local info = playerGCache[guid] or playerCache[playerName]
-    if not info then
+    if not info or not playerGCache[guid] then
         self:RequestPlayerInspect(playerName)
         info = {
         class = "Unknown",
         spec = "Unknown",
+        specTree = "Unknown",
         --   classIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
         --   specIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
         roleIcon = "",
-        guid = UnitGUID(unit)
+        name = UnitFullName(unit),
         }
         playerGCache[guid] = info
 
