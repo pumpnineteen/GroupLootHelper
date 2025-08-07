@@ -46,8 +46,8 @@ local defaults = {
         grow_up = false,
         log = "",
         activeRolls  = {},      -- keyed by rollID
-        historyRolls = {},
-        playerCache  = {},      
+        historyTable = {},
+        playerGCache  = {},      
         uniqueID = 0,
     },
 }
@@ -368,7 +368,6 @@ local LibSpec = LibStub("LibClassicSpecs", true) or LibStub("LibSpec")
 local activeRolls
 local historyRolls
 local historyTable
-local playerCache
 local playerGCache
 local serverIDCache
 local uid_to_rollid = {}
@@ -689,7 +688,7 @@ function GLH:RefreshHistoryTab()
         -- Update suggestions list
         if #text >= 2 then
             local suggestions = {}
-            for name in pairs(db.global.playerCache) do
+            for name in pairs(guidCache) do
                 if name:lower():find(text:lower(), 1, true) then
                     table.insert(suggestions, name)
                 end
@@ -1033,7 +1032,7 @@ end
 -- Factory for each player’s row
 function GLH:CreateRoleSpecRow(parent, unit)
     local playerName = UnitName(unit)
-    local cacheInfo  = db.global.playerCache[playerName] or {}
+    local cacheInfo  = db.global.playerGCache[playerName] or {}
 
     -- Column 1: Name (highlight & click-to-target)
     local nameLabel = AceGUI:Create("Label")
@@ -1072,7 +1071,7 @@ function GLH:CreateRoleSpecRow(parent, unit)
         roleButton:SetWidth(25)
         roleButton:SetCallback("OnClick", function()
             cacheInfo.role = role
-            db.global.playerCache[playerName].role = role
+            db.global.playerGCache[playerName].role = role
         end)
         roleGroup:AddChild(roleButton)
     end
@@ -1115,7 +1114,7 @@ function GLH:CreateRoleSpecRow(parent, unit)
         pointsBox:SetUserData("cell", { alignH = "CENTER" })
         pointsBox:SetCallback("OnEnterPressed", function(_, _, text)
             cacheInfo.talentPoints = tonumber(text) or 0
-            db.global.playerCache[playerName].talentPoints = cacheInfo.talentPoints
+            db.global.playerGCache[playerName].talentPoints = cacheInfo.talentPoints
         end)
         specOrPointsFrame:AddChild(pointsBox)
     end
@@ -1139,7 +1138,7 @@ function GLH:CreateRoleSpecRow(parent, unit)
     specDropdown:SetValue(cacheInfo.specID or 1)
     specDropdown:SetCallback("OnValueChanged", function(_, _, selected)
         cacheInfo.specID = selected
-        db.global.playerCache[playerName].specID = selected
+        db.global.playerGCache[playerName].specID = selected
     end)
 
     parent:AddChild(specDropdown)
@@ -2170,7 +2169,6 @@ function GLH:OnEnable()
     activeRolls = db.global.activeRolls or {} -- Store active roll information
     historyRolls = db.global.historyRolls or {}-- Store history of rolls
     historyTable = db.global.historyTable or {} -- Store history of rolls in a table format
-    playerCache = db.global.playerCache or {}
     playerGCache = db.global.playerGCache or {}
     itemDataCache = db.global.itemDataCache or {} -- Cache for item data
     itemLinkCache = db.global.itemLinkCache or {} -- Cache for item links
@@ -2185,7 +2183,7 @@ function GLH:OnEnable()
     db.global.activeRolls  = activeRolls
     db.global.historyRolls = historyRolls
     db.global.historyTable = historyTable
-    db.global.playerCache  = playerCache
+    db.global.playerCache  = nil
     db.global.playerGCache  = playerGCache
     db.global.itemDataCache = itemDataCache
     db.global.itemLinkCache = itemLinkCache
@@ -2268,8 +2266,8 @@ function GLH:UpdatePlayerCacheGroup()
     local numGroupMembers = GetNumGroupMembers()  -- Works with raids and parties.
     for i = 1, numGroupMembers do
         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-        local name = UnitName(unit)
-        if name and not playerCache[name] then
+        local name = UnitFullName(unit)
+        if name and not guidCache[name] then
             self:FillPlayerInfo(name, unit)
             -- We can get class info via UnitClass.
             local _, class = UnitClass(unit)
@@ -2279,19 +2277,13 @@ function GLH:UpdatePlayerCacheGroup()
             -- local specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
             
             -- Update or create an entry in the cache.
-            if not playerCache[name] then
-                playerCache[name] = {}
-            end
+            local guid = guidCache[name]
             local classColour = self:GetClassColour(class)
-            playerCache[name].cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
-            playerCache[name].class = class or "Unknown"
+            playerGCache[guid].cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
+            playerGCache[guid].class = class or "Unknown"
             -- playerCache[name].classIcon = classIcon
             -- playerCache[name].roleIcon = "Interface\\Icons\\INV_Misc_QuestionMark"  -- You may later update this when you learn a player’s actual role.
             -- Keep existing spec info if available; otherwise set defaults.
-            if not playerCache[name].spec then
-                playerCache[name].spec = "Unknown"
-                -- playerCache[name].specIcon = specIcon
-            end
         end
     end
 end
@@ -2425,20 +2417,23 @@ end
 function GLH:FillPlayerInfo(playerName, unit)
     local guid = GetGUID(playerName, unit)
     print("Filling player info for:", playerName, "GUID:", guid)
-    local info = playerGCache[guid] or playerCache[playerName]
+    local info = playerGCache[guid]
+
     if not info or not playerGCache[guid] then
+        local name = UnitFullName(unit)
+        local class = UnitClass(unit)
+        local classColour = self:GetClassColour(class)
+
         self:RequestPlayerInspect(playerName)
         info = {
-        class = "Unknown",
+        class = UnitClass(unit) or "Unknown",
         spec = "Unknown",
         specTree = "Unknown",
-        --   classIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
-        --   specIcon = "Interface\\Icons\\INV_Misc_QuestionMark",
-        roleIcon = "",
-        name = UnitFullName(unit),
+        cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name),
+        name = name,
         }
         playerGCache[guid] = info
-
+        guidCache[name] = guid
     end
     return info
 end
