@@ -2132,6 +2132,9 @@ function GLH:FullNameGCache()
         if playerData.name and not string.find(playerData.name, "-", 1, true) then
             playerData.name = playerData.name .. "-" .. serverName
         end
+        if not playerData.name then
+            playerGCache[guid] = nil
+        end
     end
 end
 
