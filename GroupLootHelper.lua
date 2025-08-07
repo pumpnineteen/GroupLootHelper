@@ -5,6 +5,7 @@ local AceTimer = LibStub("AceTimer-3.0")
 
 local dummyFunc = function() end
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned or dummyFunc
+local select = select
 local pairs = pairs
 local ipairs = ipairs
 local unpack = unpack
@@ -16,7 +17,17 @@ local tostring = tostring
 local C_Timer = C_Timer
 local print = print
 local date = date
+local time = time
 local YOU = YOU
+
+local UnitExists = UnitExists
+local UnitName = UnitName
+local UnitFullName = UnitFullName
+local UnitGUID = UnitGUID
+local UnitIsFriend = UnitIsFriend
+local UnitIsPlayer = UnitIsPlayer
+local UnitClass = UnitClass
+local GetUnitName = GetUnitName
 
 local defaults = {
     profile = {
@@ -152,6 +163,14 @@ local function inject_autovivify(tbl)
     return tbl
 end
 
+local function IsEmptyTbl(tbl)
+  for _ in pairs(tbl) do
+    return false  -- Found a key!
+  end
+  return true     -- No keys found
+end
+
+
 local function PrintTable(tbl, indent, visited)
     indent  = indent or 0
     visited = visited or {}
@@ -172,6 +191,18 @@ local function PrintTable(tbl, indent, visited)
             print(prefix .. tostring(v))
         end
     end
+end
+
+local function GetServerIDFromGUID(guid)
+    -- print("GetServerIDFromGUID:", guid)
+    if not guid or type(guid) ~= "string" then
+        return nil
+    end
+    local splittbl = split(guid, "-")
+    -- PrintTable(splittbl)
+    local serverID = splittbl[2]
+
+    return serverID
 end
 
 local itemLinkCache
@@ -339,6 +370,7 @@ local historyRolls
 local historyTable
 local playerCache
 local playerGCache
+local serverIDCache
 local uid_to_rollid = {}
 local rollid_to_uid = {}
 local itemNameToRollID = {} -- Map item names to roll IDs
@@ -1629,6 +1661,8 @@ local function HandleSlashCommand(msg)
         db.global.zoneID_list = zoneID_list
     elseif msg == "history" then    
         PrintTable(historyRolls)
+    elseif msg == "conv" then
+        GLH:ConvertHistoryRollsFormat()
     else
         print("Unknown command. Use /glh to open the loot window.")
     end
@@ -1670,6 +1704,9 @@ function GLH:QueueTooltip(uid, entry)
 end
 
 function GLH:UPDATE_MOUSEOVER_UNIT()
+    if not playerGCache then
+        return
+    end
     if not UnitExists("mouseover") then
         return
     end
@@ -1679,6 +1716,10 @@ function GLH:UPDATE_MOUSEOVER_UNIT()
     end
 
     local guid = UnitGUID("mouseover")
+    
+    if playerGCache[guid] then
+        return
+    end
     local fullName = UnitFullName("mouseover")
     local class = UnitClass("mouseover")
     print("Mouseover unit:", fullName, "GUID:", guid, "Class:", class)
@@ -1707,7 +1748,7 @@ function GLH:_ProcessTooltipQueue(now)
         print(now, timeEnd, delta)
         if delta > LOOT_EXPIRATION then
             print("Moving", entry.link, "to history...")
-            self:AddEntryToHistory(historyRolls, entry)
+            self:AddEntryToHistoryTbl(historyTable, entry)
             activeRolls[uid] = nil
         else
             local loot_container = self:AddTooltipContainer(
@@ -1777,10 +1818,10 @@ function GLH:AddEntryToHistory(history, entry, dateKey, link, winner, location)
     local locations = ensure(linkTbl, "locations", {})
     
     if location.mapID then
-        local maps = ensure(locations, "maps", {})
-        maps[location.mapID] = true
+        local mapIDs = ensure(locations, "mapIDs", {})
+        mapIDs[location.mapID] = true
     elseif location.instanceID then
-        local instances = ensure(locations, "instances", {})
+        local instances = ensure(locations, "instanceIDs", {})
         instances[location.instanceID] = true
     else
         print("Warning: No mapID or instanceID found in location for link:", link)
@@ -1796,82 +1837,162 @@ function GLH:AddEntryToHistory(history, entry, dateKey, link, winner, location)
     print("Storing:", link, winner, historyRolls[dateKey][link].winners[winner].amount)
 end
 
-
-
--- function GLH:ConvertHistoryRollsFormat()
---     -- Create temporary table for new format
---     local newFormat = {}
+function GLH:AddEntryToHistoryTbl(history, entry, dateKey, link, winner, location)
+    -- print("Adding entry to history:", entry.link, link, "Winner:", winner, winner)
+    local newEntry = {}
+    dateKey = dateKey or (entry.date and GLH:GetDateKey(entry.date)) or (entry.timeEnd and GLH:GetDateKey(date("*t", entry.timeEnd))) or GLH:GetDateKey()
+    location = location or entry.location or self:GetLocation() or {}
     
---     for uid, entry in pairs(historyRolls) do
---         if type(uid) == "number" then
+    if type(dateKey) == "table" then
+        dateKey = GLH:GetDateKey(dateKey)
+    end
+
+    link = link or entry.link
+    local link_amount
+    link, link_amount = GLH:GetAmount(link)
+    local itemID = GetItemID(link)
+
+    winner = (playerGCache[winner] and winner) or guidCache[winner] or (entry.winner and playerGCache[entry.winner] and entry.winner) or (entry.winner and guidCache[entry.winner]) or youGUID
+    local player = (entry.player and playerGCache[entry.player] and entry.player) or (entry.player and guidCache[entry.player]) or youGUID
+
+    local amount = link_amount
+    location = location or entry.location
+    newEntry = {
+        dateKey = dateKey,
+        itemID = itemID,
+        amount = amount or 1,
+        player = player,
+        winner = winner,
+        mapID = location.mapID,
+        instanceID = location.instanceID
+    }
+    table.insert(history, newEntry)
+    print("Storing:", link, playerGCache[winner], amount)
+end
+
+
+
+function GLH:ConvertHistoryRollsFormat()
+    -- Create temporary table for new format
+    local newFormat = {}
+    local instanceCount = 0
+    local mapCount = 0
+    for uid, entry in pairs(historyRolls) do
+        if type(uid) == "number" then
             
         
---         end
---         if type(uid) ~= "number" then
---             -- entry should be the new forat table here, uid is actually dateKey
---             local dateKey = uid
---             if entry and type(entry) == "table" then
---                 if not newFormat[dateKey] then
---                     newFormat[dateKey] = {}
---                 end
---                 for link, entry in pairs(historyRolls[uid]) do
---                     local captures = { string.match(link, "|rx(%d+)") }
---                     local link_amount = captures[1] or nil
---                     if link_amount then
---                         -- print("Found link amount:", link_amount, "for link:", link)
---                         link = string.gsub(link, "|rx%d+$", "|r")
---                         -- print("Updated link:", link)
---                     end
---                     if not entry.winners then
---                         entry.winners = {}
---                         local winner = entry.winner or youName
---                         if not string.find(winner, "-", 1, true) then
---                             winner = winner .. "-" .. realmName
---                         end
---                         entry.winners[winner] = entry.winners[winner] or {}
---                         entry.winners[winner].amount = link_amount or entry.amount or 1
---                     else
---                         if link_amount then
---                             for winner, winnerData in pairs(entry.winners) do
---                                 winnerData.amount = link_amount
---                                 break
---                             end
---                             for winner, winnerData in pairs(entry.winners) do
---                                 winnerData.player = winnerData.player or winner
---                             end
---                         end
---                     end
+        end
+        if type(uid) ~= "number" then
+            -- entry should be the new forat table here, uid is actually dateKey
+            local dateKey = uid
+            if entry and type(entry) == "table" then
+                if not newFormat[dateKey] then
+                    newFormat[dateKey] = {}
+                end
+                for link, entry in pairs(historyRolls[uid]) do
+                    local captures = { string.match(link, "|rx(%d+)") }
+                    local link_amount = captures[1] or nil
+                    if link_amount then
+                        -- print("Found link amount:", link_amount, "for link:", link)
+                        link = string.gsub(link, "|rx%d+$", "|r")
+                        -- print("Updated link:", link)
+                    end
+                    if not entry.winners then
+                        entry.winners = {}
+                        local winner = entry.winner or youName
+                        if not string.find(winner, "-", 1, true) then
+                            winner = winner .. "-" .. realmName
+                        end
+                        entry.winners[winner] = entry.winners[winner] or {}
+                        entry.winners[winner].amount = link_amount or entry.amount or 1
+                    else
+                        if link_amount then
+                            for winner, winnerData in pairs(entry.winners) do
+                                winnerData.amount = link_amount
+                                break
+                            end
+                            for winner, winnerData in pairs(entry.winners) do
+                                winnerData.player = winnerData.player or winner
+                            end
+                        end
+                    end
+                    if entry.locations and #entry.locations > 0 then
+                        local newLocations = {}
+                        local mapIDs = {}
+                        local instanceIDs = {}
+                        for key, location in pairs(entry.locations) do
+                            print(key, location.mapID, location.instanceID, location.instanceInfo and location.instanceInfo.instanceID)
+                            if key == "mapID" then
+                                mapIDs[location] = true
+                            elseif key == "instanceID" then
+                                instanceIDs[location] = true
+                            elseif location.mapID then
+                                mapIDs[location.mapID] = true
+                                mapCount = mapCount + 1
+                            elseif location.instanceID then
+                                instanceIDs[location.instanceID] = true
+                                instanceCount = instanceCount + 1
+                            elseif location.instanceInfo then
+                                instanceIDs[location.instanceInfo.instanceID] = true
+                                instanceCount = instanceCount + 1
+                                -- print("Found instanceInfo in location:", location.instanceInfo.instanceID, instanceIDs[location.instanceInfo.instanceID])
+                            end
+                        end
+                        -- print("InstanceIDs:")
+                        -- PrintTable(instanceIDs)
+                        -- print("Found locations for link:", link, "Map IDs:", #mapIDs, "Instance IDs:", #instanceIDs, "Locations:", #entry.locations)
+                        if not IsEmptyTbl(instanceIDs) then
+                            newLocations["instanceIDs"] = instanceIDs
+                            -- print("Added instanceIDs for link:", link, "Count:", #instanceIDs)
+                        end
+                        if not IsEmptyTbl(mapIDs) then
+                            newLocations["mapIDs"] = mapIDs
+                            -- print("Added mapIDs for link:", link, "Count:", #mapIDs)
+                        end
+                        if IsEmptyTbl(instanceIDs) and IsEmptyTbl(mapIDs) then
+                            print("Warning: No mapID or instanceID found in locations for link:", link)
+                        else
+                            entry.locations = newLocations
+                        end
+                        
 
---                     entry.link = nil
---                     entry.active = nil
---                     entry.name = nil
---                     entry.rollID = nil
---                     entry.timeStart = nil
---                     entry.winner = nil
---                     entry.amount = nil
---                     entry.player = nil
+                    end
 
---                     newFormat[dateKey][link] = entry
---                 end       
---             end
---         end
---         if type(uid) == "number" then 
---             -- print("Converting:", entry.link)
---             GLH:AddEntryToHistory(newFormat, entry)
---         end
---     end
+                    entry.link = nil
+                    entry.active = nil
+                    entry.name = nil
+                    entry.rollID = nil
+                    entry.timeStart = nil
+                    entry.winner = nil
+                    entry.amount = nil
+                    entry.player = nil
+                    entry.maps = nil
+                    entry.instances = nil
+                    entry.locations.maps = nil
+                    entry.locations.instances = nil
 
---     -- Replace old format with new
---     db.global.historyRolls = newFormat
+                    newFormat[dateKey][link] = entry
+                end       
+            end
+        end
+        if type(uid) == "number" then 
+            -- print("Converting:", entry.link)
+            GLH:AddEntryToHistory(newFormat, entry)
+        end
+    end
+
+    -- Replace old format with new
+    db.global.historyRolls = newFormat
     
---     -- Debug output
---     for dateKey, items in pairs(newFormat) do
---         for link, entry in pairs(items) do
---             Log(string.format("Converted history entry: %s >%s< x%d", dateKey, link, entry.amount))
---             GetItemData(link)
---         end
---     end
--- end
+    -- Debug output
+    for dateKey, items in pairs(newFormat) do
+        for link, entry in pairs(items) do
+            -- Log(string.format("Converted history entry: %s >%s< x%d", dateKey, link, entry.amount))
+            GetItemData(link)
+        end
+    end
+    print("Converted historyRolls format. Instance count:", instanceCount, "Map count:", mapCount)
+end
 
 function GLH:ConsolidateItemIDCache()
     local newCache = {}
@@ -1929,29 +2050,46 @@ function GLH:HistoryRollsTableFormat()
                             mapIDs[location.mapID] = true
                         elseif location.instanceID then
                             instanceIDs[location.instanceID] = true
+                        elseif location.instanceInfo and location.instanceInfo.instanceID then
+                            instanceIDs[location.instanceInfo.instanceID] = true
                         end
                     end
                 end
+                local mapID
+                local instanceID
+                if mapIDs then
+                    for _, id in pairs(mapIDs) do
+                        mapID = id
+                        break
+                    end
+                end
+                if instanceIDs then
+                    for _, id in pairs(instanceIDs) do
+                        instanceID = id
+                        break
+                    end
+                end
+
                 if not IsValidPlayerName(entry.player) then
                     entry.player = youFullName
                 else
                     entry.player = playerFullNames[entry.player]
                 end
                 if entry.winners then
-                    
+                    for winner, winnerData in pairs(entry.winners) do
+                        local newEntry = {
+                            dateKey = dateKey,
+                            itemID = itemID,
+                            amount = winnerData.amount or 1,
+                            player = entry.player,
+                            winner = guidCache[winner],
+                            winnerName = not guidCache[winner] and winner or nil,
+                            mapID = mapID,
+                            instanceID = instanceID
+                        }
+                        table.insert(newHistory, newEntry)
+                    end
                 end
-            end
-            if not entry.winners then
-                entry.winners = {}
-            end
-            if not entry.locations then
-                entry.locations = {}
-            end
-            if not entry.maps then
-                entry.maps = {}
-            end
-            if not entry.instances then
-                entry.instances = {}
             end
 
             -- Ensure itemLink is set correctly
@@ -1960,7 +2098,10 @@ function GLH:HistoryRollsTableFormat()
             end
 
         end
+        historyRolls[dateKey] = nil -- Clear old format
     end
+    db.global.historyTable = newHistory
+    historyTable = db.global.historyTable
 end
 
 function GLH:OnEnable()
@@ -1992,11 +2133,13 @@ function GLH:OnEnable()
     end
 
     youName = GetUnitName("player")
-    youFullName = GetUnitFullName("player")
+    youFullName = UnitFullName("player")
     youGUID = UnitGUID("player")
     print(youName)
     realmName = GetRealmName()
     youName = youName .. "-" .. realmName
+    guidCache[youName] = youGUID
+
 
     DEFAULT_SPACING    = db.global.spacing or 5
     ROLE_ICON_SIZE     = db.global.role_icon_size or 16
@@ -2018,6 +2161,7 @@ function GLH:OnEnable()
     itemDataCache = db.global.itemDataCache or {} -- Cache for item data
     itemLinkCache = db.global.itemLinkCache or {} -- Cache for item links
     itemIDCache = db.global.itemIDCache or {} -- Cache for item IDs
+    serverIDCache = db.global.serverIDCache or {} -- Cache for server IDs
 
     self:FillPlayerInfo(youName, "player")
     
@@ -2034,9 +2178,18 @@ function GLH:OnEnable()
     db.global.itemIDCache = nil
     db.global.instanceCache = instanceCache
     db.global.mapCache = mapCache
+    db.global.serverIDCache = serverIDCache
 
+    local realmGUID = GetServerIDFromGUID(youGUID)
+    print("Realm GUID:", realmGUID, "Realm Name:", realmName)
+    serverIDCache[realmGUID] = realmName
+    serverIDCache[realmName] = realmGUID
 
-    -- self:ConvertHistoryRollsFormat()
+    for guid, playerData in pairs(playerGCache) do
+        guidCache[playerData.name] = guid
+    end
+
+    self:ConvertHistoryRollsFormat()
     self:HistoryRollsTableFormat()
 
     for uID, activeRoll in pairs(activeRolls) do
@@ -2305,7 +2458,7 @@ function GLH:_ChatMsgLoot(event, msg, ...)
             
             local rollID = itemNameToRollID[payloadData.loot] or itemLinkToRollID[payloadData.loot]
             local uid = rollid_to_uid[rollID]
-            print(key, rollID, uid)
+            -- print(key, rollID, uid)
             if rollID and activeRolls[uid] then
                 self:ProcessLootRollMessage(rollID, key, payloadData)
             else
@@ -2346,7 +2499,7 @@ function GLH:GetLocation()
 end
 
 function GLH:ProcessLootMessage(patternkey, payloadData)
-    print("Processing loot message:", patternkey, payloadData.looter, payloadData.loot)
+    -- print("Processing loot message:", patternkey, payloadData.looter, payloadData.loot)
     local location = self:GetLocation()
     local looter = payloadData.looter or youName
     local loot   = payloadData.loot
@@ -2354,6 +2507,8 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
     GetItemData(loot)
 
     looter = cleanName(looter)
+    local looterGUID = guidCache[looter]
+    -- print("Looter GUID:", looterGUID, "Name:", looter)
 
     if patternkey == "PATTERN_LOOT_ITEM" or 
        patternkey == "PATTERN_LOOT_ITEM_MULTIPLE" or 
@@ -2363,11 +2518,11 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
        patternkey == "PATTERN_LOOT_ITEM_PUSHED_SELF_MULTIPLE" or 
        patternkey == "PATTERN_LOOT_ITEM_SELF" or 
        patternkey == "PATTERN_LOOT_ITEM_SELF_MULTIPLE" then
-        print("Item looted: ", looter, loot)
+        -- print("Item looted: ", looter, loot)
 
         
-        GLH:AddEntryToHistory(historyRolls, {}, nil, loot, looter, location)
-        db.global.historyRolls = historyRolls
+        GLH:AddEntryToHistoryTbl(historyTable, {}, nil, loot, looterGUID, location)
+        db.global.historyTable = historyTable
     else
         print("Not storing loot:", loot, looter)
     end
