@@ -2104,6 +2104,19 @@ function GLH:HistoryRollsTableFormat()
     historyTable = db.global.historyTable
 end
 
+function GLH:WinnerNameHistoryTable()
+    for _, entry in ipairs(historyTable) do
+        if entry.winnerName and guidCache[entry.winnerName] then
+            entry.winner = guidCache[entry.winnerName]
+            entry.winnerName = nil -- Remove winnerName after updating winner
+        end
+        if entry.player and guidCache[entry.player] then
+            entry.player = guidCache[entry.player]
+        end
+    end
+    print("Updated historyTable with winner names.")
+end
+
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
 
@@ -2191,6 +2204,7 @@ function GLH:OnEnable()
 
     self:ConvertHistoryRollsFormat()
     self:HistoryRollsTableFormat()
+    self:WinnerNameHistoryTable()
 
     for uID, activeRoll in pairs(activeRolls) do
         if activeRoll.rollID then
