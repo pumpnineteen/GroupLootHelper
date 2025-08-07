@@ -211,6 +211,7 @@ local function UnitFullName(unit)
     if not string.find(fullName, "-") then
         fullName = fullName .. "-" .. realmName
     end
+    return fullName
 end
 
 local itemLinkCache
@@ -2126,6 +2127,7 @@ end
 
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
+    realmName = GetRealmName()
 
     GLH._tooltipQueue   = {}
     GLH._tooltipRunning = false
@@ -2157,7 +2159,6 @@ function GLH:OnEnable()
     youGUID = UnitGUID("player")
     local _, youClass = UnitClass("player")
     print(youName)
-    realmName = GetRealmName()
     youName = youName .. "-" .. realmName
     guidCache[youName] = youGUID
 
