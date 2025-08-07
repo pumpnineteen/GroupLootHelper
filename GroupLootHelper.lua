@@ -22,7 +22,7 @@ local YOU = YOU
 
 local UnitExists = UnitExists
 local UnitName = UnitName
-local UnitFullName = UnitFullName
+local _UnitFullName = UnitFullName
 local UnitGUID = UnitGUID
 local UnitIsFriend = UnitIsFriend
 local UnitIsPlayer = UnitIsPlayer
@@ -203,6 +203,14 @@ local function GetServerIDFromGUID(guid)
     local serverID = splittbl[2]
 
     return serverID
+end
+
+local function UnitFullName(unit)
+    local fullName = _UnitFullName(unit)
+    cleanName(fullName)
+    if not string.find(fullName, "-") then
+        fullName = fullName .. "-" .. realmName
+    end
 end
 
 local itemLinkCache
