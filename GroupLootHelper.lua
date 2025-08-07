@@ -2125,6 +2125,16 @@ function GLH:WinnerNameHistoryTable()
     print("Updated historyTable with winner names.")
 end
 
+function GLH:FullNameGCache()
+    for guid, playerData in pairs(playerGCache) do
+        local serverID = GetServerIDFromGUID(guid)
+        local serverName = serverIDCache[serverID] or realmName
+        if playerData.name and not string.find(playerData.name, "-", 1, true) then
+            playerData.name = playerData.name .. "-" .. serverName
+        end
+    end
+end
+
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
     realmName = GetRealmName()
@@ -2201,8 +2211,9 @@ function GLH:OnEnable()
     db.global.mapCache = mapCache
     db.global.serverIDCache = serverIDCache
 
-    playerGCache[youGUID] = playerGCache[youGUID] or { name = youName, class = youClass }
     playerGCache[youGUID] = playerGCache[youGUID] or { name = youFullName, class = youClass }
+
+    GLH:FullNameGCache()
 
     local realmGUID = GetServerIDFromGUID(youGUID)
     print("Realm GUID:", realmGUID, "Realm Name:", realmName)
