@@ -2148,6 +2148,7 @@ function GLH:OnEnable()
     youName = GetUnitName("player")
     youFullName = UnitFullName("player")
     youGUID = UnitGUID("player")
+    local _, youClass = UnitClass("player")
     print(youName)
     realmName = GetRealmName()
     youName = youName .. "-" .. realmName
@@ -2192,6 +2193,9 @@ function GLH:OnEnable()
     db.global.instanceCache = instanceCache
     db.global.mapCache = mapCache
     db.global.serverIDCache = serverIDCache
+
+    playerGCache[youGUID] = playerGCache[youGUID] or { name = youName, class = youClass }
+    playerGCache[youGUID] = playerGCache[youGUID] or { name = youFullName, class = youClass }
 
     local realmGUID = GetServerIDFromGUID(youGUID)
     print("Realm GUID:", realmGUID, "Realm Name:", realmName)
