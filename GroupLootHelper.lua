@@ -2135,6 +2135,7 @@ function GLH:FullNameGCache()
         if not playerData.name then
             playerGCache[guid] = nil
         end
+        playerData.cname = nil
     end
 end
 
@@ -2302,7 +2303,7 @@ function GLH:UpdatePlayerCacheGroup()
             -- Update or create an entry in the cache.
             local guid = guidCache[name]
             local classColour = self:GetClassColour(class)
-            playerGCache[guid].cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
+            -- playerGCache[guid].cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
             playerGCache[guid].class = class or "Unknown"
             -- playerCache[name].classIcon = classIcon
             -- playerCache[name].roleIcon = "Interface\\Icons\\INV_Misc_QuestionMark"  -- You may later update this when you learn a player’s actual role.
@@ -2452,7 +2453,7 @@ function GLH:FillPlayerInfo(playerName, unit)
         class = UnitClass(unit) or "Unknown",
         spec = "Unknown",
         specTree = "Unknown",
-        cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name),
+        -- cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name),
         name = name,
         }
         playerGCache[guid] = info
