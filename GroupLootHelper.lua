@@ -74,6 +74,7 @@ local LOOT_EXPIRATION = 4 * 60 * 60
 
 local GROW_UP
 local log
+local register_mouseover
 
 local youName
 local youFullName
@@ -92,6 +93,9 @@ local qualities = {
     }
 
 local function split(inputstr, delimiter)
+    if inputstr == nil or type(inputstr) ~= "string" then
+        return {}
+    end
     if delimiter == nil then
         delimiter = "%s"  -- Default: split by whitespace.
     end
@@ -139,6 +143,7 @@ local function debugmsg(...)
 end
 
 local function cleanName(name)
+    -- print("Cleaning name:", name)
     local nametbl = split(name, "%:%s+")
     if name == YOU then
         name = youName
@@ -208,6 +213,9 @@ end
 local function UnitFullName(unit)
     local fullName = _UnitFullName(unit)
     cleanName(fullName)
+    if not fullName then
+        return nil
+    end
     if not string.find(fullName, "-") then
         fullName = fullName .. "-" .. realmName
     end
@@ -629,7 +637,7 @@ function GLH:CreateLootWindow()
     frame:SetLayout("Fill")
 
     local tabGroup = AceGUI:Create("TabGroup")
-    tabGroup:SetLayout("Flow")
+    tabGroup:SetLayout("Fill")
     tabGroup:SetTabs({
         { text = "Active Loot",    value = "active" },
         { text = "History",        value = "history" },
@@ -676,128 +684,26 @@ function GLH:ShowTab(group)
 end
 
 function GLH:RefreshHistoryTab()
-    -- Clear existing content
-    self.historyContainer:ReleaseChildren()
-
-    -- Create filter controls group
-    local filterGroup = AceGUI:Create("SimpleGroup")
-    filterGroup:SetFullWidth(true)
-    filterGroup:SetLayout("Flow")
-    self.historyContainer:AddChild(filterGroup)
-
-    -- Player name filter with auto-complete
-    local playerFilter = AceGUI:Create("EditBox")
-    playerFilter:SetLabel("Player Name")
-    playerFilter:SetWidth(150)
-    playerFilter:SetCallback("OnTextChanged", function(_, _, text)
-        -- Store filter value
-        self.historyFilters = self.historyFilters or {}
-        self.historyFilters.player = text
-        
-        -- Update suggestions list
-        if #text >= 2 then
-            local suggestions = {}
-            for name in pairs(guidCache) do
-                if name:lower():find(text:lower(), 1, true) then
-                    table.insert(suggestions, name)
-                end
-            end
-            -- TODO: Show suggestions dropdown
-        end
-        
-        self:ApplyHistoryFilters()
-    end)
-    filterGroup:AddChild(playerFilter)
-
-    -- Quality filter (multiple selection)
-    local qualityFilter = AceGUI:Create("Dropdown")
-    qualityFilter:SetLabel("Quality")
-    qualityFilter:SetWidth(150)
-    qualityFilter:SetMultiselect(true)
-    qualityFilter:SetList(qualities)
-    qualityFilter:SetCallback("OnValueChanged", function(_, _, value, checked)
-        self.historyFilters = self.historyFilters or {}
-        self.historyFilters.qualities = self.historyFilters.qualities or {}
-        self.historyFilters.qualities[value] = checked
-        self:ApplyHistoryFilters()
-    end)
-    filterGroup:AddChild(qualityFilter)
-
-    --[[
-    -- Date range filters
-    local dateStartPicker = AceGUI:Create("DatePicker") -- You'll need to create this custom widget
-    dateStartPicker:SetLabel("From Date")
-    dateStartPicker:SetWidth(150)
-    dateStartPicker:SetCallback("OnValueChanged", function(_, _, date)
-        self.historyFilters = self.historyFilters or {}
-        self.historyFilters.dateStart = date
-        self:ApplyHistoryFilters()
-    end)
-    filterGroup:AddChild(dateStartPicker)
-
-    local dateEndPicker = AceGUI:Create("DatePicker") -- You'll need to create this custom widget
-    dateEndPicker:SetLabel("To Date")
-    dateEndPicker:SetWidth(150)
-    dateEndPicker:SetCallback("OnValueChanged", function(_, _, date)
-        self.historyFilters = self.historyFilters or {}
-        self.historyFilters.dateEnd = date
-        self:ApplyHistoryFilters()
-    end)
-    filterGroup:AddChild(dateEndPicker)
-    ]]--
-
-    -- Create scrolling table for history
-    local headerGroup = AceGUI:Create("SimpleGroup")
-    headerGroup:SetLayout("Table")
-    -- Initialize table layout data
-    headerGroup:SetUserData("table", {
-        columns = {
-            250,  -- Item column width 
-            150,  -- Zone column width
-            100,  -- Looter column width
-            80,   -- Type column width
-            100,  -- Slot column width
-        },
-        alignV = "TOP",
-        alignH = "LEFT",
-        space = DEFAULT_SPACING or 5,
-    })
-    headerGroup:SetFullWidth(true)
-    headerGroup:SetFullHeight(true)
-    self.historyContainer:AddChild(headerGroup)
-
-    -- Define table headers
-    local headers = {
-        { text = "Item", width = 250, sort = "item" },
-        { text = "Zone", width = 150, sort = "zone" },
-        { text = "Looter", width = 100, sort = "looter" },
-        { text = "Type", width = 80, sort = "type" },
-        { text = "Slot", width = 100, sort = "slot" }
-    }
-
-    -- Create header row
-    for _, header in ipairs(headers) do
-        local headerButton = AceGUI:Create("InteractiveLabel")
-        headerButton:SetText(header.text)
-        headerButton:SetWidth(header.width)
-        headerButton:SetCallback("OnClick", function()
-            self.historySortField = header.sort
-            self:ApplyHistoryFilters()
-        end)
-        headerGroup:AddChild(headerButton)
-    end
-
-    local itemsScrollFrame = AceGUI:Create("ScrollFrame")
-    itemsScrollFrame:SetLayout("List")
-    itemsScrollFrame:SetFullWidth(true)
-    itemsScrollFrame:SetFullHeight(true)
-
-    self.historyContainer:AddChild(itemsScrollFrame)
-    self.historyContainer:SetUserData("itemsScrollFrame", itemsScrollFrame)
-
-    -- Initial load of filtered data
-    self:ApplyHistoryFilters()
+    print("Refreshing history tab")
+    
+    self.historyContainer:SetLayout("List")
+    self.historyContainer:SetFullWidth(true)
+    self.historyContainer:SetFullHeight(true)
+    
+    -- Clear any existing content
+    -- self.historyContainer:ReleaseChildren()
+    
+    -- Add a simple test label
+    local testLabel = AceGUI:Create("Label")
+    testLabel:SetText("History Tab Test Label")
+    testLabel:SetFullWidth(true)
+    testLabel.frame:Show()
+    self.historyContainer:AddChild(testLabel)
+    
+    -- Force layout
+    self.historyContainer:DoLayout()
 end
+
 
 function GLH:ApplyHistoryFilters()
     local scrollFrame = self.historyContainer:GetUserData("itemsScrollFrame")
@@ -1174,6 +1080,25 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     -----------------------------------------
     -- Create the main container using Table Layout
     -----------------------------------------
+    local mainContainer = self:CreateItemRollContainerTable()
+
+    self:AddItemRollCells(mainContainer)
+
+    -----------------------------------------
+    -- Finally, add the main container to Loot Window's scroll list.
+    -----------------------------------------
+    lootList:AddChild(mainContainer, top_container)
+    if GROW_UP then
+        top_container = mainContainer
+    end
+    if #lootList.children % 2 == 0 then
+        
+    end
+    lootList:DoLayout()
+    return mainContainer
+end
+
+function GLH:CreateItemRollContainerTable()
     local mainContainer = AceGUI:Create("SimpleGroup")
     -- print("Creating main container for item: " , itemLink)
     -- AddBackdropToFrame(mainContainer.frame, backdrop, {1, 1, 1, 0.4})
@@ -1200,14 +1125,18 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     })
     mainContainer:SetLayout("Table")
 
-    -----------------------------------------
+    return mainContainer
+end
+
+function GLH:AddItemRollCells(mainContainer)
+-----------------------------------------
     -- Column 1: Item Tooltip
     -----------------------------------------
     local colTooltip = AceGUI:Create("SimpleGroup")
     colTooltip:SetLayout("Flow")
     colTooltip:SetAutoAdjustHeight(true)
     colTooltip:SetUserData("cell", { alignH = "LEFT", alignV = "TOP" })
-    -- Create and add your tooltip widget into colTooltip
+
     do
         local tooltipFrame = GLH:CreateTooltipFrame()
         
@@ -1219,23 +1148,8 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
         local tooltip = tooltipWidget.frame
     
         AddBackdropToFrame(tooltip, edgelessBackdrop, {0, 0, 0, 0.6})
-        -- print("Clearing tooltip frame backdrop for item: ", itemLink)
-        
-        -- Re-anchor the native tooltip frame within this column’s frame.
-        -- tooltip:ClearAllPoints()
-        -- tooltip:SetPoint("TOPLEFT", colTooltip.frame, "TOPLEFT", 0, 0)
-        -- tooltip:SetPoint("BOTTOMRIGHT", colTooltip.frame, "BOTTOMRIGHT", 0, 0)
-        -- tooltip:SetScript("OnUpdate", nil)
-        -- tooltip:SetScript("OnHide", function()
-        --     print("Hiding tooltip frame for item: ", itemLink)
-        -- end)
-        -- tooltip:SetScript("OnShow", function()
-        --     print("Showing tooltip frame for item: ", itemLink)
-        -- end)
         tooltip:SetClampedToScreen(false)
         tooltip:Show()
-        -- print("Tooltip:", tooltip:GetWidth(), tooltip:GetHeight())
-        -- print("Widget:", tooltipWidget.frame:GetWidth(), tooltipWidget.frame:GetHeight())
 
         colTooltip:AddChild(tooltipWidget)
     end
@@ -1320,19 +1234,6 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     -- colRoll:AddChild(disenchantButton)
     colRoll:AddChild(greedButton)
     colRoll:AddChild(passButton)
-
-    -----------------------------------------
-    -- Finally, add the main container to your Loot Window's scroll list.
-    -----------------------------------------
-    lootList:AddChild(mainContainer, top_container)
-    if GROW_UP then
-        top_container = mainContainer
-    end
-    if #lootList.children % 2 == 0 then
-        
-    end
-    lootList:DoLayout()
-    return mainContainer
 end
 
 
@@ -1544,6 +1445,7 @@ function GLH:CreateMSNeedButton(size, rollID)
             print("MS Need clicked (non-Gargul)")
             RollOnLoot(rollID, 1)
             disableButton(self)
+            self:RemoveRollID(rollID)
         end
     end)
     return button
@@ -1562,6 +1464,7 @@ function GLH:CreateOSNeedButton(size, rollID)
             print("OS Need clicked (non-Gargul)")
             RollOnLoot(rollID, 1)
             disableButton(self, 3)
+            self:RemoveRollID(rollID)
         end
     end)
     return button
@@ -1578,6 +1481,7 @@ function GLH:CreateGreedButton(size, rollID)
         else
             RollOnLoot(rollID, 2)
             disableButton(self, 3)
+            self:RemoveRollID(rollID)
         end
     end)
     return button
@@ -1590,6 +1494,7 @@ function GLH:CreateDisenchantButton(size, rollID)
         print("Disenchant clicked")
         RollOnLoot(rollID, 3)
         disableButton(self, 3)
+        -- self:RemoveRollID(rollID)
     end)
     return button
 end
@@ -1601,6 +1506,7 @@ function GLH:CreatePassButton(size, rollID)
         print("Pass clicked")
         RollOnLoot(rollID, 0)
         disableButton(self, 3)
+        self:RemoveRollID(rollID)
     end)
     return button
 end
@@ -1671,6 +1577,8 @@ local function HandleSlashCommand(msg)
         PrintTable(historyRolls)
     elseif msg == "conv" then
         GLH:ConvertHistoryRollsFormat()
+    elseif msg == "mini" then
+        GLH:ActiveMiniRolls()
     else
         print("Unknown command. Use /glh to open the loot window.")
     end
@@ -2139,6 +2047,76 @@ function GLH:FullNameGCache()
     end
 end
 
+local activeMiniRolls = {}
+local activeMiniRollIDs = {}
+local miniRollsActiveIndex = 0
+local miniRollWindow
+
+function GLH:CreateMiniRoll(rollID)
+    local mainContainer = self:CreateItemRollContainerTable()
+    self:AddItemRollCells(mainContainer)
+    activeMiniRolls[rollID] = mainContainer
+    table.insert(activeMiniRollIDs, rollID)
+end
+
+function GLH:RemoveRollID(rollID)
+    for i, id in ipairs(activeMiniRollIDs) do
+        if id == rollID then
+            local widget = table.remove(activeMiniRollIDs, i)
+            widget:ReleaseChildren()
+            widget:Hide()
+            widget = nil
+            activeMiniRolls[rollID] = nil
+            break
+        end
+    end
+    if #activeMiniRollIDs == 0 then
+        miniRollWindow:Hide()
+    else
+        miniRollWindow:SelectTab("current")
+    end
+end
+
+function GLH:ActiveMiniRolls()
+    if not miniRollWindow then 
+        local tabGroup = AceGUI:Create("TabGroupWindow")
+        tabGroup:SetLayout("Fill")
+        tabGroup:SetWidth(400)
+        tabGroup:SetHeight(200)
+        tabGroup:SetAutoAdjustHeight(false)
+        tabGroup:SetTabs({
+            { text = "<<", value = "first" },
+            { text = "<", value = "prev" },
+            { text = ">", value = "next" },
+            { text = ">>", value = "last" },
+        })
+
+        local function OnGroupSelected(container, event, group)
+            container:ReleaseChildren()
+            if group == "first" then
+                miniRollsActiveIndex = 1
+            elseif group == "prev" then
+                miniRollsActiveIndex = math.max(1, miniRollsActiveIndex - 1)
+            elseif group == "next" then
+                miniRollsActiveIndex = math.min(#activeMiniRollIDs, miniRollsActiveIndex + 1)
+            elseif group == "last" then
+                miniRollsActiveIndex = #activeMiniRollIDs
+            elseif group == "current" then
+                -- no action needed, just show current
+            else
+                print("Unknown tab selected:", group)
+                return
+            end
+            tabGroup:AddChild(activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]])
+        end
+
+        tabGroup:SetCallback("OnGroupSelected", OnGroupSelected)
+        tabGroup:SelectTab("first")
+        miniRollWindow = tabGroup
+    end
+    miniRollWindow:Show()
+end
+
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
     realmName = GetRealmName()
@@ -2150,6 +2128,7 @@ function GLH:OnEnable()
     instanceID_list = db.global.instanceID_list or {}
     instanceCache = db.global.instanceCache or {}
     mapCache = db.global.mapCache or {}
+    register_mouseover = db.global.register_mouseover or false
 
     GLH:AddInstanceIDtoCache()
 
@@ -2166,6 +2145,10 @@ function GLH:OnEnable()
     for event, func in pairs(eventHandlers) do
         -- self:RegisterEvent(event, func) -- not using direct binding to keep the logging inject
         self:RegisterEvent(event)
+    end
+
+    if not register_mouseover then
+        self:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
     end
 
     youName = GetUnitName("player")
@@ -2684,7 +2667,8 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
     rollid_to_uid[rollID] = uid
     itemNameToRollID[name] = uid
     itemLinkToRollID[itemlink] = uid
-    loot_container_cache[uid] = GLH:AddTooltipContainer(itemlink, texture, timeEnd),
+    loot_container_cache[uid] = self:AddTooltipContainer(itemlink, texture, timeEnd)
+    self:CreateMiniRoll(rollID)
     Log("New roll started for: " , name, rollID, uid, itemlink)
 end
 
