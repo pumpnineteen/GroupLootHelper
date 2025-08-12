@@ -374,6 +374,12 @@ local function GetGUID(name, unit)
     return guid
 end
 
+local function EmptyCell()
+  local lbl = AceGUI:Create("Label")
+  lbl:SetText("")
+  return lbl
+end
+
 
 GLH_Log = GLH_Log or {}
 -- Initialize localization
@@ -1211,6 +1217,8 @@ function GLH:AddItemRollCells(mainContainer)
 
     -- Finally, add the player row to the vertical scroll container.
     colPlayerInfoScroll:AddChild(playerNamesTable)
+
+    mainContainer:SetUserData("playerNamesTable", playerNamesTable)
 
     -----------------------------------------
     -- Column 3: Roll Buttons (using Flow Layout)
@@ -2117,6 +2125,34 @@ function GLH:ActiveMiniRolls()
     miniRollWindow:Show()
 end
 
+function GLH:AddMiniRollInfo(rollID, playerInfoData)
+    local class = playerInfoData.class
+    local classColour = self:GetClassColour(class)
+    local cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
+    local rollIcon = playerInfoData.rollIcon
+    if not activeMiniRolls[rollID] then
+        print("ERROR: Couldn't find rollID",rollID, "in activeMiniRolls!" )
+        return
+    end
+    local playerNamesTable = activeMiniRolls[rollID]:GetUserData("playerNamesTable")
+    if not playerNamesTable then
+        print("ERROR: Missing player names table in minirolls!")
+    end
+
+    local nameLabel = AceGUI:Create("Label")
+    nameLabel:SetText(cname)
+    local children = {
+        nameLabel,
+        EmptyCell(), -- role
+        EmptyCell(), -- spec
+        playerInfoData.rollIcon,
+        EmptyCell() -- roll value
+    }
+
+    playerNamesTable:AddChildren(children)
+    
+end
+
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
     realmName = GetRealmName()
@@ -2609,6 +2645,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     -- Build a player info table for UI purposes.
     local playerInfoData = {
         name     = looter,
+        class    = info.class,
         roleIcon = info.roleIcon,
         specIcon = info.specIcon,
         rollType = (patternkey:find("NEED") and "NEED") or 
@@ -2626,6 +2663,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     
     -- Update the UI row for this player’s roll.
     self:AddRollInfo(rollID, playerInfoData)
+    self:AddMiniRollInfo(rollID, playerInfoData)
     if loot_winner then
         local uid = rollid_to_uid[rollID]
         if uid and activeRolls[uid] then
