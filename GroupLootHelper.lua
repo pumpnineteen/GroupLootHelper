@@ -1086,9 +1086,9 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     -----------------------------------------
     -- Create the main container using Table Layout
     -----------------------------------------
-    local mainContainer = self:CreateItemRollContainerTable()
+    local mainContainer = self:CreateItemRollContainerTable(itemLink)
 
-    self:AddItemRollCells(mainContainer)
+    self:AddItemRollCells(mainContainer, lootList, itemLink, texture)
 
     -----------------------------------------
     -- Finally, add the main container to Loot Window's scroll list.
@@ -1104,7 +1104,7 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     return mainContainer
 end
 
-function GLH:CreateItemRollContainerTable()
+function GLH:CreateItemRollContainerTable(itemLink)
     local mainContainer = AceGUI:Create("SimpleGroup")
     -- print("Creating main container for item: " , itemLink)
     -- AddBackdropToFrame(mainContainer.frame, backdrop, {1, 1, 1, 0.4})
@@ -1134,7 +1134,7 @@ function GLH:CreateItemRollContainerTable()
     return mainContainer
 end
 
-function GLH:AddItemRollCells(mainContainer)
+function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture)
 -----------------------------------------
     -- Column 1: Item Tooltip
     -----------------------------------------
@@ -1147,7 +1147,9 @@ function GLH:AddItemRollCells(mainContainer)
         local tooltipFrame = GLH:CreateTooltipFrame()
         
         local tooltipWidget = AceGUI:Create("GLHTooltip")
-        tooltipWidget:SetUserData("layoutParent", lootList)
+        if lootList then
+            tooltipWidget:SetUserData("layoutParent", lootList)
+        end
         tooltipWidget:SetTooltipFrame(tooltipFrame)
         tooltipWidget:SetHyperlink(itemLink, texture)
         tooltipFrame:Show()
@@ -2060,11 +2062,14 @@ local activeMiniRollIDs = {}
 local miniRollsActiveIndex = 0
 local miniRollWindow
 
-function GLH:CreateMiniRoll(rollID)
-    local mainContainer = self:CreateItemRollContainerTable()
-    self:AddItemRollCells(mainContainer)
+function GLH:CreateMiniRoll(rollID, itemLink, texture)
+    print("Creating miniroll:", itemLink, texture)
+    local mainContainer = self:CreateItemRollContainerTable(itemLink)
+    print("mainContainer", mainContainer)
+    self:AddItemRollCells(mainContainer, nil, itemLink, texture)
     activeMiniRolls[rollID] = mainContainer
     table.insert(activeMiniRollIDs, rollID)
+
 end
 
 function GLH:RemoveRollID(rollID)
@@ -2116,6 +2121,7 @@ function GLH:ActiveMiniRolls()
                 return
             end
             tabGroup:AddChild(activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]])
+            tabGroup:DoLayout()
         end
 
         tabGroup:SetCallback("OnGroupSelected", OnGroupSelected)
@@ -2127,6 +2133,7 @@ end
 
 function GLH:AddMiniRollInfo(rollID, playerInfoData)
     local class = playerInfoData.class
+    local name = playerInfoData.name
     local classColour = self:GetClassColour(class)
     local cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
     local rollIcon = playerInfoData.rollIcon
@@ -2141,11 +2148,15 @@ function GLH:AddMiniRollInfo(rollID, playerInfoData)
 
     local nameLabel = AceGUI:Create("Label")
     nameLabel:SetText(cname)
+
+    local rollIcon = AceGUI:Create("Icon")
+    rollIcon:SetImage(playerInfoData.rollIcon)
+
     local children = {
         nameLabel,
         EmptyCell(), -- role
         EmptyCell(), -- spec
-        playerInfoData.rollIcon,
+        rollIcon,
         EmptyCell() -- roll value
     }
 
@@ -2706,7 +2717,8 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
     itemNameToRollID[name] = uid
     itemLinkToRollID[itemlink] = uid
     loot_container_cache[uid] = self:AddTooltipContainer(itemlink, texture, timeEnd)
-    self:CreateMiniRoll(rollID)
+    self:ActiveMiniRolls()
+    self:CreateMiniRoll(rollID, itemlink, texture)
     Log("New roll started for: " , name, rollID, uid, itemlink)
 end
 
