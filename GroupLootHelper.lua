@@ -2059,17 +2059,21 @@ end
 
 local activeMiniRolls = {}
 local activeMiniRollIDs = {}
-local miniRollsActiveIndex = 0
+local miniRollsActiveIndex = 1
 local miniRollWindow
 
 function GLH:CreateMiniRoll(rollID, itemLink, texture)
     print("Creating miniroll:", itemLink, texture)
+    Log("Creating miniroll:", itemLink, texture)
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
     print("mainContainer", mainContainer)
+    Log("mainContainer", mainContainer)
     self:AddItemRollCells(mainContainer, nil, itemLink, texture)
     activeMiniRolls[rollID] = mainContainer
     table.insert(activeMiniRollIDs, rollID)
-
+    if miniRollWindow then
+        miniRollWindow:SelectTab("current")
+    end
 end
 
 function GLH:RemoveRollID(rollID)
@@ -2120,7 +2124,9 @@ function GLH:ActiveMiniRolls()
                 print("Unknown tab selected:", group)
                 return
             end
-            tabGroup:AddChild(activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]])
+            local mainContainer = activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]]
+            tabGroup:AddChild(mainContainer)
+            mainContainer:Show()
             tabGroup:DoLayout()
         end
 
