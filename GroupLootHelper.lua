@@ -55,6 +55,7 @@ local defaults = {
 local db
 
 local DEBUG = false
+local PRINTLOG = false
 local top_container = nil
 local logWindow = nil
 local logEditbox = nil
@@ -132,7 +133,9 @@ local function Log(...)
     if logEditbox then
         logEditbox:SetText(log)
     end
-    print(logLine)
+    if PRINTLOG then
+        print(logLine)
+    end
 end
 
 local function debugmsg(...)
@@ -1070,7 +1073,7 @@ function GLH:RefreshActiveTab()
     self.activeContainer:DoLayout()
 end
 
-function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
+function GLH:AddTooltipContainer(itemLink, texture, timeEnd, rollID)
     if not itemLink then
         print("Error - AddTooltipContainer: itemLink is nil")
         return
@@ -1088,7 +1091,7 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd)
     -----------------------------------------
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
 
-    self:AddItemRollCells(mainContainer, lootList, itemLink, texture)
+    self:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID)
 
     -----------------------------------------
     -- Finally, add the main container to Loot Window's scroll list.
@@ -1134,7 +1137,7 @@ function GLH:CreateItemRollContainerTable(itemLink)
     return mainContainer
 end
 
-function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture)
+function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID, miniRoll)
 -----------------------------------------
     -- Column 1: Item Tooltip
     -----------------------------------------
@@ -1174,7 +1177,6 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture)
     colPlayerInfoScroll:SetAutoAdjustHeight(true)
     -- Note: AceGUI's ScrollFrame typically scrolls vertically. By fixing the width of the content,
     -- horizontal scrolling shouldn’t be needed.
-    colPlayerInfoScroll:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
     mainContainer:AddChild(colPlayerInfoScroll)
 
     -- Configure the nested table within the scroll frame.
@@ -1184,38 +1186,106 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture)
     --  3: Spec Icon (fixed 16px)
     --  4: Roll Icon (auto)
     --  5: Roll Value (auto)
-    colPlayerInfoScroll:SetUserData("table", {
-        columns = {
-            PLAYER_NAME_WIDTH,
-            ROLE_ICON_SIZE,
-            SPEC_ICON_SIZE,
-            0,                   -- Roll Icon auto-width
-            ROLL_VALUE_WIDTH,
-        },
-        space = DEFAULT_SPACING,
-        alignH = "LEFT",
-        alignV = "CENTER",
-    })
-    colPlayerInfoScroll:SetLayout("Table")
 
     -- Populate the player info table with one row as an example.
     local playerNamesTable = AceGUI:Create("SimpleGroup")
     playerNamesTable:SetAutoAdjustHeight(true)
     mainContainer:SetUserData("playerNamesTable", playerNamesTable)
     playerNamesTable:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    playerNamesTable:SetUserData("table", {
-        columns = {
-            PLAYER_NAME_WIDTH,
-            ROLE_ICON_SIZE,
-            SPEC_ICON_SIZE,
-            0,
-            ROLL_VALUE_WIDTH,
-        },
-        space = DEFAULT_SPACING,
-    })
+
+    local tableLayout
+    if miniRoll then
+        tableLayout = {
+            columns = {
+                0, -- player name
+                ROLE_ICON_SIZE,
+                SPEC_ICON_SIZE,
+                ROLL_BUTTON_SIZE,               
+            },
+            space = DEFAULT_SPACING,
+            alignH = "LEFT",
+            alignV = "CENTER",
+        }
+    else
+        tableLayout = {
+            columns = {
+                0, -- player name
+                ROLE_ICON_SIZE,
+                SPEC_ICON_SIZE,
+                ROLL_BUTTON_SIZE,               
+                ROLL_VALUE_WIDTH,
+            },
+            space = DEFAULT_SPACING,
+            alignH = "LEFT",
+            alignV = "CENTER",
+        }
+    end
+    playerNamesTable:SetUserData("table", tableLayout)
     playerNamesTable:SetLayout("Table")
     playerNamesTable:SetUserData("FirstGreedOrDisenchant", nil)
     playerNamesTable:SetUserData("FirstPass", nil)
+    playerNamesTable:SetUserData("miniRoll", miniRoll)
+    
+    playerNamesTable:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
+    function playerNamesTable:OnRollInfo(event, info)
+        if info.rollID == self.rollID then
+            print("RollInfo received!")
+            local _miniRoll = self:GetUserData("miniRoll")
+            local row = {}
+            
+            local nameLabel = AceGUI:Create("Label")
+            nameLabel:SetText(info.cname)
+            table.insert(row, nameLabel)
+
+            local roleIcon
+            if info.roleIcon then
+                roleIcon = AceGUI:Create("Icon")
+                roleIcon:SetImage(info.roleIcon)
+                roleIcon:SetWidth(ROLE_ICON_SIZE)
+                roleIcon:SetHeight(ROLE_ICON_SIZE)
+            else 
+                roleIcon = EmptyCell()
+            end
+            table.insert(row, roleIcon)
+
+            local specIcon
+            if info.specIcon then
+                specIcon = AceGUI:Create("Icon")
+                specIcon:SetImage(info.specIcon)
+                specIcon:SetWidth(SPEC_ICON_SIZE)
+                specIcon:SetHeight(SPEC_ICON_SIZE)
+            else
+                specIcon = EmptyCell()
+            end
+            table.insert(row, specIcon)
+
+            local rollIcon = AceGUI:Create("Icon")
+            rollIcon:SetImage(info.rollIcon)
+            rollIcon:SetWidth(ROLL_BUTTON_SIZE)
+            rollIcon:SetHeight(ROLL_BUTTON_SIZE)
+            table.insert(row, rollIcon)
+
+            if not _miniRoll then
+                local rollValue = AceGUI:Create("Label")
+                rollValue:SetText(info.rollValue or "")
+                rollValue:SetUserData("rollID", rollID)
+                rollValue:SetUserData("name", info.name)
+                rollValue:RegisterCallback("GLH_ROLL_VALUE", "OnRollValue")
+                function rollValue:OnRollValue(event, info)
+                    local _rollID = self:GetUserData("rollID")
+                    local _name = self:GetUserDate("name")
+                    if info.rollID == _rollID and info.name == _name then
+                        self:SetText(info.rollValue)
+                    end
+                end
+                table.insert(row, rollValue)
+            end
+
+            playerNamesTable:AddChildren(row)
+
+        end
+    end
+
 
     -- Finally, add the player row to the vertical scroll container.
     colPlayerInfoScroll:AddChild(playerNamesTable)
@@ -1232,11 +1302,11 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture)
     mainContainer:AddChild(colRoll)
 
     -- Create roll buttons using your existing functions.
-    local msNeedButton = self:CreateMSNeedButton(ROLL_BUTTON_SIZE)
-    local osNeedButton = self:CreateOSNeedButton(ROLL_BUTTON_SIZE)
+    local msNeedButton = self:CreateMSNeedButton(ROLL_BUTTON_SIZE, rollID)
+    local osNeedButton = self:CreateOSNeedButton(ROLL_BUTTON_SIZE, rollID)
     -- local disenchantButton = self:CreateDisenchantButton(ROLL_BUTTON_SIZE)
-    local greedButton = self:CreateGreedButton(ROLL_BUTTON_SIZE)
-    local passButton = self:CreatePassButton(ROLL_BUTTON_SIZE)
+    local greedButton = self:CreateGreedButton(ROLL_BUTTON_SIZE, rollID)
+    local passButton = self:CreatePassButton(ROLL_BUTTON_SIZE, rollID)
 
     -- Add buttons to the roll column.
     colRoll:AddChild(msNeedButton)
@@ -1446,16 +1516,19 @@ function GLH:CreateMSNeedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "MSNeed")
     button:SetCallback("OnClick", function(widget, event, ...)
+        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
         if IsGargulRoll(rollID) then
             print("MS Need clicked")
             RandomRoll(1, 100)
             disableButton(self, 3)
 
-        else
-            print("MS Need clicked (non-Gargul)")
+        elseif rollID then
+            print("MS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
             disableButton(self)
             self:RemoveRollID(rollID)
+        else 
+            print("RollID missing...")
         end
     end)
     return button
@@ -1466,15 +1539,18 @@ function GLH:CreateOSNeedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "OSNeed")
     button:SetCallback("OnClick", function(widget, event, ...)
+        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
         if IsGargulRoll(rollID) then
             print("OS Need clicked")
             RandomRoll(1, 99)
             disableButton(self, 3)
-        else
-            print("OS Need clicked (non-Gargul)")
+        elseif rollID then
+            print("OS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
             disableButton(self, 3)
             self:RemoveRollID(rollID)
+        else 
+            print("RollID missing...")
         end
     end)
     return button
@@ -1484,14 +1560,18 @@ function GLH:CreateGreedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "Greed")
     button:SetCallback("OnClick", function(widget, event, ...)
+        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
         print("Greed clicked")
         if IsGargulRoll(rollID) then
             RandomRoll(1, 100)
             disableButton(self)
-        else
+        elseif rollID then
+            print("Attempting to roll on loot", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 2)
             disableButton(self, 3)
             self:RemoveRollID(rollID)
+        else 
+            print("RollID missing...")
         end
     end)
     return button
@@ -1513,6 +1593,7 @@ function GLH:CreatePassButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "Pass")
     button:SetCallback("OnClick", function(widget, event, ...)
+        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
         print("Pass clicked")
         RollOnLoot(rollID, 0)
         disableButton(self, 3)
@@ -1576,7 +1657,6 @@ local function HandleSlashCommand(msg)
         end
     elseif msg == "log" then
         GLH:ShowLog()
-
     elseif msg == "show" or msg == "" then
         GLH.LootWindow:Show()
     elseif msg == "zones" then
@@ -1589,6 +1669,33 @@ local function HandleSlashCommand(msg)
         GLH:ConvertHistoryRollsFormat()
     elseif msg == "mini" then
         GLH:ActiveMiniRolls()
+    elseif msg == "prlog" then
+        PRINTLOG = not PRINTLOG
+    elseif msg == "tmini" then
+        PRINTLOG = true
+        local index = 0
+        for k, link in pairs(testLinks) do
+            C_Timer.After(1*index, function()
+                Log("Adding mini:", unpack(link))
+                local itemLink, texture = unpack(link)
+                GLH:ActiveMiniRolls()
+                GLH:CreateMiniRoll(k, itemLink, texture)
+            end)
+            index = index + 1
+        end
+    elseif msg == "pmini" then
+        PRINTLOG = true
+        GLH:ActiveMiniRollsPages()
+        local index = 0
+        for k, link in pairs(testLinks) do
+            C_Timer.After(1*index, function()
+                Log("Adding mini:", unpack(link))
+                local itemLink, texture = unpack(link)
+                GLH:CreateMiniRollPages(k, itemLink, texture)
+            end)
+            index = index + 1
+        end
+
     else
         print("Unknown command. Use /glh to open the loot window.")
     end
@@ -1662,7 +1769,7 @@ function GLH:_ProcessTooltipQueue(now)
     end
     local batchSize = 5
     for i=1, batchSize do
-        local item = tremove(self._tooltipQueue, 1)
+        local item = table.remove(self._tooltipQueue, 1)
         if not item then break end
     
         local uid = item.id
@@ -1680,7 +1787,8 @@ function GLH:_ProcessTooltipQueue(now)
             local loot_container = self:AddTooltipContainer(
             entry.link,
             entry.texture,
-            entry.timeEnd
+            entry.timeEnd,
+            entry.rollID
             )
             loot_container_cache[uid] = loot_container
         end
@@ -2061,19 +2169,38 @@ local activeMiniRolls = {}
 local activeMiniRollIDs = {}
 local miniRollsActiveIndex = 1
 local miniRollWindow
+local miniRollPaged
 
-function GLH:CreateMiniRoll(rollID, itemLink, texture)
-    print("Creating miniroll:", itemLink, texture)
+-- function GLH:CreateMiniRoll(rollID, itemLink, texture)
+--     Log("Creating miniroll:", itemLink, texture)
+--     local mainContainer = self:CreateItemRollContainerTable(itemLink)
+--     Log("mainContainer", mainContainer)
+--     self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID)
+--     activeMiniRolls[rollID] = mainContainer
+--     table.insert(activeMiniRollIDs, rollID)
+--     if miniRollWindow then
+--         Log("Selecting current miniroll")
+--         miniRollWindow:SelectTab("current")
+--     else
+--         Log("No miniroll available!")
+--     end
+-- end
+
+function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     Log("Creating miniroll:", itemLink, texture)
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
-    print("mainContainer", mainContainer)
+    -- mainContainer:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
+    -- function mainContainer:OnRollInfo(event, info)
+    --     if info.rollID == self.rollID then
+    --         print("RollInfo received!")
+    --     end
+    -- end
     Log("mainContainer", mainContainer)
-    self:AddItemRollCells(mainContainer, nil, itemLink, texture)
+    local miniRoll = true
+    self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID, miniRoll)
     activeMiniRolls[rollID] = mainContainer
     table.insert(activeMiniRollIDs, rollID)
-    if miniRollWindow then
-        miniRollWindow:SelectTab("current")
-    end
+    miniRollPaged:AddPage(mainContainer)
 end
 
 function GLH:RemoveRollID(rollID)
@@ -2094,6 +2221,19 @@ function GLH:RemoveRollID(rollID)
     end
 end
 
+function GLH:ActiveMiniRollsPages()
+    if not miniRollPaged then
+        local paged = AceGUI:Create("PagedWindow")
+        paged:SetLayout("Fill")
+        paged:SetWidth(400)
+        paged:SetHeight(200)
+        paged:SetAutoAdjustHeight(false)
+
+        miniRollPaged = paged
+    end
+    miniRollPaged:Show()
+end
+
 function GLH:ActiveMiniRolls()
     if not miniRollWindow then 
         local tabGroup = AceGUI:Create("TabGroupWindow")
@@ -2104,30 +2244,78 @@ function GLH:ActiveMiniRolls()
         tabGroup:SetTabs({
             { text = "<<", value = "first" },
             { text = "<", value = "prev" },
+            { text = "", value = "current"},
             { text = ">", value = "next" },
             { text = ">>", value = "last" },
         })
 
+        -- local function OnPageChanged(pageChanged)
+        --     if pageChanged then
+        --         miniRollWindow:ReleaseChildren()
+        --     end
+        -- end
+        local function HideCurrent(miniRollsActiveIndex)
+            local mainContainer = activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]]
+            if mainContainer and mainContainer.frame.Hide then
+                mainContainer.frame:Hide()
+            end
+        end
+
         local function OnGroupSelected(container, event, group)
-            container:ReleaseChildren()
+            Log("Active:", miniRollsActiveIndex, #activeMiniRollIDs, activeMiniRollIDs[miniRollsActiveIndex])
+            local pageChanged = false
             if group == "first" then
+                Log("Selecting first...")
+                HideCurrent(miniRollsActiveIndex)
+                pageChanged = miniRollsActiveIndex ~= 1
                 miniRollsActiveIndex = 1
+                -- tabGroup:SelectTab("current")
+                -- return
             elseif group == "prev" then
+                HideCurrent(miniRollsActiveIndex)
+                pageChanged = miniRollsActiveIndex ~= 1
                 miniRollsActiveIndex = math.max(1, miniRollsActiveIndex - 1)
+                Log("Prev", miniRollsActiveIndex)
+                -- tabGroup:SelectTab("current")
+                -- return
             elseif group == "next" then
+                HideCurrent(miniRollsActiveIndex)
+                pageChanged = miniRollsActiveIndex ~= #activeMiniRollIDs
                 miniRollsActiveIndex = math.min(#activeMiniRollIDs, miniRollsActiveIndex + 1)
+                Log("Next", miniRollsActiveIndex)
+                -- tabGroup:SelectTab("current")
+                -- return
             elseif group == "last" then
+                Log("Selecting last...", #activeMiniRollIDs)
+                HideCurrent(miniRollsActiveIndex)
+                pageChanged = miniRollsActiveIndex ~= #activeMiniRollIDs
                 miniRollsActiveIndex = #activeMiniRollIDs
+                -- tabGroup:SelectTab("current")
+                -- return
             elseif group == "current" then
+                Log("Current tab called....", miniRollsActiveIndex)
                 -- no action needed, just show current
             else
                 print("Unknown tab selected:", group)
-                return
+                -- return
+            end
+            if miniRollsActiveIndex == 0 then
+                Log("There seem to be no active minirolls")
+                miniRollsActiveIndex = 1
+                -- return
             end
             local mainContainer = activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]]
-            tabGroup:AddChild(mainContainer)
-            mainContainer:Show()
-            tabGroup:DoLayout()
+            Log("MC:", mainContainer, miniRollsActiveIndex, #activeMiniRollIDs, activeMiniRollIDs[miniRollsActiveIndex])
+            if mainContainer then
+                -- container:ReleaseChildren()
+                -- container.frame:Hide()
+                tabGroup:AddChild(mainContainer)
+                mainContainer.frame:Show()
+                Log("mainContainer", mainContainer)
+                tabGroup:DoLayout()
+            else
+                Log("No mainContainer!")
+            end
         end
 
         tabGroup:SetCallback("OnGroupSelected", OnGroupSelected)
@@ -2142,31 +2330,34 @@ function GLH:AddMiniRollInfo(rollID, playerInfoData)
     local name = playerInfoData.name
     local classColour = self:GetClassColour(class)
     local cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
-    local rollIcon = playerInfoData.rollIcon
-    if not activeMiniRolls[rollID] then
-        print("ERROR: Couldn't find rollID",rollID, "in activeMiniRolls!" )
-        return
-    end
-    local playerNamesTable = activeMiniRolls[rollID]:GetUserData("playerNamesTable")
-    if not playerNamesTable then
-        print("ERROR: Missing player names table in minirolls!")
-    end
+    playerInfoData.cname = cname
+    -- playerInfoData.rollID = rollID
+    AceGUI:SendMessage("GLH_ROLL_INFO", playerInfoData)
+    -- local rollIcon = playerInfoData.rollIcon
+    -- if not activeMiniRolls[rollID] then
+    --     print("ERROR: Couldn't find rollID",rollID, "in activeMiniRolls!" )
+    --     return
+    -- end
+    -- local playerNamesTable = activeMiniRolls[rollID]:GetUserData("playerNamesTable")
+    -- if not playerNamesTable then
+    --     print("ERROR: Missing player names table in minirolls!")
+    -- end
 
-    local nameLabel = AceGUI:Create("Label")
-    nameLabel:SetText(cname)
+    -- local nameLabel = AceGUI:Create("Label")
+    -- nameLabel:SetText(cname)
 
-    local rollIcon = AceGUI:Create("Icon")
-    rollIcon:SetImage(playerInfoData.rollIcon)
+    -- local rollIcon = AceGUI:Create("Icon")
+    -- rollIcon:SetImage(playerInfoData.rollIcon)
 
-    local children = {
-        nameLabel,
-        EmptyCell(), -- role
-        EmptyCell(), -- spec
-        rollIcon,
-        EmptyCell() -- roll value
-    }
+    -- local children = {
+    --     nameLabel,
+    --     EmptyCell(), -- role
+    --     EmptyCell(), -- spec
+    --     rollIcon,
+    --     EmptyCell() -- roll value
+    -- }
 
-    playerNamesTable:AddChildren(children)
+    -- playerNamesTable:AddChildren(children)
     
 end
 
@@ -2597,7 +2788,7 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
         GLH:AddEntryToHistoryTbl(historyTable, {}, nil, loot, looterGUID, location)
         db.global.historyTable = historyTable
     else
-        print("Not storing loot:", loot, looter)
+        print("Not storing loot:", loot, looter, patternkey)
     end
         
 
@@ -2606,6 +2797,7 @@ end
 function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     local looter = payloadData.looter
     local loot   = payloadData.loot
+    local roll   = payloadData.roll
 
     looter = looter or UnitName("player")  -- Default to player if looter is not specified.
     local loot_winner = nil
@@ -2661,6 +2853,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     
     -- Build a player info table for UI purposes.
     local playerInfoData = {
+        rollID   = rollID,
         name     = looter,
         class    = info.class,
         roleIcon = info.roleIcon,
@@ -2675,7 +2868,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
                     (patternkey:find("DISENCHANT") and "Interface\\Buttons\\UI-GroupLoot-Disenchant-Up") or
                     (patternkey:find("PASSED") and "Interface\\Buttons\\UI-GroupLoot-Pass-Up") or 
                     "Interface\\Buttons\\UI-GroupLoot-Dice-Up",
-        rollValue = "",  -- Set default; you can update this as roll values become known.
+        rollValue = roll or "",  -- Set default; you can update this as roll values become known.
         }
     
     -- Update the UI row for this player’s roll.
@@ -2723,8 +2916,8 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
     itemNameToRollID[name] = uid
     itemLinkToRollID[itemlink] = uid
     loot_container_cache[uid] = self:AddTooltipContainer(itemlink, texture, timeEnd)
-    self:ActiveMiniRolls()
-    self:CreateMiniRoll(rollID, itemlink, texture)
+    self:ActiveMiniRollsPages()
+    self:CreateMiniRollPages(rollID, itemlink, texture)
     Log("New roll started for: " , name, rollID, uid, itemlink)
 end
 

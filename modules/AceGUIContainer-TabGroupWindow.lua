@@ -529,7 +529,7 @@ local methods = {
 	["OnHeightSet"] = function(self, height)
         if resizing then return end -- Prevent recursive calls
             resizing = true
-        print("OnHeightSet called with height:", height)
+        -- print("OnHeightSet called with height:", height)
 		local content = self.content
         local border = self.border
 		local contentheight = height - (self.borderoffset + 23)
@@ -538,7 +538,7 @@ local methods = {
 		end
 		content:SetHeight(contentheight)
 		content.height = contentheight
-        print(content.height)
+        -- print(content.height)
         border:SetHeight(height - 4)
         resizing = false
 	end,
@@ -674,7 +674,7 @@ local function Constructor()
 
     local closebutton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	closebutton:SetScript("OnClick", Button_OnClick)
-	closebutton:SetPoint("TOPRIGHT", -5, -10)
+	closebutton:SetPoint("TOPRIGHT", -5, 0)
 	closebutton:SetHeight(20)
 	closebutton:SetWidth(100)
 	closebutton:SetText(CLOSE)

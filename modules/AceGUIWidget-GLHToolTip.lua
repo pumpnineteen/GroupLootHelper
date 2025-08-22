@@ -5,215 +5,54 @@ local LOOT_FRAME_WIDTH = 243
 local LOOT_FRAME_HEIGHT = 84
 local LOOT_ICON_SIZE = 34
 
-local methods = {
-	["OnAcquire"] = function(self)
-	end,
 
-	-- ["OnRelease"] = nil,
+local function AddIconCallbacks(self, link)
+    local widget = self
 
-	["LayoutFinished"] = function(self, width, height)
-		if self.noAutoHeight then return end
-		self:SetHeight(height or 0)
-	end,
-
-	["OnWidthSet"] = function(self, width)
-		local content = self.frame
-		content:SetWidth(width)
-		content.width = width
-	end,
-
-	["OnHeightSet"] = function(self, height)
-		local content = self.frame
-		content:SetHeight(height)
-		content.height = height
-	end,
-
-    ["OnRelease"] = function(self)
-        -- print("OnRelease...")
-        self:SetHyperlink(nil)
-        self:SetUserData("layoutParent", nil)
-        self:SetUserData("Hyperlink_set", nil)
-        self:SetUserData("fullWidth", nil)
-        self:SetUserData("fullHeight", nil)
-        self:SetUserData("expanded" , nil)
-
-        self.frame:Hide()
-    end,
-
-    ["_DoLayout"] = function(self)
-        local lootList = self:GetUserData("layoutParent")
-        if lootList then
-          lootList:DoLayout()
-          if lootList.UpdateScrollChildRect then
-            lootList:UpdateScrollChildRect()
-          end
-        else
-          print("No layoutParent set!")
-        end
-      end,     
-
-    ["ToggleExpansion"] = function(self)
-        local expanded = self:GetUserData("expanded")
-        -- print("expanded", expanded)
-        if expanded then
-            self:CollapseTooltip()
-        else
-            self:ExpandTooltip()
-        end
-    end,
-    
-    ["CollapseTooltip"] = function(self)
-        -- Contracted view: fixed width, one row with icon on the left and coloured item name on the right.
-        local fixedWidth = self:GetUserData("condensedWidth") or  200     -- adjust as needed
-        local fixedHeight = 40     -- adjust as needed
-    
-        self:SetWidth(fixedWidth)
-        self:SetHeight(fixedHeight)
-    
-        -- Hide the full tooltip copied content (if any)
-        if self.tooltipTextFrame then
-            self.tooltipTextFrame:Hide()
-        end
-
-        local icon = self:GetUserData("itemButton")
-        icon:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 5, -5)
-    
-        -- Create (or show) a condensed container if not already there.
-        if not self.condensedFrame then
-            self.condensedFrame = CreateFrame("Frame", nil, self.frame)
-            -- self.condensedFrame:SetFrameLevel(icon:GetFrameLevel() - 1)
-            self.condensedFrame:SetAllPoints(self.frame)
-            -- Create a label for the item name (with colour coding).
-            local nameFontString = self:GetUserData("nameFontString")
-            local drawLayer = nameFontString:GetDrawLayer()
-                if not drawLayer or drawLayer == "0" or drawLayer == 0 then
-                    drawLayer = "OVERLAY"
-                end
-            self.condensedFrame.label = self.condensedFrame:CreateFontString(nil, drawLayer, "GameFontHighlight")
-
-            self.condensedFrame.label:SetPoint("LEFT", icon, "RIGHT", 5, 0)
-            self.condensedFrame.label:SetJustifyH("LEFT")
-            -- self.condensedFrame.label:SetJustifyV("CENTER")
-            self.condensedFrame.label:SetText(nameFontString:GetText())
-            self.condensedFrame.label:SetTextColor(nameFontString:GetTextColor())
-            self.condensedFrame.label:SetShadowColor(nameFontString:GetShadowColor())
-            self.condensedFrame.label:SetShadowOffset(nameFontString:GetShadowOffset())
-            self.condensedFrame.label:SetFontObject(nameFontString:GetFontObject())
-            
-            C_Timer.After(0, function ()
-                local width = self.condensedFrame.label:GetWidth() 
-                width = width + icon:GetWidth() + 10
-
-                if width > self.frame.width then
-                    self:SetWidth(width)
-                else 
-                    width = self.frame.width
-                end
-                -- print("condensed width", width)
-
-                self:SetUserData("condensedWidth", width)
-            end)
-        end
-
-        C_Timer.After(0, function ()
-            self.condensedFrame:Show()
-
-            self:SetUserData("expanded", false)
-        end)
-
-        C_Timer.After(0.1, function () self:_DoLayout() end)
-        
-    end,
-    
-    ["ExpandTooltip"] = function(self)
-        local fullWidth = self:GetUserData("fullWidth") or 300
-        local fullHeight = self:GetUserData("fullHeight") or 100
-        self:SetWidth(fullWidth)
-        self:SetHeight(fullHeight)
-
-        if self.condensedFrame then
-            self.condensedFrame:Hide()
-        end
-    
-        self.tooltipTextFrame:Show()
-        local icon = self:GetUserData("itemButton")
-        icon:Show()
-    
-        self:SetUserData("expanded", true)
-        self:_DoLayout()
-    end,
-
-    ["SetHyperlink"] = function(self, link, texture)
-        if self:GetUserData("Hyperlink_set") then
-            return
-        end
-
-        self.itemlink = link
-        self:SetUserData("itemTexture", texture)
-        local tpframe = self:GetUserData("tooltipFrame")
-        local frame = self.frame
-        local widget = self
-        if tpframe then
-            tpframe:SetOwner(UIParent, "ANCHOR_NONE")
-            tpframe:SetHyperlink(link)
-            tpframe:Show()
-            -----------------------------------------------------------------------------
-            -- Create the item icon
-            -----------------------------------------------------------------------------
-            local icon = self:GetUserData("itemButton") or CreateFrame("Button", nil, frame)
-            -- print("Setting item icon texture:", texture)
-            icon:SetNormalTexture(texture)
-            icon:SetSize(LOOT_ICON_SIZE, LOOT_ICON_SIZE)
-            icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -5)
-            icon:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetHyperlink(link)
-            end)
-            icon:SetScript("OnLeave", function(self)
-                GameTooltip:Hide()
-            end)
-            icon:SetScript("OnClick", function(self, button)
-                if button == "LeftButton" then
-                    if IsModifiedClick("CHATLINK") then
-                        ChatEdit_InsertLink(link)
-                    elseif IsModifiedClick("DRESSUP") then
-                        DressUpItemLink(link)
-                    else
-                        -- TODO: Add quest rewards/set items/etc
-                        widget:ToggleExpansion()
-                    end
-                end
-            end)
-            icon:EnableMouse(true)
-            self:SetUserData("itemButton", icon)
-
-            -- print("icon", icon, self:GetUserData("itemButton"), self)
-
-            if not self.tooltipTextFrame then
-
-                self.tooltipTextFrame = CreateFrame("Frame", nil, frame)
-
-                self:_copyFrameRegions(tpframe, self.tooltipTextFrame)
-
-                self:SetUserData("expanded" , true)
-                self.tooltipTextFrame:SetAllPoints(self.frame)
-                self.tooltipTextFrame:Show()
-                -- tpframe:Hide()
-                frame:Show()
-                self:SetUserData("Hyperlink_set", true)
+    self.icon:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetHyperlink(link)
+    end)
+    self.icon:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
+    self.icon:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            if IsModifiedClick("CHATLINK") then
+                ChatEdit_InsertLink(link)
+            elseif IsModifiedClick("DRESSUP") then
+                DressUpItemLink(link)
+            else
+                -- TODO: Add quest rewards/set items/etc
+                widget:ToggleExpansion()
             end
-        else
-            frame:Hide()
         end
-    end,
+    end)
+end
 
-    ["SetTooltipFrame"] = function(self, tooltipFrame)
-        assert(tooltipFrame and tooltipFrame.SetOwner, "You must provide a valid tooltip frame.")
-        self:SetUserData("tooltipFrame", tooltipFrame)
-    end,
+local function CreateIcon(self, link, texture)
+    -----------------------------------------------------------------------------
+    -- Create the item icon
+    -----------------------------------------------------------------------------
+    print("Creating icon:", link, texture, self.iconSet)
+    if not self.iconSet then
+        self.icon:ClearAllPoints()
+        self.icon:SetTexture(texture)
+        self.icon:SetWidth(LOOT_ICON_SIZE)
+        self.icon:SetHeight(LOOT_ICON_SIZE)
+        AddIconCallbacks(self, link)
+        self.icon:EnableMouse(true)
+        self.icon:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 6, -6)
+        -- local lvl = self.frame:GetFrameLevel()
+        -- local strata = frame:GetFrameStrata()
+        -- self.icon:SetFrameLevel(lvl+2)
+        -- icon:SetFrameStrata(strata)
+    end
+    self.iconSet = true
+end
 
-    -- Copies visual regions from sourceFrame to targetFrame.
-    ["_copyFrameRegions"] = function(self, sourceFrame, targetFrame)
+-- Copies visual regions from sourceFrame to targetFrame.
+local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
         assert(sourceFrame and targetFrame, "Source and target frames must be provided.")
 
         -- clear out any old children so we don’t stack textures & strings forever
@@ -227,11 +66,12 @@ local methods = {
             child:SetParent(nil)
         end
 
-        local topTextOffset = -5
+        local topTextOffset = -6
         local nameFontString = nil
         -- local itemIcon = self:GetUserData("itemIcon") or targetFrame
         local icon = self:GetUserData("itemButton")
 
+        local lastText = nil
         for i, region in ipairs({ sourceFrame:GetRegions() }) do
             local regionType = region:GetObjectType()
             local point = region:GetPoint()
@@ -256,9 +96,9 @@ local methods = {
                     if str and str == RETRIEVING_ITEM_INFO then
                         -- the tooltip is still loading—delay and retry once
                         C_Timer.After(1, function()
-                            if sourceFrame:IsShown() then
-                                self:_copyFrameRegions(sourceFrame, targetFrame)
-                            end
+                            -- if sourceFrame:IsShown() then
+                                self:SetHyperlink(link, texture)
+                            -- end
                         end)
                     end
                     local drawLayer = region:GetDrawLayer()
@@ -267,6 +107,7 @@ local methods = {
                     end
                 
                     local text = targetFrame:CreateFontString(nil, drawLayer, "GameFontNormal")
+                    text:ClearAllPoints()
                     text:SetFontObject(region:GetFontObject())
                     text:SetText(str)
                     text:SetTextColor(region:GetTextColor())
@@ -279,39 +120,237 @@ local methods = {
                         -- print("nameFontString", text:GetText())
                     end
                     
-                    text:SetAllPoints(region)
+                    -- text:SetAllPoints(region)
 
+                    -- print(point)
+                    -- print(point, region:GetJustifyH(), sourceFrame:GetWidth(), text:GetWidth())
                     if point == "TOP" then
-                        text:SetPoint("TOP", icon, "BOTTOM", 5 , topTextOffset)
-                        text:SetPoint("LEFT", targetFrame, "LEFT", 5, 0)
-                        text:SetPoint("RIGHT", targetFrame, "RIGHT", -5, 0)
+                        text:SetPoint("TOP", self.icon, "BOTTOM", 6 , topTextOffset)
+                        text:SetPoint("LEFT", targetFrame, "LEFT", 6, 0)
+                        if text:GetWidth() > sourceFrame:GetWidth() then
+                            text:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
+                        else
+                            text:SetPoint("RIGHT", targetFrame, "LEFT", 6 + text:GetWidth(), 0)
+                        end
                         topTextOffset = topTextOffset - region:GetHeight() - 1
-                    end
-
+                        lastText = text
+                    elseif point == "RIGHT" then
+                        text:SetJustifyH("RIGHT")
+                        text:SetPoint("TOP", self.icon, "BOTTOM", 6 , topTextOffset + lastText:GetHeight() + 1)
+                        text:SetPoint("LEFT", lastText, "RIGHT", 6, 0)
+                        text:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
+                        topTextOffset = topTextOffset - 1
+                    end    
                 end
             end
         end
-        topTextOffset = topTextOffset - 5 
+        topTextOffset = topTextOffset - 6 
         self:SetUserData("nameFontString", nameFontString)
 
         
-        if icon then
-            local fullHeight = (-1 * topTextOffset) + icon:GetHeight() + 5
-            local fullWidth = sourceFrame:GetWidth()
-            -- print("Height:", sourceFrame:GetHeight(), "Full Height:", fullHeight)
-            self:SetWidth(fullWidth)
-            self:SetHeight(fullHeight)
+        local fullHeight = (-1 * topTextOffset)
+        local fullWidth = sourceFrame:GetWidth()
+        -- print("Height:", sourceFrame:GetHeight(), "Full Height:", fullHeight)
+        targetFrame:SetWidth(fullWidth)
+        targetFrame:SetHeight(fullHeight)
 
-            self:SetUserData("fullWidth", fullWidth)
-            self:SetUserData("fullHeight", fullHeight)
-        else
-            print("Missing icon", icon)
+        self:SetUserData("fullWidth", fullWidth)
+        self:SetUserData("fullHeight", fullHeight)
+        -- print("W H:", fullWidth, fullWidth)
+    end
+
+local function UpdateTooltips(self)
+
+end
+
+local methods = {
+	["OnAcquire"] = function(self)
+        
+	end,
+
+	-- ["OnRelease"] = nil,
+
+	["LayoutFinished"] = function(self, width, height)
+		if self.noAutoHeight then return end
+		self:SetHeight(height or 0)
+	end,
+
+	["OnWidthSet"] = function(self, width)
+		local content = self.frame
+		content:SetWidth(width)
+		content.width = width
+	end,
+
+	["OnHeightSet"] = function(self, height)
+		local content = self.frame
+		content:SetHeight(height)
+		content.height = height
+	end,
+
+    ["OnRelease"] = function(self)
+        print("OnRelease...")
+        self:SetUserData("layoutParent", nil)
+        self:SetUserData("Hyperlink_set", nil)
+        self:SetUserData("fullWidth", nil)
+        self:SetUserData("fullHeight", nil)
+        self.expanded = nil
+        self.itemLink = nil
+        if self._rollListener then
+            AceGUI:UnregisterCallback(self.rollMessage, self)
         end
+        self._rollListener = false
+
+        self.frame:Hide()
+    end,
+
+    ["DoLayout"] = function(self)
+    end,
+
+    ["_DoLayout"] = function(self, layoutParent)
+        if layoutParent then
+            layoutParent:DoLayout()
+            if layoutParent.UpdateScrollChildRect then
+                layoutParent:UpdateScrollChildRect()
+            end
+        else
+            print("No layoutParent set!")
+        end
+      end,     
+
+    ["ToggleExpansion"] = function(self)
+        -- print("expanded", expanded)
+        if self.expanded then
+            self:CollapseTooltip()
+        else
+            self:ExpandTooltip()
+        end
+    end,
+    
+    ["CollapseTooltip"] = function(self)
+        -- Contracted view: fixed width, one row with icon on the left and coloured item name on the right.
+        self.compactBackground:Show()
+        self.expandedBackground:Hide()
+        self.frame:SetWidth(self.compactBackground:GetWidth())
+        self.frame:SetHeight(self.compactBackground:GetHeight())
+        self.expanded = false
+        self.frame:Show()
+    end,
+    
+    ["ExpandTooltip"] = function(self)
+        self.compactBackground:Hide()
+        self.expandedBackground:Show()
+        self.frame:SetWidth(self.expandedBackground:GetWidth())
+        self.frame:SetHeight(self.expandedBackground:GetHeight())
+        self.expanded = true
+        self.frame:Show()
+    end,
+
+    ["SetHyperlink"] = function(self, link, texture)
+        if self:GetUserData("Hyperlink_set") then
+            return
+        end
+
+        self.itemLink = link
+        -- print("SetHyperlink:", link, texture)
+        self:SetUserData("itemTexture", texture)
+        local tpframe = self:GetUserData("tooltipFrame")
+        local frame = self.frame
+        frame:Show()
+
+        if tpframe then
+            tpframe:SetOwner(UIParent, "ANCHOR_NONE")
+            tpframe:SetHyperlink(link)
+            tpframe:Show()
+
+            CreateIcon(self, link, texture)
+
+            do
+                self:SetUserData("Hyperlink_set", true)
+                _copyFrameRegions(self, tpframe, self.expandedFrame, link, texture)
+                self.expanded = true
+
+                self.expandedFrame:Show()
+                
+                local width = self.expandedFrame:GetWidth() 
+                width = width + self.icon:GetWidth() + 6 + 6 + 6
+                local height = self.expandedFrame:GetHeight() 
+                height = height + self.icon:GetHeight() + 6 + 6
+
+                self.expandedBackground:SetWidth(width)
+                self.expandedBackground:SetHeight(height)
+                self.expandedBackground:Show()
+            end
+
+            do
+                local nameFontString = self:GetUserData("nameFontString")
+                self.compactFrame.label = self.compactFrame:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
+
+                self.compactFrame.label:SetPoint("TOPLEFT")
+                self.compactFrame.label:SetPoint("BOTTOMRIGHT")
+
+                self.compactFrame.label:SetJustifyH("LEFT")
+                self.compactFrame.label:SetJustifyV("MIDDLE")
+                self.compactFrame.label:SetText(nameFontString:GetText())
+                self.compactFrame.label:SetVertexColor(nameFontString:GetTextColor())
+                self.compactFrame.label:SetShadowColor(nameFontString:GetShadowColor())
+                self.compactFrame.label:SetShadowOffset(nameFontString:GetShadowOffset())
+                self.compactFrame.label:SetFontObject(nameFontString:GetFontObject())
+                self.compactFrame:Show()
+                self.compactFrame.label:Show()
+                self.compactFrame:SetWidth(self.compactFrame.label:GetWidth())
+                self.compactFrame:SetHeight(self.compactFrame.label:GetHeight())
+
+                local width = self.compactFrame.label:GetWidth() 
+                width = width + self.icon:GetWidth() + 6 + 6 + 6
+                local height = self.icon:GetHeight() + 6 + 6
+
+                width = math.max(self.expandedBackground:GetWidth(), width)
+
+                self.compactBackground:SetWidth(width)
+                self.compactBackground:SetHeight(height)
+                self.compactBackground:Hide()
+
+                self:SetUserData("compactWidth", width)
+            end
+        else
+            frame:Hide()
+        end
+        self:ExpandTooltip()
+        frame:Show()
+        self:Show()
+    end,
+
+    ["SetTooltipFrame"] = function(self, tooltipFrame)
+        assert(tooltipFrame and tooltipFrame.SetOwner, "You must provide a valid tooltip frame.")
+        self:SetUserData("tooltipFrame", tooltipFrame)
     end,
 
     ["OnShow"] = function(self)
-        -- print("OnShow")
+        -- print("Showing", self.itemLink)
         self.frame:Show()
+        if self.expanded then
+            self:ExpandTooltip()
+        else 
+            self:CollapseTooltip()
+        end
+    end,
+
+    ["Show"] = function(self)
+        -- print("Showing", self.itemLink)
+        self.frame:Show()
+        if self.expanded then
+            self:ExpandTooltip()
+        else 
+            self:CollapseTooltip()
+        end
+    end,
+
+    ["OnHide"] = function(self)
+        self.frame:Hide()
+    end,
+
+    ["Hide"] = function(self)
+        self.frame:Hide()
     end,
 
     ["_splitCSV"] = function (self, input)
@@ -328,17 +367,39 @@ local methods = {
 local function Constructor()
 
     local frame = CreateFrame("Frame", nil, UIParent)
+    -- frame:Hide()
 	frame:SetFrameStrata("FULLSCREEN_DIALOG")
 
-    -- local content = CreateFrame("Frame", nil, frame)
-	-- content:SetPoint("TOPLEFT")
-	-- content:SetPoint("BOTTOMRIGHT")
+    local icon = frame:CreateTexture(nil, "ARTWORK")
+
+    local expandedBackground = CreateFrame("Frame", nil, frame )
+    expandedBackground:SetPoint("TOPLEFT",  icon, "TOPLEFT",  -6, 6)
+    expandedBackground:Hide()
+
+    local compactBackground = CreateFrame("Frame", nil, frame)
+    compactBackground:SetPoint("TOPLEFT",  icon, "TOPLEFT",  -6, 6)
+    compactBackground:Hide()
+	
+    local expandedFrame = CreateFrame("Frame", nil, expandedBackground)
+	expandedFrame:SetPoint("TOPLEFT",  icon, "BOTTOMLEFT",  0, -6)
+	expandedFrame:SetPoint("BOTTOMRIGHT")
+
+    local compactFrame = CreateFrame("Frame", nil, compactBackground)
+	compactFrame:SetPoint("TOPLEFT", icon, "TOPRIGHT", 6 , 0)
+	compactFrame:SetPoint("BOTTOMRIGHT")
+
+    
 
     local widget = {
-        frame     = frame,
-        -- content   = content,
-        itemlink  = nil,
-        type      = widgetType,
+        frame = frame,
+        icon = icon, 
+        expandedBackground = expandedBackground,
+        compactBackground = compactBackground,
+        expandedFrame = expandedFrame,
+        compactFrame = compactFrame,
+        itemlink = nil,
+        expanded = true,
+        type = widgetType,
     }
 
     for method, func in pairs(methods) do

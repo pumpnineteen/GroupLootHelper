@@ -15,5 +15,6 @@
     <Include file="Libs\AceTimer-3.0\AceTimer-3.0.xml"/>
     <Script file="modules\AceGUIWidget-GLHToolTip.lua"/>
     <Script file="modules\AceGUIContainer-TabGroupWindow.lua"/>
+    <Script file="modules\AceGUIContainer-PagedWindow.lua"/>
 
 </Ui>
