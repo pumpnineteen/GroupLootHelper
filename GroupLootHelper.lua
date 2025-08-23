@@ -2,6 +2,7 @@ local addonName, addonTable = ...
 local GLH = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceEvent-3.0")
 local crayon = LibStub("Crayon-3.0")
 local AceTimer = LibStub("AceTimer-3.0")
+local AceEvent = LibStub("AceEvent-3.0")
 
 local dummyFunc = function() end
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned or dummyFunc
@@ -1269,7 +1270,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
                 rollValue:SetText(info.rollValue or "")
                 rollValue:SetUserData("rollID", rollID)
                 rollValue:SetUserData("name", info.name)
-                GLH:Embed(rollValue)
+                AceEvent:Embed(rollValue)
                 rollValue:RegisterCallback("GLH_ROLL_VALUE", "OnRollValue")
                 function rollValue:OnRollValue(event, info)
                     local _rollID = self:GetUserData("rollID")
@@ -1285,7 +1286,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
 
         end
     end
-    GLH:Embed(playerNamesTable)
+    AceEvent:Embed(playerNamesTable)
     playerNamesTable:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
 
 
