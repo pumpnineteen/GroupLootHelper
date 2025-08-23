@@ -1226,7 +1226,6 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     playerNamesTable:SetUserData("FirstPass", nil)
     playerNamesTable:SetUserData("miniRoll", miniRoll)
     
-    playerNamesTable:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
     function playerNamesTable:OnRollInfo(event, info)
         if info.rollID == self.rollID then
             print("RollInfo received!")
@@ -1270,6 +1269,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
                 rollValue:SetText(info.rollValue or "")
                 rollValue:SetUserData("rollID", rollID)
                 rollValue:SetUserData("name", info.name)
+                GLH:Embed(rollValue)
                 rollValue:RegisterCallback("GLH_ROLL_VALUE", "OnRollValue")
                 function rollValue:OnRollValue(event, info)
                     local _rollID = self:GetUserData("rollID")
@@ -1285,6 +1285,8 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
 
         end
     end
+    GLH:Embed(playerNamesTable)
+    playerNamesTable:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
 
 
     -- Finally, add the player row to the vertical scroll container.
@@ -1516,7 +1518,7 @@ function GLH:CreateMSNeedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "MSNeed")
     button:SetCallback("OnClick", function(widget, event, ...)
-        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
+        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         if IsGargulRoll(rollID) then
             print("MS Need clicked")
             RandomRoll(1, 100)
@@ -1539,7 +1541,7 @@ function GLH:CreateOSNeedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "OSNeed")
     button:SetCallback("OnClick", function(widget, event, ...)
-        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
+        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         if IsGargulRoll(rollID) then
             print("OS Need clicked")
             RandomRoll(1, 99)
@@ -1555,12 +1557,13 @@ function GLH:CreateOSNeedButton(size, rollID)
     end)
     return button
 end
+
 function GLH:CreateGreedButton(size, rollID)
     local button = CreateButtonWithTextures(size, greedButtonTextures)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "Greed")
     button:SetCallback("OnClick", function(widget, event, ...)
-        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
+        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         print("Greed clicked")
         if IsGargulRoll(rollID) then
             RandomRoll(1, 100)
@@ -1576,6 +1579,7 @@ function GLH:CreateGreedButton(size, rollID)
     end)
     return button
 end
+
 function GLH:CreateDisenchantButton(size, rollID)
     local button = CreateButtonWithTextures(size, disenchantButtonTextures)
     button:SetUserData("rollID", rollID)
@@ -1588,12 +1592,13 @@ function GLH:CreateDisenchantButton(size, rollID)
     end)
     return button
 end
+
 function GLH:CreatePassButton(size, rollID)
     local button = CreateButtonWithTextures(size, passButtonTextures)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "Pass")
     button:SetCallback("OnClick", function(widget, event, ...)
-        AceGUI:SendMessage("GLH_ROLLED", {rollID = rollID})
+        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         print("Pass clicked")
         RollOnLoot(rollID, 0)
         disableButton(self, 3)
@@ -2332,7 +2337,7 @@ function GLH:AddMiniRollInfo(rollID, playerInfoData)
     local cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
     playerInfoData.cname = cname
     -- playerInfoData.rollID = rollID
-    AceGUI:SendMessage("GLH_ROLL_INFO", playerInfoData)
+    GLH:SendMessage("GLH_ROLL_INFO", playerInfoData)
     -- local rollIcon = playerInfoData.rollIcon
     -- if not activeMiniRolls[rollID] then
     --     print("ERROR: Couldn't find rollID",rollID, "in activeMiniRolls!" )

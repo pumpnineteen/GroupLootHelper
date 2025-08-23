@@ -97,6 +97,7 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
                         -- the tooltip is still loading—delay and retry once
                         C_Timer.After(1, function()
                             -- if sourceFrame:IsShown() then
+                                self:SetUserData("Hyperlink_set", false)
                                 self:SetHyperlink(link, texture)
                             -- end
                         end)
