@@ -1,4 +1,5 @@
 local AceGUI = LibStub("AceGUI-3.0")
+local AceEvent = LibStub("AceEvent-3.0")
 local widgetType = "GLHTooltip"
 local widgetVersion = 1
 local LOOT_FRAME_WIDTH = 243
@@ -6,17 +7,17 @@ local LOOT_FRAME_HEIGHT = 84
 local LOOT_ICON_SIZE = 34
 
 
-local function AddIconCallbacks(self, link)
+local function AddIconCallbacks(self, element, link)
     local widget = self
 
-    self.icon:SetScript("OnEnter", function(self)
+    element:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink(link)
     end)
-    self.icon:SetScript("OnLeave", function(self)
+    element:SetScript("OnLeave", function(self)
         GameTooltip:Hide()
     end)
-    self.icon:SetScript("OnMouseDown", function(self, button)
+    element:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
             if IsModifiedClick("CHATLINK") then
                 ChatEdit_InsertLink(link)
@@ -36,16 +37,18 @@ local function CreateIcon(self, link, texture)
     -----------------------------------------------------------------------------
     print("Creating icon:", link, texture, self.iconSet)
     if not self.iconSet then
-        self.icon:ClearAllPoints()
+        -- self.icon:ClearAllPoints()
+        self.icon:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 6, -6)
         self.icon:SetTexture(texture)
         self.icon:SetWidth(LOOT_ICON_SIZE)
         self.icon:SetHeight(LOOT_ICON_SIZE)
-        AddIconCallbacks(self, link)
-        self.icon:EnableMouse(true)
-        self.icon:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 6, -6)
+        AddIconCallbacks(self, self.frame, link)
+        -- AddIconCallbacks(self, self.icon, link)
+        -- self.icon:EnableMouse(true)
+        
         -- local lvl = self.frame:GetFrameLevel()
         -- local strata = frame:GetFrameStrata()
-        -- self.icon:SetFrameLevel(lvl+2)
+        -- self.icon:SetFrameLevel(lvl+100)
         -- icon:SetFrameStrata(strata)
     end
     self.iconSet = true
@@ -70,25 +73,29 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
         local nameFontString = nil
         -- local itemIcon = self:GetUserData("itemIcon") or targetFrame
         local icon = self:GetUserData("itemButton")
+        local width = sourceFrame:GetWidth()
+        local height = sourceFrame:GetHeight()
+        targetFrame:SetWidth(width)
+        targetFrame:SetHeight(height)
 
-        local lastText = nil
+        local lastText = self.icon
         for i, region in ipairs({ sourceFrame:GetRegions() }) do
             local regionType = region:GetObjectType()
             local point = region:GetPoint()
             if regionType == "Texture" then
                 -- if region:GetTexture() then
-                    local drawLayer = region:GetDrawLayer()
-                    if not drawLayer or drawLayer == "0" or drawLayer == 0 then
-                        drawLayer = "ARTWORK"
-                    end
+                    -- local drawLayer = region:GetDrawLayer()
+                    -- if not drawLayer or drawLayer == "0" or drawLayer == 0 then
+                    --     drawLayer = "ARTWORK"
+                    -- end
+                    -- -- print("Adding texture", link)
+                    -- local textureCopy = targetFrame:CreateTexture(nil, drawLayer)
 
-                    local textureCopy = targetFrame:CreateTexture(nil, drawLayer)
-
-                    textureCopy:SetAllPoints(region)
-                    textureCopy:SetTexture(region:GetTexture())
-                    textureCopy:SetVertexColor(region:GetVertexColor())
-                    textureCopy:SetBlendMode(region:GetBlendMode())
-                    textureCopy:SetTexCoord(region:GetTexCoord())
+                    -- textureCopy:SetAllPoints(region)
+                    -- textureCopy:SetTexture(region:GetTexture())
+                    -- textureCopy:SetVertexColor(region:GetVertexColor())
+                    -- textureCopy:SetBlendMode(region:GetBlendMode())
+                    -- textureCopy:SetTexCoord(region:GetTexCoord())
                 -- end
             elseif regionType == "FontString" then
                 if region:GetText() then
@@ -111,12 +118,13 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
                     text:ClearAllPoints()
                     text:SetFontObject(region:GetFontObject())
                     text:SetText(str)
+                    -- print(str)
                     text:SetTextColor(region:GetTextColor())
                     text:SetShadowColor(region:GetShadowColor())
                     text:SetShadowOffset(region:GetShadowOffset())
                     text:SetJustifyH(region:GetJustifyH())
                     text:SetJustifyV(region:GetJustifyV())
-                    if not nameFontString and text:GetText() then
+                    if not nameFontString and str then
                         nameFontString = text
                         -- print("nameFontString", text:GetText())
                     end
@@ -125,20 +133,21 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
 
                     -- print(point)
                     -- print(point, region:GetJustifyH(), sourceFrame:GetWidth(), text:GetWidth())
+
                     if point == "TOP" then
-                        text:SetPoint("TOP", self.icon, "BOTTOM", 6 , topTextOffset)
-                        text:SetPoint("LEFT", targetFrame, "LEFT", 6, 0)
+                        text:SetPoint("TOP", lastText, "BOTTOM", 0 , -2)
+                        text:SetPoint("LEFT", lastText, "LEFT", 0, 0)
                         if text:GetWidth() > sourceFrame:GetWidth() then
                             text:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
                         else
-                            text:SetPoint("RIGHT", targetFrame, "LEFT", 6 + text:GetWidth(), 0)
+                            text:SetPoint("RIGHT", lastText, "LEFT", text:GetWidth() + 6, 0)
                         end
                         topTextOffset = topTextOffset - region:GetHeight() - 1
                         lastText = text
                     elseif point == "RIGHT" then
                         text:SetJustifyH("RIGHT")
-                        text:SetPoint("TOP", self.icon, "BOTTOM", 6 , topTextOffset + lastText:GetHeight() + 1)
-                        text:SetPoint("LEFT", lastText, "RIGHT", 6, 0)
+                        text:SetPoint("TOP", lastText, "TOP", 0 , 0)
+                        text:SetPoint("LEFT", lastText, "RIGHT", 0, 0)
                         text:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
                         topTextOffset = topTextOffset - 1
                     end    
@@ -159,10 +168,6 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
         self:SetUserData("fullHeight", fullHeight)
         -- print("W H:", fullWidth, fullWidth)
     end
-
-local function UpdateTooltips(self)
-
-end
 
 local methods = {
 	["OnAcquire"] = function(self)
@@ -255,6 +260,7 @@ local methods = {
         -- print("SetHyperlink:", link, texture)
         self:SetUserData("itemTexture", texture)
         local tpframe = self:GetUserData("tooltipFrame")
+        -- print("TPFRAME:", tpframe)
         local frame = self.frame
         frame:Show()
 
@@ -262,8 +268,6 @@ local methods = {
             tpframe:SetOwner(UIParent, "ANCHOR_NONE")
             tpframe:SetHyperlink(link)
             tpframe:Show()
-
-            CreateIcon(self, link, texture)
 
             do
                 self:SetUserData("Hyperlink_set", true)
@@ -273,9 +277,9 @@ local methods = {
                 self.expandedFrame:Show()
                 
                 local width = self.expandedFrame:GetWidth() 
-                width = width + self.icon:GetWidth() + 6 + 6 + 6
+                width = width + LOOT_ICON_SIZE + 6 + 6 + 6
                 local height = self.expandedFrame:GetHeight() 
-                height = height + self.icon:GetHeight() + 6 + 6
+                height = height + LOOT_ICON_SIZE + 6 + 6
 
                 self.expandedBackground:SetWidth(width)
                 self.expandedBackground:SetHeight(height)
@@ -284,7 +288,9 @@ local methods = {
 
             do
                 local nameFontString = self:GetUserData("nameFontString")
-                self.compactFrame.label = self.compactFrame:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
+                if not self.compactFrame.label then
+                    self.compactFrame.label = self.compactFrame:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
+                end
 
                 self.compactFrame.label:SetPoint("TOPLEFT")
                 self.compactFrame.label:SetPoint("BOTTOMRIGHT")
@@ -302,8 +308,8 @@ local methods = {
                 self.compactFrame:SetHeight(self.compactFrame.label:GetHeight())
 
                 local width = self.compactFrame.label:GetWidth() 
-                width = width + self.icon:GetWidth() + 6 + 6 + 6
-                local height = self.icon:GetHeight() + 6 + 6
+                width = width + LOOT_ICON_SIZE + 6 + 6 + 6
+                local height = LOOT_ICON_SIZE + 6 + 6
 
                 width = math.max(self.expandedBackground:GetWidth(), width)
 
@@ -313,12 +319,14 @@ local methods = {
 
                 self:SetUserData("compactWidth", width)
             end
+            CreateIcon(self, link, texture)
         else
             frame:Hide()
         end
         self:ExpandTooltip()
         frame:Show()
         self:Show()
+        AceEvent:SendMessage("GLH_TOOLTIP_NEW_ITEMINFO", link)
     end,
 
     ["SetTooltipFrame"] = function(self, tooltipFrame)
@@ -370,8 +378,10 @@ local function Constructor()
     local frame = CreateFrame("Frame", nil, UIParent)
     -- frame:Hide()
 	frame:SetFrameStrata("FULLSCREEN_DIALOG")
+    local iconFrame = CreateFrame("Frame", nil, frame )
+    iconFrame:SetFrameLevel(frame:GetFrameLevel() + 10)
 
-    local icon = frame:CreateTexture(nil, "ARTWORK")
+    local icon = iconFrame:CreateTexture(nil, "ARTWORK")
 
     local expandedBackground = CreateFrame("Frame", nil, frame )
     expandedBackground:SetPoint("TOPLEFT",  icon, "TOPLEFT",  -6, 6)

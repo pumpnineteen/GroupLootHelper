@@ -85,6 +85,9 @@ local guidCache = {}
 local realmName
 local loot_container_cache = {}
 
+local miniRollWindow
+local miniRollPaged
+
 local qualities = {
         poor = "|cff9d9d9d",
         common = "|cffffffff",
@@ -526,6 +529,178 @@ local rollTypeChanged = {
     LOOT_NEED_BEFORE_GREED,
     LOOT_ROUND_ROBIN, 
 }
+
+local bbframes = {}
+
+local function createbbframe()
+    local f = CreateFrame("Frame", nil, UIParent)
+    f:SetFrameStrata("TOOLTIP")
+    f:SetFrameLevel(9999)
+    f:SetClampedToScreen(true)
+    f:Show()
+    return f
+end
+
+local function ShowBoundingBox(targetFrame, frame, color)
+    if not frame then 
+        frame = createbbframe()
+    end
+    
+    assert(targetFrame ~= nil, "Target frame must be specified")
+    if targetFrame.frame then
+        targetFrame = targetFrame.frame
+    end
+    
+    -- Get target dimensions and position for comparison
+    local targetWidth = targetFrame:GetWidth() or 0
+    local targetHeight = targetFrame:GetHeight() or 0
+    local targetLeft = targetFrame:GetLeft() or 0
+    local targetBottom = targetFrame:GetBottom() or 0
+
+    Log(targetLeft, targetBottom, targetWidth, targetHeight)
+     
+    -- Ensure minimum 100x100 display size
+    local displayWidth = math.max(targetWidth, 100)
+    local displayHeight = math.max(targetHeight, 100)
+    
+    -- Create or reuse debug frame
+    if not frame._debugFrame then
+        frame._debugFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+        frame._debugFrame:SetFrameStrata("TOOLTIP")
+        frame._debugFrame:SetFrameLevel(9999)
+        frame._debugFrame:SetClampedToScreen(true)
+        
+        
+        -- Create text display
+        frame._debugText = frame._debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        frame._debugText:SetTextColor(1, 1, 1, 1)
+        frame._debugText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    end
+    frame._debugFrame:Show()
+    
+    -- Position and size the debug frame
+    frame._debugFrame:SetSize(displayWidth, displayHeight)
+
+    -- Get frame dimensions and position
+    local frameWidth = frame._debugFrame:GetWidth() or 0
+    local frameHeight = frame._debugFrame:GetHeight() or 0
+    local frameLeft = frame._debugFrame:GetLeft() or 0
+    local frameBottom = frame._debugFrame:GetBottom() or 0
+
+    -- Determine color based on match
+    local borderColor
+    if frameWidth ~= targetWidth or frameHeight ~= targetHeight or 
+           frameLeft ~= targetLeft or frameBottom ~= targetBottom then
+        borderColor = {1, 0, 0, 1} -- Red for mismatch
+    else
+        borderColor = {1, 1, 1, 1} -- White for match
+    end
+    
+    if targetLeft and targetBottom then
+        frame._debugFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", targetLeft, targetBottom)
+    else
+        -- Fallback positioning if frame has no position
+        frame._debugFrame:SetPoint("CENTER", UIParent, "CENTER")
+    end
+    
+    -- Set backdrop with colored border
+    frame._debugFrame:SetBackdrop({
+        bgFile = nil,
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = false,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 }
+    })
+    frame._debugFrame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
+    
+    -- Position text at bottom right
+    frame._debugText:SetPoint("BOTTOMRIGHT", frame._debugFrame, "BOTTOMRIGHT", -5, 5)
+    
+    -- Format bounding box info text
+    local bbText = string.format("(%.0f,%.0f) %.0fx%.0f", frameLeft, frameBottom, frameWidth, frameHeight)
+    frame._debugText:SetText(bbText)
+    
+    -- Show the debug frame
+    frame._debugFrame:Show()
+    
+    -- Console output
+    local matchStatus = (frameWidth == targetWidth and frameHeight == targetHeight and 
+                        frameLeft == targetLeft and frameBottom == targetBottom) and "MATCH" or "MISMATCH"
+    
+    Log(string.format("BoundingBox [%s]: (%.1f,%.1f) %.1fx%.1f - %s", 
+          frame:GetName() or "unnamed", frameLeft, frameBottom, frameWidth, frameHeight, matchStatus))
+    
+    if targetFrame ~= frame then
+        Log(string.format("  Target [%s]: (%.1f,%.1f) %.1fx%.1f", 
+              targetFrame:GetName() or "unnamed", targetLeft, targetBottom, targetWidth, targetHeight))
+    end
+end
+
+local function HideBoundingBox(frame)
+    if frame and frame._debugFrame then
+        frame._debugFrame:Hide()
+    end
+end
+
+-- Enhanced version that can show multiple frames at once
+local function ShowMultipleBoundingBoxes(frames)
+    for i, frameData in ipairs(frames) do
+        local frame = frameData.frame or frameData
+        local target = frameData.target
+        local color = frameData.color
+        
+        ShowBoundingBox(frame, target, color)
+    end
+end
+
+-- Utility to compare two frames visually
+local function CompareBoundingBoxes(frame1, frame2, name1, name2)
+    name1 = name1 or "Frame1"
+    name2 = name2 or "Frame2" 
+    
+    print("=== Comparing " .. name1 .. " vs " .. name2 .. " ===")
+    
+    ShowBoundingBox(frame1, nil, {0, 1, 0, 1}) -- Green for frame1
+    ShowBoundingBox(frame2, nil, {0, 0, 1, 1}) -- Blue for frame2
+    
+    -- Show if they match
+    local f1Left, f1Bottom, f1Width, f1Height = frame1:GetLeft() or 0, frame1:GetBottom() or 0, frame1:GetWidth() or 0, frame1:GetHeight() or 0
+    local f2Left, f2Bottom, f2Width, f2Height = frame2:GetLeft() or 0, frame2:GetBottom() or 0, frame2:GetWidth() or 0, frame2:GetHeight() or 0
+    
+    if f1Left == f2Left and f1Bottom == f2Bottom and f1Width == f2Width and f1Height == f2Height then
+        print("  Frames are IDENTICAL")
+    else
+        print("  Frames DIFFER:")
+        if f1Left ~= f2Left or f1Bottom ~= f2Bottom then
+            print(string.format("    Position: %s(%.1f,%.1f) vs %s(%.1f,%.1f)", name1, f1Left, f1Bottom, name2, f2Left, f2Bottom))
+        end
+        if f1Width ~= f2Width or f1Height ~= f2Height then
+            print(string.format("    Size: %s(%.1fx%.1f) vs %s(%.1fx%.1f)", name1, f1Width, f1Height, name2, f2Width, f2Height))
+        end
+    end
+end
+
+-- Usage examples:
+--
+-- Basic usage - white border for normal frames
+-- ShowBoundingBox(myFrame)
+--
+-- Compare frame against target - red if different, white if same
+-- ShowBoundingBox(myFrame, targetFrame) 
+--
+-- Force a specific color
+-- ShowBoundingBox(myFrame, nil, {1, 1, 0, 1}) -- Yellow
+--
+-- Compare working vs broken miniroll items
+-- local workingItem = YourAddon.lootRollWindow.items[1]
+-- local brokenItem = YourAddon.miniRoll.pagedWidget.children[YourAddon.miniRoll.currentPage]
+-- CompareBoundingBoxes(workingItem.frame, brokenItem.frame, "LootRoll", "MiniRoll")
+--
+-- Hide all debug visuals
+-- for _, child in ipairs(YourAddon.miniRoll.pagedWidget.children) do
+--     HideBoundingBox(child.frame)
+-- end
 
 local function CreateLootButton(item)
     local button = AceGUI:Create("Button")
@@ -1134,7 +1309,6 @@ function GLH:CreateItemRollContainerTable(itemLink)
         alignV = "TOP",
     })
     mainContainer:SetLayout("Table")
-
     return mainContainer
 end
 
@@ -1158,14 +1332,26 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
         tooltipWidget:SetHyperlink(itemLink, texture)
         tooltipFrame:Show()
         local tooltip = tooltipWidget.frame
-    
-        AddBackdropToFrame(tooltip, edgelessBackdrop, {0, 0, 0, 0.6})
+
+        AddBackdropToFrame(tooltipWidget.compactBackground, edgelessBackdrop, {0, 0, 0, 0.6})
+        AddBackdropToFrame(tooltipWidget.expandedBackground, edgelessBackdrop, {0, 0, 0, 0.6})
+        
         tooltip:SetClampedToScreen(false)
         tooltip:Show()
 
         colTooltip:AddChild(tooltipWidget)
     end
     mainContainer:AddChild(colTooltip)
+    AceEvent:Embed(colTooltip)
+    function colTooltip:GLH_TOOLTIP_NEW_ITEMINFO(msg, itemLink)
+        local _il =  colTooltip:GetUserData("itemLink")
+        if itemLink == colTooltip:GetUserData("itemLink") then
+            print("MATCHING GLH_TOOLTIP_NEW_ITEMINFO received", itemLink)
+            -- colTooltip.frame:SetWidth(colTooltip.)
+        end
+        -- print("GLH_TOOLTIP_NEW_ITEMINFO received", _il, itemLink)
+    end
+    colTooltip:RegisterMessage("GLH_TOOLTIP_NEW_ITEMINFO", "GLH_TOOLTIP_NEW_ITEMINFO")
 
     -----------------------------------------
     -- Column 2: Player Info Table wrapped in a vertical scroll frame
@@ -1271,7 +1457,6 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
                 rollValue:SetUserData("rollID", rollID)
                 rollValue:SetUserData("name", info.name)
                 AceEvent:Embed(rollValue)
-                rollValue:RegisterCallback("GLH_ROLL_VALUE", "OnRollValue")
                 function rollValue:OnRollValue(event, info)
                     local _rollID = self:GetUserData("rollID")
                     local _name = self:GetUserDate("name")
@@ -1279,6 +1464,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
                         self:SetText(info.rollValue)
                     end
                 end
+                rollValue:RegisterMessage("GLH_ROLL_VALUE", "OnRollValue")
                 table.insert(row, rollValue)
             end
 
@@ -1287,7 +1473,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
         end
     end
     AceEvent:Embed(playerNamesTable)
-    playerNamesTable:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
+    playerNamesTable:RegisterMessage("GLH_ROLL_INFO", "OnRollInfo")
 
 
     -- Finally, add the player row to the vertical scroll container.
@@ -1495,10 +1681,16 @@ end
 
 local function IsGargulRoll(rollID)
     -- Check if the rollID is a Gargul roll
+    if type(rollID) == "number" then
+        return false
+    end
     return rollID and rollID:match("^GargulRoll_")
 end
 
 local function disableButton(button, time)
+    if not button then return end
+    if not button.GetParent then return end
+    
     local parent = button:GetParent()
     for _, child in ipairs(parent.children) do
         if child.SetDisabled then
@@ -1523,13 +1715,13 @@ function GLH:CreateMSNeedButton(size, rollID)
         if IsGargulRoll(rollID) then
             print("MS Need clicked")
             RandomRoll(1, 100)
-            disableButton(self, 3)
+            disableButton(widget, 3)
 
         elseif rollID then
             print("MS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
-            disableButton(self)
-            self:RemoveRollID(rollID)
+            disableButton(widget)
+            -- GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
         end
@@ -1544,14 +1736,14 @@ function GLH:CreateOSNeedButton(size, rollID)
     button:SetCallback("OnClick", function(widget, event, ...)
         GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         if IsGargulRoll(rollID) then
-            print("OS Need clicked")
+            Log("OS Need clicked")
             RandomRoll(1, 99)
             disableButton(self, 3)
         elseif rollID then
-            print("OS Need clicked", rollID, rollid_to_uid[rollID])
+            Log("OS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
             disableButton(self, 3)
-            self:RemoveRollID(rollID)
+            -- GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
         end
@@ -1573,7 +1765,7 @@ function GLH:CreateGreedButton(size, rollID)
             print("Attempting to roll on loot", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 2)
             disableButton(self, 3)
-            self:RemoveRollID(rollID)
+            -- GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
         end
@@ -1589,7 +1781,7 @@ function GLH:CreateDisenchantButton(size, rollID)
         print("Disenchant clicked")
         RollOnLoot(rollID, 3)
         disableButton(self, 3)
-        -- self:RemoveRollID(rollID)
+        -- GLH:RemoveRollID(rollID)
     end)
     return button
 end
@@ -1603,7 +1795,7 @@ function GLH:CreatePassButton(size, rollID)
         print("Pass clicked")
         RollOnLoot(rollID, 0)
         disableButton(self, 3)
-        self:RemoveRollID(rollID)
+        -- GLH:RemoveRollID(rollID)
     end)
     return button
 end
@@ -1677,30 +1869,36 @@ local function HandleSlashCommand(msg)
         GLH:ActiveMiniRolls()
     elseif msg == "prlog" then
         PRINTLOG = not PRINTLOG
-    elseif msg == "tmini" then
-        PRINTLOG = true
-        local index = 0
-        for k, link in pairs(testLinks) do
-            C_Timer.After(1*index, function()
-                Log("Adding mini:", unpack(link))
-                local itemLink, texture = unpack(link)
-                GLH:ActiveMiniRolls()
-                GLH:CreateMiniRoll(k, itemLink, texture)
-            end)
-            index = index + 1
-        end
+        print("Print log enabled:", PRINTLOG)
     elseif msg == "pmini" then
         PRINTLOG = true
         GLH:ActiveMiniRollsPages()
         local index = 0
         for k, link in pairs(testLinks) do
             C_Timer.After(1*index, function()
-                Log("Adding mini:", unpack(link))
+                -- Log("Adding mini:", unpack(link))
                 local itemLink, texture = unpack(link)
                 GLH:CreateMiniRollPages(k, itemLink, texture)
             end)
             index = index + 1
         end
+    elseif msg == "pbb" then
+        PRINTLOG = true
+        if not miniRollPaged then
+            return
+        end
+        Log("MiniRoll Page BB...")
+        if not miniRollPaged.currentIndex then
+            Log("No current page...")
+            return
+        end
+        Log("Current page:", miniRollPaged.currentIndex)
+        if not GLH.testBB then
+            GLH.testBB = createbbframe()
+        end
+        local targetFrame = miniRollPaged.pages[miniRollPaged.currentIndex]
+        ShowBoundingBox(targetFrame, GLH.testBB)
+
 
     else
         print("Unknown command. Use /glh to open the loot window.")
@@ -1907,7 +2105,7 @@ function GLH:AddEntryToHistoryTbl(history, entry, dateKey, link, winner, locatio
         instanceID = location.instanceID
     }
     table.insert(history, newEntry)
-    print("Storing:", link, playerGCache[winner], amount)
+    Log("Storing:", link, playerGCache[winner], amount)
 end
 
 
@@ -2174,8 +2372,6 @@ end
 local activeMiniRolls = {}
 local activeMiniRollIDs = {}
 local miniRollsActiveIndex = 1
-local miniRollWindow
-local miniRollPaged
 
 -- function GLH:CreateMiniRoll(rollID, itemLink, texture)
 --     Log("Creating miniroll:", itemLink, texture)
@@ -2193,8 +2389,8 @@ local miniRollPaged
 -- end
 
 function GLH:CreateMiniRollPages(rollID, itemLink, texture)
-    Log("Creating miniroll:", itemLink, texture)
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
+    mainContainer.rollID = rollID
     -- mainContainer:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
     -- function mainContainer:OnRollInfo(event, info)
     --     if info.rollID == self.rollID then
@@ -2207,17 +2403,20 @@ function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     activeMiniRolls[rollID] = mainContainer
     table.insert(activeMiniRollIDs, rollID)
     miniRollPaged:AddPage(mainContainer)
+
 end
 
 function GLH:RemoveRollID(rollID)
     for i, id in ipairs(activeMiniRollIDs) do
         if id == rollID then
             local widget = table.remove(activeMiniRollIDs, i)
-            widget:ReleaseChildren()
-            widget:Hide()
-            widget = nil
-            activeMiniRolls[rollID] = nil
-            break
+            if widget then
+                widget:ReleaseChildren()
+                widget:Hide()
+                widget = nil
+                activeMiniRolls[rollID] = nil
+                break
+            end
         end
     end
     if #activeMiniRollIDs == 0 then
@@ -2234,8 +2433,15 @@ function GLH:ActiveMiniRollsPages()
         paged:SetWidth(400)
         paged:SetHeight(200)
         paged:SetAutoAdjustHeight(false)
+        AceEvent:Embed(paged)
+        function paged:GLH_ROLLED(msg, info)
+            Log("GLH_ROLLED received:", info.rollID)
+            paged:RemovePageRollID(info.rollID)
+        end
+        paged:RegisterMessage("GLH_ROLLED", "GLH_ROLLED")
 
         miniRollPaged = paged
+
     end
     miniRollPaged:Show()
 end
@@ -2493,7 +2699,12 @@ function GLH:OnEnable()
     -- end 
 
     self:SpawnAllTooltipContainers()
+    -- self:RegisterMessage("GLH_TOOLTIP_NEW_ITEMINFO", "NewIteminfo")
 end
+
+-- function GLH:NewIteminfo()
+--     print("GLH_TOOLTIP_NEW_ITEMINFO")
+-- end
 
 function GLH:CreateTooltipFrame()
     local name = "GLH_Tooltip" .. tooltipIndex

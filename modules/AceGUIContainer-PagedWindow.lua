@@ -78,6 +78,13 @@ local function SizerE_OnMouseDown(frame)
     AceGUI:ClearFocus()
 end
 
+local function HideWidget(widget)
+    if widget.Hide then
+        widget:Hide()
+    else
+        widget.frame:Hide()
+    end
+
 --[[-----------------------------------------------------------------------------
 Scripts
 -------------------------------------------------------------------------------]]
@@ -176,12 +183,9 @@ local methods = {
         status.currentIndex = index
 
         if self.pages[self.currentIndex] then
-            -- self:ReleaseChildren()
             self.children = {}
             local page = self.pages[self.currentIndex]
-            -- page:SetParent(self)
-            -- page:OnAcquire()
-            -- self:AddChild(page)
+            self:AddChild(page)
             page.frame:Show()
             if page.LayoutFinished then
                  page:LayoutFinished(self.content.width, self.content.height)
@@ -194,10 +198,6 @@ local methods = {
     end,
 
     ["AddPage"] = function(self, widget, index)
-        -- parent into the content area
-        widget.frame:SetParent(self.content)
-        widget.frame:ClearAllPoints()
-        widget.frame:SetAllPoints(self.content)
         widget.frame:Hide()
 
         if index and index >= 1 and index <= #self.pages then
@@ -218,9 +218,28 @@ local methods = {
     end,
 
     ["RemovePage"] = function(self, widget)
+        self:Release(widget)
         for i = #self.pages, 1, -1 do
             if self.pages[i] == widget then
-                widget:Hide()
+                HideWidget(widget)
+                tremove(self.pages, i)
+                if self.currentIndex > i then
+                    self.currentIndex = self.currentIndex - 1
+                elseif self.currentIndex == i then
+                    self:SelectPage(i) -- This will select the new widget at this index, or the last one
+                end
+                break
+            end
+        end
+        self:UpdateNavControls()
+    end,
+
+    ["RemovePageRollID"] = function(self, rollID)
+        for i = #self.pages, 1, -1 do
+            local widget = self.pages[i]
+            if widget.rollID and widget.rollID == rollID then
+                self:Release(widget)
+                HideWidget(widget)
                 tremove(self.pages, i)
                 if self.currentIndex > i then
                     self.currentIndex = self.currentIndex - 1
@@ -235,7 +254,11 @@ local methods = {
 
     ["RemoveAllChildren"] = function(self)
         for _, widget in ipairs(self.pages) do
-            widget:Hide()
+            if widget.Hide then
+                widget:Hide()
+            else
+                widget.frame:Hide()
+            end
         end
         wipe(self.children)
         self:SelectPage(1)
@@ -309,6 +332,12 @@ local methods = {
             frame:SetPoint("CENTER")
         end
         self:SelectPage(status.currentIndex or 1)
+    end,
+
+    ["ToggleClipping"] = function(self)
+        -- TODO: maybe set up a clipper frame, and attach children to that for better clipping... 
+        self.clipping = not self.clipping
+        self.content:SetClipsChildren(self.clipping)
     end
 }
 
@@ -414,6 +443,7 @@ local function Constructor()
     local content = CreateFrame("Frame", nil, border)
     content:SetPoint("TOPLEFT", 10, -7)
     content:SetPoint("BOTTOMRIGHT", -10, 7)
+    content:SetClipsChildren(true)
 
     -- Navigation Controls
     local navContainer = CreateFrame("Frame", nil, frame)
@@ -460,6 +490,7 @@ local function Constructor()
         pageDisplay  = pageDisplay,
         nextButton   = nextButton,
         lastButton   = lastButton,
+        clipping     = true,
         type         = Type
     }
     for method, func in pairs(methods) do
