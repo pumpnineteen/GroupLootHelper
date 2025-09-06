@@ -84,6 +84,7 @@ local function HideWidget(widget)
     else
         widget.frame:Hide()
     end
+end
 
 --[[-----------------------------------------------------------------------------
 Scripts
