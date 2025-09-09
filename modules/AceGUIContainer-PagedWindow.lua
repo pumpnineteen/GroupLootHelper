@@ -86,6 +86,12 @@ local function HideWidget(widget)
     end
 end
 
+local function ReleaseWidget(widget)
+    if widget.Release then
+        widget:Release()
+    end
+end
+
 --[[-----------------------------------------------------------------------------
 Scripts
 -------------------------------------------------------------------------------]]
@@ -221,7 +227,7 @@ local methods = {
     end,
 
     ["RemovePage"] = function(self, widget)
-        self:Release(widget)
+        ReleaseWidget(widget)
         for i = #self.pages, 1, -1 do
             if self.pages[i] == widget then
                 HideWidget(widget)
@@ -240,23 +246,23 @@ local methods = {
     ["RemovePageRollID"] = function(self, rollID)
         local removedIndex = nil
         local numPages = #self.pages
-        
+        -- print("Attempting to remove page with rollID:", rollID, "from", numPages, "pages")
         -- Find and remove the page with matching rollID
         for i = numPages, 1, -1 do
             local widget = self.pages[i]
             if widget.rollID and widget.rollID == rollID then
                 removedIndex = i
                 
-                print("Removing page with rollID:", rollID, "at index:", i)
+                -- print("Removing page with rollID:", rollID, "at index:", i)
                 
                 -- Hide the widget first
                 HideWidget(widget)
-                self:Release(widget)
+                ReleaseWidget(widget)
                 
                 -- Remove from pages array
-                print("Pages before removal:", #self.pages)
+                -- print("Pages before removal:", #self.pages)
                 tremove(self.pages, i)
-                print("Pages after removal:", #self.pages)
+                -- print("Pages after removal:", #self.pages)
                 break
             end
         end
@@ -267,7 +273,7 @@ local methods = {
         end
         
         local newNumPages = #self.pages
-        print("Pages remaining:", newNumPages)
+        -- print("Pages remaining:", newNumPages)
         
         if newNumPages == 0 then
             self.currentIndex = 0
@@ -299,7 +305,7 @@ local methods = {
         local status = self.status or self.localstatus
         status.currentIndex = self.currentIndex
         
-        print("New current index:", self.currentIndex, "of", newNumPages)
+        -- print("New current index:", self.currentIndex, "of", newNumPages)
         
         -- Refresh the current page display
         self:SelectPage(self.currentIndex)
@@ -335,7 +341,7 @@ local methods = {
         -- Release all pages properly
         for _, widget in ipairs(self.pages) do
             HideWidget(widget)
-            self:Release(widget)
+            ReleaseWidget(widget)
         end
         
         -- Clear the pages array
