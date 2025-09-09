@@ -1717,7 +1717,7 @@ function GLH:CreateMSNeedButton(size, rollID)
             RandomRoll(1, 100)
             disableButton(widget, 3)
 
-        elseif rollID then
+        elseif rollID and type(rollID) == "number" then
             print("MS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
             disableButton(widget)
@@ -1739,7 +1739,7 @@ function GLH:CreateOSNeedButton(size, rollID)
             Log("OS Need clicked")
             RandomRoll(1, 99)
             disableButton(self, 3)
-        elseif rollID then
+        elseif rollID and type(rollID) == "number" then
             Log("OS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
             disableButton(self, 3)
@@ -1757,11 +1757,11 @@ function GLH:CreateGreedButton(size, rollID)
     button:SetUserData("rollType", "Greed")
     button:SetCallback("OnClick", function(widget, event, ...)
         GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
-        print("Greed clicked")
+        print("Greed clicked", rollID)
         if IsGargulRoll(rollID) then
             RandomRoll(1, 100)
             disableButton(self)
-        elseif rollID then
+        elseif rollID and type(rollID) == "number" then
             print("Attempting to roll on loot", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 2)
             disableButton(self, 3)
@@ -1778,9 +1778,11 @@ function GLH:CreateDisenchantButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "Disenchant")
     button:SetCallback("OnClick", function(widget, event, ...)
-        print("Disenchant clicked")
-        RollOnLoot(rollID, 3)
-        disableButton(self, 3)
+        print("Disenchant clicked", rollID)
+        if rollID and type(rollID) == "number" then
+            RollOnLoot(rollID, 3)
+            disableButton(self, 3)
+        end
         -- GLH:RemoveRollID(rollID)
     end)
     return button
@@ -1792,9 +1794,11 @@ function GLH:CreatePassButton(size, rollID)
     button:SetUserData("rollType", "Pass")
     button:SetCallback("OnClick", function(widget, event, ...)
         GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
-        print("Pass clicked")
-        RollOnLoot(rollID, 0)
-        disableButton(self, 3)
+        print("Pass clicked", rollID)
+        if rollID and type(rollID) == "number" then
+            RollOnLoot(rollID, 0)
+            disableButton(self, 3)
+        end
         -- GLH:RemoveRollID(rollID)
     end)
     return button
@@ -1866,7 +1870,7 @@ local function HandleSlashCommand(msg)
     elseif msg == "conv" then
         GLH:ConvertHistoryRollsFormat()
     elseif msg == "mini" then
-        GLH:ActiveMiniRolls()
+        GLH:ActiveMiniRollsPages()
     elseif msg == "prlog" then
         PRINTLOG = not PRINTLOG
         print("Print log enabled:", PRINTLOG)
@@ -2444,6 +2448,7 @@ function GLH:ActiveMiniRollsPages()
 
     end
     miniRollPaged:Show()
+    miniRollPaged:RefreshPages()
 end
 
 function GLH:ActiveMiniRolls()
@@ -2535,6 +2540,7 @@ function GLH:ActiveMiniRolls()
         miniRollWindow = tabGroup
     end
     miniRollWindow:Show()
+    miniRollWindow:RefreshPages()
 end
 
 function GLH:AddMiniRollInfo(rollID, playerInfoData)

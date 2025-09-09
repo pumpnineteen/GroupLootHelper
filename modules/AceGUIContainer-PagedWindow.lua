@@ -236,21 +236,95 @@ local methods = {
     end,
 
     ["RemovePageRollID"] = function(self, rollID)
-        for i = #self.pages, 1, -1 do
+        local removedIndex = nil
+        local numPages = #self.pages
+        
+        -- Find and remove the page with matching rollID
+        for i = numPages, 1, -1 do
             local widget = self.pages[i]
             if widget.rollID and widget.rollID == rollID then
+                -- Store the index we're removing
+                removedIndex = i
+                
+                -- Release the widget properly
                 self:Release(widget)
                 HideWidget(widget)
+                
+                -- Remove from pages array
                 tremove(self.pages, i)
-                if self.currentIndex > i then
-                    self.currentIndex = self.currentIndex - 1
-                elseif self.currentIndex == i then
-                    self:SelectPage(i) -- This will select the new widget at this index, or the last one
-                end
                 break
             end
         end
+        
+        -- If we didn't find a matching page, exit early
+        if not removedIndex then
+            return
+        end
+        
+        -- Update current index based on what was removed
+        local newNumPages = #self.pages
+        
+        if newNumPages == 0 then
+            -- No pages left
+            self.currentIndex = 0
+            self:UpdateNavControls()
+            -- Clear children array
+            wipe(self.children)
+            return
+        end
+        
+        -- Adjust current index if necessary
+        if self.currentIndex > removedIndex then
+            -- We removed a page before current, shift index down
+            self.currentIndex = self.currentIndex - 1
+        elseif self.currentIndex == removedIndex then
+            -- We removed the current page
+            if removedIndex > newNumPages then
+                -- The removed page was the last one, go to new last page
+                self.currentIndex = newNumPages
+            else
+                -- Stay at same index (which now shows the next page)
+                self.currentIndex = removedIndex
+            end
+        end
+        -- If removedIndex < currentIndex, currentIndex stays the same
+        
+        -- Ensure currentIndex is within valid bounds
+        self.currentIndex = math.max(1, math.min(self.currentIndex, newNumPages))
+        
+        -- Update status
+        local status = self.status or self.localstatus
+        status.currentIndex = self.currentIndex
+        
+        -- Refresh the current page display
+        self:SelectPage(self.currentIndex)
         self:UpdateNavControls()
+    end,
+
+    -- Also add this helper method to rebuild/refresh the entire widget
+    ["RefreshPages"] = function(self)
+        local numPages = #self.pages
+        
+        if numPages == 0 then
+            self.currentIndex = 0
+            wipe(self.children)
+            self:UpdateNavControls()
+            return
+        end
+        
+        -- Ensure current index is valid
+        if self.currentIndex > numPages then
+            self.currentIndex = numPages
+        elseif self.currentIndex < 1 then
+            self.currentIndex = 1
+        end
+        
+        -- Update status
+        local status = self.status or self.localstatus
+        status.currentIndex = self.currentIndex
+        
+        -- Force refresh current page
+        self:SelectPage(self.currentIndex)
     end,
 
     ["RemoveAllChildren"] = function(self)
