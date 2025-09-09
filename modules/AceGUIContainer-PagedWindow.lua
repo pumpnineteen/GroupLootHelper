@@ -243,37 +243,31 @@ local methods = {
         for i = numPages, 1, -1 do
             local widget = self.pages[i]
             if widget.rollID and widget.rollID == rollID then
-                -- Store the index we're removing
                 removedIndex = i
                 
-                -- Release the widget properly
+                print("Removing page with rollID:", rollID, "at index:", i)
                 self:Release(widget)
                 HideWidget(widget)
                 
-                -- Remove from pages array
                 tremove(self.pages, i)
                 break
             end
         end
         
-        -- If we didn't find a matching page, exit early
         if not removedIndex then
             return
         end
         
-        -- Update current index based on what was removed
         local newNumPages = #self.pages
         
         if newNumPages == 0 then
-            -- No pages left
             self.currentIndex = 0
             self:UpdateNavControls()
-            -- Clear children array
+
             wipe(self.children)
             return
         end
         
-        -- Adjust current index if necessary
         if self.currentIndex > removedIndex then
             -- We removed a page before current, shift index down
             self.currentIndex = self.currentIndex - 1
@@ -287,7 +281,6 @@ local methods = {
                 self.currentIndex = removedIndex
             end
         end
-        -- If removedIndex < currentIndex, currentIndex stays the same
         
         -- Ensure currentIndex is within valid bounds
         self.currentIndex = math.max(1, math.min(self.currentIndex, newNumPages))
