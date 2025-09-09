@@ -246,8 +246,8 @@ local methods = {
                 removedIndex = i
                 
                 print("Removing page with rollID:", rollID, "at index:", i)
-                self:Release(widget)
                 HideWidget(widget)
+                self:Release(widget)
                 
                 tremove(self.pages, i)
                 break

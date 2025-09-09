@@ -2540,7 +2540,7 @@ function GLH:ActiveMiniRolls()
         miniRollWindow = tabGroup
     end
     miniRollWindow:Show()
-    miniRollWindow:RefreshPages()
+    -- miniRollWindow:RefreshPages()
 end
 
 function GLH:AddMiniRollInfo(rollID, playerInfoData)
