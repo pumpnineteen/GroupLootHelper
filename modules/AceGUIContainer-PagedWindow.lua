@@ -251,20 +251,12 @@ local methods = {
                 
                 -- Hide the widget first
                 HideWidget(widget)
-                
-                -- Remove from children if it's currently displayed
-                for j = #self.children, 1, -1 do
-                    if self.children[j] == widget then
-                        tremove(self.children, j)
-                        break
-                    end
-                end
-                
-                -- Release the widget properly
                 self:Release(widget)
                 
                 -- Remove from pages array
+                print("Pages before removal:", #self.pages)
                 tremove(self.pages, i)
+                print("Pages after removal:", #self.pages)
                 break
             end
         end
