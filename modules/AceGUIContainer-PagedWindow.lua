@@ -170,26 +170,28 @@ local methods = {
         if numPages == 0 then
             self.currentIndex = 0
             status.currentIndex = 0
+            wipe(self.children)
             self:UpdateNavControls()
             return
         end
 
         index = math.max(1, math.min(index, numPages))
 
-        for _ , page in ipairs(self.pages) do
+        for _, page in ipairs(self.pages) do
             page.frame:Hide()
         end
 
         self.currentIndex = index
         status.currentIndex = index
 
+        wipe(self.children)
+        
         if self.pages[self.currentIndex] then
-            self.children = {}
             local page = self.pages[self.currentIndex]
             self:AddChild(page)
             page.frame:Show()
             if page.LayoutFinished then
-                 page:LayoutFinished(self.content.width, self.content.height)
+                page:LayoutFinished(self.content.width, self.content.height)
             end
             self:Fire("OnPageChanged", self.currentIndex, page)
         end
@@ -246,28 +248,43 @@ local methods = {
                 removedIndex = i
                 
                 print("Removing page with rollID:", rollID, "at index:", i)
+                
+                -- Hide the widget first
                 HideWidget(widget)
+                
+                -- Remove from children if it's currently displayed
+                for j = #self.children, 1, -1 do
+                    if self.children[j] == widget then
+                        tremove(self.children, j)
+                        break
+                    end
+                end
+                
+                -- Release the widget properly
                 self:Release(widget)
                 
+                -- Remove from pages array
                 tremove(self.pages, i)
                 break
             end
         end
         
         if not removedIndex then
+            print("No page found with rollID:", rollID)
             return
         end
         
         local newNumPages = #self.pages
+        print("Pages remaining:", newNumPages)
         
         if newNumPages == 0 then
             self.currentIndex = 0
-            self:UpdateNavControls()
-
             wipe(self.children)
+            self:UpdateNavControls()
             return
         end
         
+        -- Adjust current index if necessary
         if self.currentIndex > removedIndex then
             -- We removed a page before current, shift index down
             self.currentIndex = self.currentIndex - 1
@@ -278,7 +295,8 @@ local methods = {
                 self.currentIndex = newNumPages
             else
                 -- Stay at same index (which now shows the next page)
-                self.currentIndex = removedIndex
+                -- But make sure we don't go beyond available pages
+                self.currentIndex = math.min(removedIndex, newNumPages)
             end
         end
         
@@ -289,9 +307,10 @@ local methods = {
         local status = self.status or self.localstatus
         status.currentIndex = self.currentIndex
         
+        print("New current index:", self.currentIndex, "of", newNumPages)
+        
         -- Refresh the current page display
         self:SelectPage(self.currentIndex)
-        self:UpdateNavControls()
     end,
 
     -- Also add this helper method to rebuild/refresh the entire widget
@@ -321,15 +340,27 @@ local methods = {
     end,
 
     ["RemoveAllChildren"] = function(self)
+        -- Release all pages properly
         for _, widget in ipairs(self.pages) do
-            if widget.Hide then
-                widget:Hide()
-            else
-                widget.frame:Hide()
-            end
+            HideWidget(widget)
+            self:Release(widget)
         end
+        
+        -- Clear the pages array
+        wipe(self.pages)
+        
+        -- Clear children array
         wipe(self.children)
-        self:SelectPage(1)
+        
+        -- Reset current index
+        self.currentIndex = 0
+        
+        -- Update status
+        local status = self.status or self.localstatus
+        status.currentIndex = 0
+        
+        -- Update navigation controls
+        self:UpdateNavControls()
     end,
 
     ["OnWidthSet"] = function(self, width)
