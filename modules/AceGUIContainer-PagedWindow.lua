@@ -532,10 +532,10 @@ local function Constructor()
 
     local closebutton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     closebutton:SetScript("OnClick", Button_OnClick)
-    closebutton:SetPoint("TOPRIGHT", -5, -10)
-    closebutton:SetHeight(20)
-    closebutton:SetWidth(28)
-    closebutton:SetText("  X  ")
+    closebutton:SetPoint("TOPRIGHT", 0, 0)
+    closebutton:SetHeight(22)
+    closebutton:SetWidth(42)
+    closebutton:SetText("X")
 
     local content = CreateFrame("Frame", nil, border)
     content:SetPoint("TOPLEFT", 10, -7)
@@ -544,8 +544,8 @@ local function Constructor()
 
     -- Navigation Controls
     local navContainer = CreateFrame("Frame", nil, frame)
-    navContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -25)
-    navContainer:SetPoint("TOPRIGHT", closebutton, "TOPLEFT", -10, 0)
+    navContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    navContainer:SetPoint("TOPRIGHT", closebutton, "TOPLEFT", 0, 0)
     navContainer:SetHeight(22)
 
     local firstButton = CreateNavButton(navContainer, "GLH_PagedNavFirst"..num, "<<", "first")
