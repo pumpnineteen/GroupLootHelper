@@ -1328,6 +1328,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
         if lootList then
             tooltipWidget:SetUserData("layoutParent", lootList)
         end
+        tooltipWidget:SetUserData("tooltipWidth", ITEM_TOOLTIP_WIDTH)
         tooltipWidget:SetTooltipFrame(tooltipFrame)
         tooltipWidget:SetHyperlink(itemLink, texture)
         tooltipFrame:Show()
@@ -1642,39 +1643,47 @@ local function CreateButtonWithTextures(size, textures, vertexColor)
     size = math.floor(tonumber(size or 16))
     
     -- Create an AceGUI Button widget instead of a raw frame.
-    local widget = AceGUI:Create("Button")
+    local widget = AceGUI:Create("InteractiveLabel")
     widget:SetWidth(size)
     widget:SetHeight(size)
     widget:SetText("")
     
     local button = widget.frame
-    
-    -- Create and set the normal texture.
-    local normal = button:CreateTexture(textures.up, "ARTWORK")
-    normal:SetAllPoints()
-    normal:SetTexture(textures['up'])
-    if vertexColor then
-        normal:SetVertexColor(unpack(vertexColor))
+    widget.vertexColor = vertexColor
+    widget.normalTexture = textures['up']
+    widget.pushedTexture = textures['down']
+    widget.highlightTexture = textures['highlight']
+    widget:SetImage(widget.normalTexture)
+    function widget:MaybeVertexColor()
+        if self.image then
+            if self.vertexColor then
+                self.image:SetVertexColor(unpack(self.vertexColor))
+            else
+                self.image:SetVertexColor(1, 1, 1, 1)
+            end
+        end
     end
-    button:SetNormalTexture(normal)
-    
-    -- Create and set the pushed texture.
-    local pushed = button:CreateTexture(textures.down, "ARTWORK")
-    pushed:SetAllPoints()
-    pushed:SetTexture(textures['down'])
-    if vertexColor then
-        pushed:SetVertexColor(unpack(vertexColor))
+    widget:MaybeVertexColor()
+    widget:SetImageSize(size, size)
+
+    function widget:OnEnter()
+        widget:SetImage(widget.highlightTexture)
+        widget:MaybeVertexColor()
+        widget:SetImageSize(size, size)
     end
-    button:SetPushedTexture(pushed)
-    
-    -- Create and set the highlight texture.
-    local highlight = button:CreateTexture(textures.highlight, "ARTWORK")
-    highlight:SetAllPoints()
-    highlight:SetTexture(textures['highlight'])
-    if vertexColor then
-        highlight:SetVertexColor(unpack(vertexColor))
+
+    function widget:OnLeave()
+        widget:SetImage(widget.normalTexture)
+        widget:MaybeVertexColor()
+        widget:SetImageSize(size, size)
     end
-    button:SetHighlightTexture(highlight)
+
+    function widget:OnMouseDown()
+        widget:SetImage(widget.pushedTexture)
+        widget:MaybeVertexColor()
+        widget:SetImageSize(size, size)
+    end
+    
     
     return widget
 end
@@ -1704,6 +1713,7 @@ local function disableButton(button, time)
         end
     end
 end
+
 
 function GLH:CreateMSNeedButton(size, rollID)
     local vertexColor = {1, 0.84, 0}
@@ -1876,6 +1886,7 @@ local function HandleSlashCommand(msg)
         print("Print log enabled:", PRINTLOG)
     elseif msg == "pmini" then
         PRINTLOG = true
+        Log("Tooltip width:", ITEM_TOOLTIP_WIDTH)
         GLH:ActiveMiniRollsPages()
         local index = 0
         for k, link in pairs(testLinks) do
@@ -1886,6 +1897,8 @@ local function HandleSlashCommand(msg)
             end)
             index = index + 1
         end
+    elseif msg == "roll" then
+       GLH:TestRolls() 
     elseif msg == "pbb" then
         PRINTLOG = true
         if not miniRollPaged then
@@ -2451,6 +2464,10 @@ function GLH:ActiveMiniRollsPages()
     miniRollPaged:RefreshPages()
 end
 
+function GLH:TestRolls()
+
+end
+
 function GLH:ActiveMiniRolls()
     if not miniRollWindow then 
         local tabGroup = AceGUI:Create("TabGroupWindow")
@@ -2579,6 +2596,13 @@ function GLH:AddMiniRollInfo(rollID, playerInfoData)
     
 end
 
+function GLH:GetTooltipMaxWidth()
+    local label = AceGUI:Create("Label")
+    label:SetText("2000-2000 damage    3.00 speed")
+    ITEM_TOOLTIP_WIDTH = label.frame:GetWidth() + 6 + 6
+    print("Calculated tooltip width:", ITEM_TOOLTIP_WIDTH)
+end
+
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
     realmName = GetRealmName()
@@ -2689,6 +2713,8 @@ function GLH:OnEnable()
             itemNameToRollID[activeRoll.itemName] = uID
         end
     end
+
+    GLH:GetTooltipMaxWidth()
 
     -- for playerName, tbl in pairs(playerCache) do
     --     name = cleanName(playerName)
