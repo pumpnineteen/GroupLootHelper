@@ -535,7 +535,7 @@ local function Constructor()
     closebutton:SetPoint("TOPRIGHT", -5, -10)
     closebutton:SetHeight(20)
     closebutton:SetWidth(28)
-    closebutton:SetText("X")
+    closebutton:SetText("  X  ")
 
     local content = CreateFrame("Frame", nil, border)
     content:SetPoint("TOPLEFT", 10, -7)

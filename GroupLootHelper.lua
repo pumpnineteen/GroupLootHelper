@@ -1640,6 +1640,7 @@ function GLH:GetClassColour(class)
 end
 
 local function CreateButtonWithTextures(size, textures, vertexColor)
+    
     size = math.floor(tonumber(size or 16))
     
     -- Create an AceGUI Button widget instead of a raw frame.
@@ -1652,8 +1653,20 @@ local function CreateButtonWithTextures(size, textures, vertexColor)
     widget.vertexColor = vertexColor
     widget.normalTexture = textures['up']
     widget.pushedTexture = textures['down']
-    widget.highlightTexture = textures['highlight']
+
     widget:SetImage(widget.normalTexture)
+
+    local highlightTexture = button:CreateTexture(nil, "ARTWORK")
+    highlightTexture:SetTexture(textures['highlight'])    
+    highlightTexture:SetAllPoints(widget.image)
+    highlightTexture:SetBlendMode("ADD")
+    if vertexColor then
+        highlightTexture:SetVertexColor(unpack(vertexColor))
+    end
+    highlightTexture:SetAlpha(0.7)
+    highlightTexture:Hide()
+    widget.highlightTexture = highlightTexture
+    
     function widget:MaybeVertexColor()
         if self.image then
             if self.vertexColor then
@@ -1666,23 +1679,20 @@ local function CreateButtonWithTextures(size, textures, vertexColor)
     widget:MaybeVertexColor()
     widget:SetImageSize(size, size)
 
-    function widget:OnEnter()
-        widget:SetImage(widget.highlightTexture)
-        widget:MaybeVertexColor()
-        widget:SetImageSize(size, size)
-    end
+    widget:SetCallback("OnEnter", function()
+        widget.highlightTexture:Show()
+    end)
 
-    function widget:OnLeave()
-        widget:SetImage(widget.normalTexture)
-        widget:MaybeVertexColor()
-        widget:SetImageSize(size, size)
-    end
+    widget:SetCallback("OnLeave", function()
+        widget.highlightTexture:Hide()
+    end)
 
-    function widget:OnMouseDown()
+    widget:SetCallback("OnMouseDown", function()
         widget:SetImage(widget.pushedTexture)
         widget:MaybeVertexColor()
         widget:SetImageSize(size, size)
-    end
+        -- print("pushed")
+    end)
     
     
     return widget
