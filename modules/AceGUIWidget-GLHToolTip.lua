@@ -43,13 +43,6 @@ local function CreateIcon(self, link, texture)
         self.icon:SetWidth(LOOT_ICON_SIZE)
         self.icon:SetHeight(LOOT_ICON_SIZE)
         AddIconCallbacks(self, self.frame, link)
-        -- AddIconCallbacks(self, self.icon, link)
-        -- self.icon:EnableMouse(true)
-        
-        -- local lvl = self.frame:GetFrameLevel()
-        -- local strata = frame:GetFrameStrata()
-        -- self.icon:SetFrameLevel(lvl+100)
-        -- icon:SetFrameStrata(strata)
     end
     self.iconSet = true
 end
@@ -71,7 +64,7 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
 
         local topTextOffset = -6
         local nameFontString = nil
-        local tooltipWidth = nil
+        local tooltipWidth = self.tooltipWidth
         -- local itemIcon = self:GetUserData("itemIcon") or targetFrame
         local icon = self:GetUserData("itemButton")
         local width = sourceFrame:GetWidth()
@@ -126,20 +119,20 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
                     text:SetJustifyH(region:GetJustifyH())
                     text:SetJustifyV(region:GetJustifyV())
                     
-                    if (not tooltipWidth) and str and nameFontString then
-                        print("trying to adjust tooltip width...", self:GetUserData("tooltipWidth"))
-                        text:SetText("1000 - 1000 Damage   Speed 3.00")
-                        tooltipWidth = text:GetWidth() + 6 + 6
-                        print("Calculated tooltip width:", tooltipWidth)
-                        self:SetUserData("tooltipWidth", tooltipWidth)
-                        text:SetText(str)
-                        targetFrame:SetWidth(tooltipWidth)
+                    -- if (not tooltipWidth) and str and nameFontString then
+                    --     print("trying to adjust tooltip width...", self:GetUserData("tooltipWidth"))
+                    --     text:SetText("1000 - 1000 Damage   Speed 3.00")
+                    --     tooltipWidth = text:GetWidth() + 6 + 6
+                    --     print("Calculated tooltip width:", tooltipWidth)
+                    --     self:SetUserData("tooltipWidth", tooltipWidth)
+                    --     text:SetText(str)
+                    --     targetFrame:SetWidth(tooltipWidth)
 
-                        if nameFontString:GetWidth() > tooltipWidth then
-                            nameFontString:ClearPoint("RIGHT")
-                            nameFontString:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
-                        end
-                    end
+                    --     if nameFontString:GetWidth() > tooltipWidth then
+                    --         nameFontString:ClearPoint("RIGHT")
+                    --         nameFontString:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
+                    --     end
+                    -- end
 
                     if not nameFontString and str then
                         nameFontString = text

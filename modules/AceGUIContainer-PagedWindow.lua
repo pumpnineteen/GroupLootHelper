@@ -121,7 +121,8 @@ local methods = {
         self.frame:SetFrameStrata("FULLSCREEN_DIALOG")
         self.frame:SetFrameLevel(100) -- Lots of room to draw under it
         self:ApplyStatus()
-        self:SetTitle()
+        -- self:SetTitle()
+        self.border:SetPoint("TOPLEFT", 1, -(self.alignoffset + 2))
         self:Show()
         self:EnableResize(true)
     end,
@@ -134,15 +135,15 @@ local methods = {
         self:RemoveAllChildren()
     end,
 
-    ["SetTitle"] = function(self, text)
-        self.titletext:SetText(text or "")
-        if text and text ~= "" then
-            self.alignoffset = 35
-        else
-            self.alignoffset = 28
-        end
-        self.border:SetPoint("TOPLEFT", 1, -(self.alignoffset + 20))
-    end,
+    -- ["SetTitle"] = function(self, text)
+    --     self.titletext:SetText(text or "")
+    --     if text and text ~= "" then
+    --         self.alignoffset = 35
+    --     else
+    --         self.alignoffset = 28
+    --     end
+    --     self.border:SetPoint("TOPLEFT", 1, -(self.alignoffset + 20))
+    -- end,
 
     ["UpdateNavControls"] = function(self)
         local numPages = #self.pages
@@ -517,12 +518,12 @@ local function Constructor()
     sizer_e:SetScript("OnMouseUp", MoverSizer_OnMouseUp)
 
 
-    local titletext = frame:CreateFontString(nil,"OVERLAY","GameFontNormal")
-    titletext:SetPoint("TOPLEFT", 14, 0)
-    titletext:SetPoint("TOPRIGHT", -14, 0)
-    titletext:SetJustifyH("LEFT")
-    titletext:SetHeight(18)
-    titletext:SetText("")
+    -- local titletext = frame:CreateFontString(nil,"OVERLAY","GameFontNormal")
+    -- titletext:SetPoint("TOPLEFT", 14, 0)
+    -- titletext:SetPoint("TOPRIGHT", -14, 0)
+    -- titletext:SetJustifyH("LEFT")
+    -- titletext:SetHeight(18)
+    -- titletext:SetText("")
 
     local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     border:SetPoint("BOTTOMRIGHT", -1, 3)
@@ -532,7 +533,7 @@ local function Constructor()
 
     local closebutton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     closebutton:SetScript("OnClick", Button_OnClick)
-    closebutton:SetPoint("TOPRIGHT", 0, 0)
+    closebutton:SetPoint("TOPRIGHT", -8, 0)
     closebutton:SetHeight(22)
     closebutton:SetWidth(42)
     closebutton:SetText("X")
@@ -549,7 +550,7 @@ local function Constructor()
     navContainer:SetHeight(22)
 
     local firstButton = CreateNavButton(navContainer, "GLH_PagedNavFirst"..num, "<<", "first")
-    firstButton:SetPoint("LEFT", 0, 0)
+    firstButton:SetPoint("LEFT", 8, 0)
     firstButton:SetWidth(40)
 
     local prevButton = CreateNavButton(navContainer, "GLH_PagedNavPrev"..num, "<", "prev")
@@ -573,8 +574,8 @@ local function Constructor()
         num          = num,
         frame        = frame,
         localstatus  = {},
-        alignoffset  = 18,
-        titletext    = titletext,
+        alignoffset  = 22,
+        -- titletext    = titletext,
         border       = border,
         pages        = {},
         currentIndex = 0,

@@ -2400,30 +2400,10 @@ local activeMiniRolls = {}
 local activeMiniRollIDs = {}
 local miniRollsActiveIndex = 1
 
--- function GLH:CreateMiniRoll(rollID, itemLink, texture)
---     Log("Creating miniroll:", itemLink, texture)
---     local mainContainer = self:CreateItemRollContainerTable(itemLink)
---     Log("mainContainer", mainContainer)
---     self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID)
---     activeMiniRolls[rollID] = mainContainer
---     table.insert(activeMiniRollIDs, rollID)
---     if miniRollWindow then
---         Log("Selecting current miniroll")
---         miniRollWindow:SelectTab("current")
---     else
---         Log("No miniroll available!")
---     end
--- end
 
 function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
     mainContainer.rollID = rollID
-    -- mainContainer:RegisterCallback("GLH_ROLL_INFO", "OnRollInfo")
-    -- function mainContainer:OnRollInfo(event, info)
-    --     if info.rollID == self.rollID then
-    --         print("RollInfo received!")
-    --     end
-    -- end
     Log("mainContainer", mainContainer)
     local miniRoll = true
     self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID, miniRoll)
@@ -2478,98 +2458,6 @@ function GLH:TestRolls()
 
 end
 
-function GLH:ActiveMiniRolls()
-    if not miniRollWindow then 
-        local tabGroup = AceGUI:Create("TabGroupWindow")
-        tabGroup:SetLayout("Fill")
-        tabGroup:SetWidth(400)
-        tabGroup:SetHeight(200)
-        tabGroup:SetAutoAdjustHeight(false)
-        tabGroup:SetTabs({
-            { text = "<<", value = "first" },
-            { text = "<", value = "prev" },
-            { text = "", value = "current"},
-            { text = ">", value = "next" },
-            { text = ">>", value = "last" },
-        })
-
-        -- local function OnPageChanged(pageChanged)
-        --     if pageChanged then
-        --         miniRollWindow:ReleaseChildren()
-        --     end
-        -- end
-        local function HideCurrent(miniRollsActiveIndex)
-            local mainContainer = activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]]
-            if mainContainer and mainContainer.frame.Hide then
-                mainContainer.frame:Hide()
-            end
-        end
-
-        local function OnGroupSelected(container, event, group)
-            Log("Active:", miniRollsActiveIndex, #activeMiniRollIDs, activeMiniRollIDs[miniRollsActiveIndex])
-            local pageChanged = false
-            if group == "first" then
-                Log("Selecting first...")
-                HideCurrent(miniRollsActiveIndex)
-                pageChanged = miniRollsActiveIndex ~= 1
-                miniRollsActiveIndex = 1
-                -- tabGroup:SelectTab("current")
-                -- return
-            elseif group == "prev" then
-                HideCurrent(miniRollsActiveIndex)
-                pageChanged = miniRollsActiveIndex ~= 1
-                miniRollsActiveIndex = math.max(1, miniRollsActiveIndex - 1)
-                Log("Prev", miniRollsActiveIndex)
-                -- tabGroup:SelectTab("current")
-                -- return
-            elseif group == "next" then
-                HideCurrent(miniRollsActiveIndex)
-                pageChanged = miniRollsActiveIndex ~= #activeMiniRollIDs
-                miniRollsActiveIndex = math.min(#activeMiniRollIDs, miniRollsActiveIndex + 1)
-                Log("Next", miniRollsActiveIndex)
-                -- tabGroup:SelectTab("current")
-                -- return
-            elseif group == "last" then
-                Log("Selecting last...", #activeMiniRollIDs)
-                HideCurrent(miniRollsActiveIndex)
-                pageChanged = miniRollsActiveIndex ~= #activeMiniRollIDs
-                miniRollsActiveIndex = #activeMiniRollIDs
-                -- tabGroup:SelectTab("current")
-                -- return
-            elseif group == "current" then
-                Log("Current tab called....", miniRollsActiveIndex)
-                -- no action needed, just show current
-            else
-                print("Unknown tab selected:", group)
-                -- return
-            end
-            if miniRollsActiveIndex == 0 then
-                Log("There seem to be no active minirolls")
-                miniRollsActiveIndex = 1
-                -- return
-            end
-            local mainContainer = activeMiniRolls[activeMiniRollIDs[miniRollsActiveIndex]]
-            Log("MC:", mainContainer, miniRollsActiveIndex, #activeMiniRollIDs, activeMiniRollIDs[miniRollsActiveIndex])
-            if mainContainer then
-                -- container:ReleaseChildren()
-                -- container.frame:Hide()
-                tabGroup:AddChild(mainContainer)
-                mainContainer.frame:Show()
-                Log("mainContainer", mainContainer)
-                tabGroup:DoLayout()
-            else
-                Log("No mainContainer!")
-            end
-        end
-
-        tabGroup:SetCallback("OnGroupSelected", OnGroupSelected)
-        tabGroup:SelectTab("first")
-        miniRollWindow = tabGroup
-    end
-    miniRollWindow:Show()
-    -- miniRollWindow:RefreshPages()
-end
-
 function GLH:AddMiniRollInfo(rollID, playerInfoData)
     local class = playerInfoData.class
     local name = playerInfoData.name
@@ -2578,32 +2466,7 @@ function GLH:AddMiniRollInfo(rollID, playerInfoData)
     playerInfoData.cname = cname
     -- playerInfoData.rollID = rollID
     GLH:SendMessage("GLH_ROLL_INFO", playerInfoData)
-    -- local rollIcon = playerInfoData.rollIcon
-    -- if not activeMiniRolls[rollID] then
-    --     print("ERROR: Couldn't find rollID",rollID, "in activeMiniRolls!" )
-    --     return
-    -- end
-    -- local playerNamesTable = activeMiniRolls[rollID]:GetUserData("playerNamesTable")
-    -- if not playerNamesTable then
-    --     print("ERROR: Missing player names table in minirolls!")
-    -- end
-
-    -- local nameLabel = AceGUI:Create("Label")
-    -- nameLabel:SetText(cname)
-
-    -- local rollIcon = AceGUI:Create("Icon")
-    -- rollIcon:SetImage(playerInfoData.rollIcon)
-
-    -- local children = {
-    --     nameLabel,
-    --     EmptyCell(), -- role
-    --     EmptyCell(), -- spec
-    --     rollIcon,
-    --     EmptyCell() -- roll value
-    -- }
-
-    -- playerNamesTable:AddChildren(children)
-    
+ 
 end
 
 function GLH:GetTooltipMaxWidth()
@@ -2726,27 +2589,8 @@ function GLH:OnEnable()
 
     GLH:GetTooltipMaxWidth()
 
-    -- for playerName, tbl in pairs(playerCache) do
-    --     name = cleanName(playerName)
-    --     if name ~= playerName then
-    --         print(name, "<<<", playerName)
-    --         if name then
-    --             playerCache[playerName] = nil
-    --             playerCache[name] = tbl
-    --         end
-    --     end
-    --     playerCache[name].roleIcon = nil
-    --     playerCache[name].specIcon = nil
-    --     playerCache[name].classIcon = nil
-    -- end 
-
     self:SpawnAllTooltipContainers()
-    -- self:RegisterMessage("GLH_TOOLTIP_NEW_ITEMINFO", "NewIteminfo")
 end
-
--- function GLH:NewIteminfo()
---     print("GLH_TOOLTIP_NEW_ITEMINFO")
--- end
 
 function GLH:CreateTooltipFrame()
     local name = "GLH_Tooltip" .. tooltipIndex
