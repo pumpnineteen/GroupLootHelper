@@ -69,6 +69,8 @@ local ROLE_ICON_SIZE
 local SPEC_ICON_SIZE
 local ROLL_BUTTON_SIZE
 local ITEM_TOOLTIP_WIDTH
+local MINI_TOOLTIP_SCALE
+local LIST_TOOLTIP_SCALE
 local PLAYER_NAME_WIDTH
 local ROLL_VALUE_WIDTH
 
@@ -1267,7 +1269,7 @@ function GLH:AddTooltipContainer(itemLink, texture, timeEnd, rollID)
     -----------------------------------------
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
 
-    self:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID)
+    self:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID, LIST_TOOLTIP_SCALE)
 
     -----------------------------------------
     -- Finally, add the main container to Loot Window's scroll list.
@@ -1312,7 +1314,7 @@ function GLH:CreateItemRollContainerTable(itemLink)
     return mainContainer
 end
 
-function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID, miniRoll)
+function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID, miniRoll, tooltip_scale)
 -----------------------------------------
     -- Column 1: Item Tooltip
     -----------------------------------------
@@ -1323,8 +1325,10 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
 
     do
         local tooltipFrame = GLH:CreateTooltipFrame()
-        
+        print(ITEM_TOOLTIP_WIDTH, "setting tooltip width, scale", tooltip_scale)
         local tooltipWidget = AceGUI:Create("GLHTooltip")
+        tooltipWidget.frame:SetScale(tooltip_scale or 1.0)
+        tooltipWidget.tooltipWidth = ITEM_TOOLTIP_WIDTH
         if lootList then
             tooltipWidget:SetUserData("layoutParent", lootList)
         end
@@ -1334,8 +1338,8 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
         tooltipFrame:Show()
         local tooltip = tooltipWidget.frame
 
-        AddBackdropToFrame(tooltipWidget.compactBackground, edgelessBackdrop, {0, 0, 0, 0.6})
-        AddBackdropToFrame(tooltipWidget.expandedBackground, edgelessBackdrop, {0, 0, 0, 0.6})
+        -- AddBackdropToFrame(tooltipWidget.compactBackground, edgelessBackdrop, {0, 0, 0, 0.6})
+        -- AddBackdropToFrame(tooltipWidget.expandedBackground, edgelessBackdrop, {0, 0, 0, 0.6})
         
         tooltip:SetClampedToScreen(false)
         tooltip:Show()
@@ -2406,7 +2410,7 @@ function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     mainContainer.rollID = rollID
     Log("mainContainer", mainContainer)
     local miniRoll = true
-    self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID, miniRoll)
+    self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID, miniRoll, MINI_TOOLTIP_SCALE)
     activeMiniRolls[rollID] = mainContainer
     table.insert(activeMiniRollIDs, rollID)
     miniRollPaged:AddPage(mainContainer)
@@ -2523,7 +2527,9 @@ function GLH:OnEnable()
     ROLE_ICON_SIZE     = db.global.role_icon_size or 16
     SPEC_ICON_SIZE     = db.global.spec_icon_size or 16
     ROLL_BUTTON_SIZE   = db.global.roll_button_size or 24
-    ITEM_TOOLTIP_WIDTH = db.global.item_tooltip_width or 0      -- 0 = auto-size based on content
+    ITEM_TOOLTIP_WIDTH = db.global.item_tooltip_width or 130
+    MINI_TOOLTIP_SCALE = db.global.mini_tooltip_scale or 0.8
+    LIST_TOOLTIP_SCALE = db.global.list_tooltip_scale or 1.0
     PLAYER_NAME_WIDTH  = db.global.player_name_width or 0      -- auto-width for name column
     ROLL_VALUE_WIDTH   = db.global.roll_value_width or 0      -- auto-width for roll value
 
@@ -2556,6 +2562,9 @@ function GLH:OnEnable()
     db.global.instanceCache = instanceCache
     db.global.mapCache = mapCache
     db.global.serverIDCache = serverIDCache
+    db.global.item_tooltip_width = ITEM_TOOLTIP_WIDTH
+    db.global.mini_tooltip_scale = MINI_TOOLTIP_SCALE 
+    db.global.list_tooltip_scale = LIST_TOOLTIP_SCALE 
 
     playerGCache[youGUID] = playerGCache[youGUID] or { name = youFullName, class = youClass }
 
@@ -2587,7 +2596,7 @@ function GLH:OnEnable()
         end
     end
 
-    GLH:GetTooltipMaxWidth()
+    -- GLH:GetTooltipMaxWidth()
 
     self:SpawnAllTooltipContainers()
 end

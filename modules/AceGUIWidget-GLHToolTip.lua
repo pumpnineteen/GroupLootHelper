@@ -176,7 +176,7 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
 
         self:SetUserData("fullWidth", fullWidth)
         self:SetUserData("fullHeight", fullHeight)
-        print("W H:", fullWidth, fullHeight, nameFontString:GetWidth())
+        print("W H:", fullWidth, fullHeight, nameFontString:GetWidth(), self:GetUserData("tooltipWidth"))
     end
 
 local methods = {

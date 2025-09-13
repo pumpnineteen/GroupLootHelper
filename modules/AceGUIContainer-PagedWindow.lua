@@ -528,7 +528,7 @@ local function Constructor()
     local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     border:SetPoint("BOTTOMRIGHT", -1, 3)
     border:SetBackdrop(PaneBackdrop)
-    border:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
+    border:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
     border:SetBackdropBorderColor(0.4, 0.4, 0.4)
 
     local closebutton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
