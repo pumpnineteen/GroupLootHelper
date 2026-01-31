@@ -69,6 +69,7 @@ local ROLE_ICON_SIZE
 local SPEC_ICON_SIZE
 local ROLL_BUTTON_SIZE
 local ITEM_TOOLTIP_WIDTH
+local DEFAULT_ITEM_TOOLTIP_WIDTH = 160
 local MINI_TOOLTIP_SCALE
 local LIST_TOOLTIP_SCALE
 local PLAYER_NAME_WIDTH
@@ -1327,7 +1328,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
         local tooltipFrame = GLH:CreateTooltipFrame()
         print(ITEM_TOOLTIP_WIDTH, "setting tooltip width, scale", tooltip_scale)
         local tooltipWidget = AceGUI:Create("GLHTooltip")
-        tooltipWidget.frame:SetScale(tooltip_scale or 1.0)
+        -- tooltipWidget.frame:SetScale(tooltip_scale or 1.0)
         tooltipWidget.tooltipWidth = ITEM_TOOLTIP_WIDTH
         if lootList then
             tooltipWidget:SetUserData("layoutParent", lootList)
@@ -1874,7 +1875,9 @@ end
 
 
 -- Function to handle slash commands
-local function HandleSlashCommand(msg)
+local function HandleSlashCommand(_msg)
+    local args = split(_msg)
+    local msg = args[1]
     if msg == "test" then
         GLH.LootWindow:Show()
         for _, link in pairs(testLinks) do
@@ -1913,6 +1916,10 @@ local function HandleSlashCommand(msg)
         end
     elseif msg == "roll" then
        GLH:TestRolls() 
+    elseif msg == "mscale" then
+        GLH:SetMiniScale(args[2] or 1.0)
+    elseif msg == "mtwidth" then
+        GLH:SetMiniTooltipWidth(args[2] or DEFAULT_ITEM_TOOLTIP_WIDTH)
     elseif msg == "pbb" then
         PRINTLOG = true
         if not miniRollPaged then
@@ -1956,6 +1963,26 @@ local eventHandlers = {
     PLAYER_ROLES_ASSIGNED = "PLAYER_ROLES_ASSIGNED",
     UPDATE_MOUSEOVER_UNIT = "UPDATE_MOUSEOVER_UNIT"
 }
+
+function GLH:SetMiniScale(scale)
+    scale = scale or 1.0
+    scale = tonumber(scale)
+
+    if scale < 0.1 then
+        scale = 1.0
+    end
+    MINI_TOOLTIP_SCALE = scale
+    db.global.mini_tooltip_scale = MINI_TOOLTIP_SCALE
+    if miniRollPaged then
+        miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)
+    end
+end
+
+function GLH:SetMiniTooltipWidth(width)
+    ITEM_TOOLTIP_WIDTH = width or DEFAULT_ITEM_TOOLTIP_WIDTH
+    ITEM_TOOLTIP_WIDTH = tonumber(ITEM_TOOLTIP_WIDTH)
+    db.global.item_tooltip_width = ITEM_TOOLTIP_WIDTH
+end
 
 function GLH:GetDateKey(currDate)
     if not currDate then
@@ -2450,8 +2477,10 @@ function GLH:ActiveMiniRollsPages()
             paged:RemovePageRollID(info.rollID)
         end
         paged:RegisterMessage("GLH_ROLLED", "GLH_ROLLED")
-
+        
         miniRollPaged = paged
+
+        miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)
 
     end
     miniRollPaged:Show()

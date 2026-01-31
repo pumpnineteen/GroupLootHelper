@@ -127,6 +127,11 @@ local methods = {
         self:EnableResize(true)
     end,
 
+    ["SetScale"] = function(self, scale)
+        self.frame:SetScale(scale or 1.0)
+        self:ApplyStatus()
+    end,
+
     ["OnRelease"] = function(self)
         self.status = nil
         for k in pairs(self.localstatus) do
