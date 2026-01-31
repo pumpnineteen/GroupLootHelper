@@ -2268,7 +2268,7 @@ function GLH:ConsolidateItemIDCache()
     for itemID, itemData in pairs(itemDataCache) do
         itemData.itemLink = itemIDCache[itemID]
         if not itemData.itemLink then
-            print("Error: itemLink is nil for itemID:", itemID, itemData.name)
+            Log("Error: itemLink is nil for itemID:", itemID, itemData.name)
         end
         newCache[itemID] = itemData
     end
