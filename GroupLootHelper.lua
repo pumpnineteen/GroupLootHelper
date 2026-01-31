@@ -136,7 +136,9 @@ local function Log(...)
         logLine = logLine .. tostring(v) .. " "
     end
     -- logLine = logLine .. "\n"
-    log = log .. logLine .. "\n"
+    log = log .. logLine 
+    table.insert(GLH_Log, {log})
+    log = log .. "\n"
     if logEditbox then
         logEditbox:SetText(log)
     end
@@ -2951,21 +2953,21 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
        patternkey == "PATTERN_LOOT_ITEM_PUSHED_SELF_MULTIPLE" or 
        patternkey == "PATTERN_LOOT_ITEM_SELF" or 
        patternkey == "PATTERN_LOOT_ITEM_SELF_MULTIPLE" then
-        Log("Item looted: ", looter, loot)
+        -- Log("Item looted: ", looter, loot)
         loot_winner = looter  -- The looter is the one who won the item.
 
     
     elseif patternkey == "PATTERN_LOOT_ROLL_NEED" or 
            patternkey == "PATTERN_LOOT_ROLL_NEED_SELF" then
-        Log(looter, "rolled NEED on", loot)
+        Log(looter, "ROLLED NEED on", loot)
     
     elseif patternkey == "PATTERN_LOOT_ROLL_GREED" or 
            patternkey == "PATTERN_LOOT_ROLL_GREED_SELF" then
-        Log(looter, "rolled GREED on", loot)
+        Log(looter, "ROLLED GREED on", loot)
 
     elseif patternkey == "PATTERN_LOOT_ROLL_DISENCHANT" or 
            patternkey == "PATTERN_LOOT_ROLL_DISENCHANT_SELF" then
-        Log(looter, "rolled DISENCHANT on", loot)
+        Log(looter, "ROLLED DISENCHANT on", loot)
 
     elseif patternkey == "PATTERN_LOOT_ROLL_PASSED" or 
            patternkey == "PATTERN_LOOT_ROLL_PASSED_AUTO" or 
