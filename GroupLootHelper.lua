@@ -131,13 +131,9 @@ end
 
 local function Log(...)
     local args = {...}
-    local logLine = ""
-    for _, v in ipairs(args) do
-        logLine = logLine .. tostring(v) .. " "
-    end
-    -- logLine = logLine .. "\n"
+    local logLine = join(args, " ")
     log = log .. logLine 
-    table.insert(GLH_Log, {log})
+    table.insert(GLH_Log, {logLine})
     log = log .. "\n"
     if logEditbox then
         logEditbox:SetText(log)
@@ -150,7 +146,14 @@ end
 local function debugmsg(...)
     if DEBUG then
         local args = {...}
-        Log("DEBUG:", unpack(args))
+        print("DEBUG:", join(args, " "))
+    end
+end
+
+local function errormsg(...)
+    if DEBUG then
+        local args = {...}
+        print("ERROR:", join(args, " "))
     end
 end
 
@@ -1527,7 +1530,7 @@ function GLH:AddRollInfo(rollID, playerInfoData)
     local firstPass = playerNamesTable:GetUserData("FirstPass")
     local rollType = playerInfoData.rollType
     if not rollType then
-        print("Error: playerInfoData.rollType is nil for rollID: " .. tostring(uid))
+        errormsg("playerInfoData.rollType is nil for rollID: " .. tostring(uid))
         rollType = "PASSED"
     end
 
@@ -2297,7 +2300,7 @@ function GLH:ConsolidateItemIDCache()
     for itemID, itemData in pairs(itemDataCache) do
         itemData.itemLink = itemIDCache[itemID]
         if not itemData.itemLink then
-            Log("Error: itemLink is nil for itemID:", itemID, itemData.name)
+            errormsg("itemLink is nil for itemID:", itemID, itemData.name)
         end
         newCache[itemID] = itemData
     end
@@ -2853,6 +2856,8 @@ function GLH:_ChatMsgLoot(event, msg, ...)
             return
         end
     end
+
+    Log("CHAT_MSG:",event, msg)
     
     for _, key in ipairs(rollpatternKeys) do
         local patternDef = L[key]
@@ -2879,6 +2884,7 @@ function GLH:_ChatMsgLoot(event, msg, ...)
 end
 
 function GLH:CHAT_MSG_LOOT(event, msg, ...)
+    Log(event, msg)
     C_Timer.After(0.5, function()
         self:_ChatMsgLoot(event, msg)
     end)
@@ -2931,7 +2937,7 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
         GLH:AddEntryToHistoryTbl(historyTable, {}, nil, loot, looterGUID, location)
         db.global.historyTable = historyTable
     else
-        print("Not storing loot:", loot, looter, patternkey)
+        Log("Not storing loot:", loot, looter, patternkey)
     end
         
 
