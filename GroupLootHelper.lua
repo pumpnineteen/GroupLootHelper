@@ -1428,6 +1428,9 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
         if info.rollID == self.rollID then
             print("RollInfo received!")
             local _miniRoll = self:GetUserData("miniRoll")
+            if _miniRoll then
+                Log("PagedMini: OnRollInfo - rollID:", info.rollID, "player:", info.name, "cname:", info.cname, "rollValue:", tostring(info.rollValue))
+            end
             local row = {}
             
             local nameLabel = AceGUI:Create("Label")
@@ -2000,21 +2003,29 @@ end
 
 -- Refresh mini roll display
 function GLH:RefreshMiniRollDisplay(rollID)
+    Log("RefreshMiniRollDisplay: called for rollID", rollID, "activeMiniRolls:", activeMiniRolls[rollID] and "yes" or "no")
     if not activeMiniRolls[rollID] then return end
     
     local miniContainer = activeMiniRolls[rollID]
     local playerNamesTable = miniContainer:GetUserData("playerNamesTable")
-    if not playerNamesTable then return end
+    if not playerNamesTable then
+        Log("RefreshMiniRollDisplay: no playerNamesTable for rollID", rollID)
+        return
+    end
     
     -- Clear existing children
     playerNamesTable:ReleaseChildren()
     
     -- Get rolls data
     local uid = rollid_to_uid[rollID]
-    if not uid or not activeRolls[uid] then return end
+    if not uid or not activeRolls[uid] then
+        Log("RefreshMiniRollDisplay: no activeRolls entry for uid/rollID", uid, rollID)
+        return
+    end
     
     local rollsData = activeRolls[uid].rollsData or {}
     local sortedRolls = SortRolls(rollsData)
+    Log("RefreshMiniRollDisplay: rollID", rollID, "players to display:", #sortedRolls)
     
     -- Re-add all players in sorted order
     for _, playerData in ipairs(sortedRolls) do
@@ -2623,6 +2634,7 @@ function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     activeMiniRolls[rollID] = mainContainer
     table.insert(activeMiniRollIDs, rollID)
     miniRollPaged:AddPage(mainContainer)
+    Log("CreateMiniRollPages: added rollID", rollID, "itemLink:", itemLink, "totalPages:", (#miniRollPaged.pages or 0))
 
 end
 
@@ -2663,6 +2675,7 @@ function GLH:ActiveMiniRollsPages()
         miniRollPaged = paged
 
         miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)
+        Log("ActiveMiniRollsPages: created miniRollPaged (scale=" .. tostring(MINI_TOOLTIP_SCALE) .. ")")
 
     end
     miniRollPaged:Show()
