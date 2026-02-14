@@ -1516,161 +1516,20 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     colRoll:AddChild(passButton)
 end
 
--- Roll type priority for sorting (lower number = higher priority)
-local ROLL_TYPE_PRIORITY = {
-    NEED = 1,
-    GREED = 2,
-    DISENCHANT = 3,
-    PASSED = 4,
-    UNKNOWN = 5
-}
-
--- Sort rolls by type priority, then alphabetically by name
-local function SortRolls(rolls)
-    local sortedPlayers = {}
-    
-    -- Convert hash table to array for sorting
-    for playerName, rollData in pairs(rolls) do
-        table.insert(sortedPlayers, {
-            name = playerName,
-            rollType = rollData.rollType,
-            rollValue = rollData.rollValue,
-            class = rollData.class,
-            roleIcon = rollData.roleIcon,
-            specIcon = rollData.specIcon,
-            rollIcon = rollData.rollIcon,
-            cname = rollData.cname
-        })
-    end
-    
-    -- Sort by roll type priority first, then alphabetically
-    table.sort(sortedPlayers, function(a, b)
-        local priorityA = ROLL_TYPE_PRIORITY[a.rollType] or 999
-        local priorityB = ROLL_TYPE_PRIORITY[b.rollType] or 999
-        
-        if priorityA ~= priorityB then
-            return priorityA < priorityB
-        end
-        
-        -- Same roll type, sort alphabetically by name
-        return a.name < b.name
-    end)
-    
-    return sortedPlayers
-end
-
-function GLH:AddPlayerRow(playerNamesTable, playerData, rollID)
-    local miniRoll = playerNamesTable:GetUserData("miniRoll")
-    
-    local nameLabel = AceGUI:Create("Label")
-    nameLabel:SetText(playerData.cname or playerData.name)
-    nameLabel:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
-    playerNamesTable:AddChild(nameLabel)
-    
-    local roleIcon
-    if playerData.roleIcon then
-        roleIcon = AceGUI:Create("Icon")
-        roleIcon:SetImage(playerData.roleIcon)
-        roleIcon:SetWidth(ROLE_ICON_SIZE)
-        roleIcon:SetHeight(ROLE_ICON_SIZE)
-        roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    else 
-        roleIcon = EmptyCell()
-    end
-    playerNamesTable:AddChild(roleIcon)
-    
-    local specIcon
-    if playerData.specIcon then
-        specIcon = AceGUI:Create("Icon")
-        specIcon:SetImage(playerData.specIcon)
-        specIcon:SetWidth(SPEC_ICON_SIZE)
-        specIcon:SetHeight(SPEC_ICON_SIZE)
-        specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    else
-        specIcon = EmptyCell()
-    end
-    playerNamesTable:AddChild(specIcon)
-    
-    local rollIcon = AceGUI:Create("Icon")
-    rollIcon:SetImage(playerData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
-    rollIcon:SetWidth(ROLL_BUTTON_SIZE)
-    rollIcon:SetHeight(ROLL_BUTTON_SIZE)
-    rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    playerNamesTable:AddChild(rollIcon)
-    
-    if not miniRoll and playerData.rollValue then
-        local rollValue = AceGUI:Create("Label")
-        rollValue:SetText(tostring(playerData.rollValue))
-        rollValue:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-        playerNamesTable:AddChild(rollValue)
-    end
-end
-
-function GLH:RefreshRollDisplay(rollID)
-    local uid = rollid_to_uid[rollID]
-    if not uid then 
-        print("WARNING: couldn't find uniqueID for rollID", rollID)
-        return 
-    end
-    
-    local container = loot_container_cache[uid]
-    if not container or not container.loot_container then
-        print("WARNING: couldn't find container for rollID", rollID)
-        return
-    end
-    
-    local playerNamesTable = container.loot_container:GetUserData("playerNamesTable")
-    if not playerNamesTable then
-        print("WARNING: couldn't find playerNamesTable for rollID", rollID)
-        return
-    end
-    
-    playerNamesTable:ReleaseChildren()
-    
-    local rollsData = activeRolls[uid] and activeRolls[uid].rollsData or {}
-    local sortedRolls = SortRolls(rollsData)
-    
-    for _, playerData in ipairs(sortedRolls) do
-        self:AddPlayerRow(playerNamesTable, playerData, rollID)
-    end
-    
-    playerNamesTable:DoLayout()
-end
-
-function GLH:RefreshMiniRollDisplay(rollID)
-    if not activeMiniRolls[rollID] then return end
-    
-    local miniContainer = activeMiniRolls[rollID]
-    local playerNamesTable = miniContainer:GetUserData("playerNamesTable")
-    if not playerNamesTable then return end
-    
-    playerNamesTable:ReleaseChildren()
-    
-    local uid = rollid_to_uid[rollID]
-    if not uid or not activeRolls[uid] then return end
-    
-    local rollsData = activeRolls[uid].rollsData or {}
-    local sortedRolls = SortRolls(rollsData)
-    
-    for _, playerData in ipairs(sortedRolls) do
-        self:AddPlayerRow(playerNamesTable, playerData, rollID)
-    end
-    
-    playerNamesTable:DoLayout()
-end
 
 function GLH:AddRollInfo(rollID, playerInfoData)
     local uid = rollid_to_uid[rollID]
-
     if not uid then 
         print("WARNING: couldn't find uniqueID for rollID", rollID)
         return 
     end
 
+    -- Store roll data in activeRolls for later sorting
     if not activeRolls[uid].rollsData then
         activeRolls[uid].rollsData = {}
     end
     
+    -- Get class info and colorize name
     local class = playerInfoData.class
     local name = playerInfoData.name
     if class then
@@ -1678,15 +1537,16 @@ function GLH:AddRollInfo(rollID, playerInfoData)
         playerInfoData.cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
     end
     
+    -- Store the player's roll data
     activeRolls[uid].rollsData[name] = playerInfoData
     
+    -- Refresh the entire display with sorted data
     self:RefreshRollDisplay(rollID)
     self:RefreshMiniRollDisplay(rollID)
 
     local playerNamesTable = loot_container_cache[uid].loot_container:GetUserData("playerNamesTable")
     if not playerNamesTable then return end
     local firstGreedOrDisenchant = playerNamesTable:GetUserData("FirstGreedOrDisenchant")
-
     local firstPass = playerNamesTable:GetUserData("FirstPass")
     local rollType = playerInfoData.rollType
     if not rollType then
@@ -2007,6 +1867,163 @@ local lfgRolesCoords = {
     roleUNKNOWN = {0.75, 1, 0, 0.25}
 }
 
+-- Roll type priority for sorting (lower number = higher priority)
+local ROLL_TYPE_PRIORITY = {
+    NEED = 1,
+    GREED = 2,
+    DISENCHANT = 3,
+    PASSED = 4,
+    UNKNOWN = 5
+}
+
+-- Sort rolls by type priority, then alphabetically by name
+local function SortRolls(rolls)
+    local sortedPlayers = {}
+    
+    -- Convert hash table to array for sorting
+    for playerName, rollData in pairs(rolls) do
+        table.insert(sortedPlayers, {
+            name = playerName,
+            rollType = rollData.rollType,
+            rollValue = rollData.rollValue,
+            class = rollData.class,
+            roleIcon = rollData.roleIcon,
+            specIcon = rollData.specIcon,
+            rollIcon = rollData.rollIcon,
+            cname = rollData.cname
+        })
+    end
+    
+    -- Sort by roll type priority first, then alphabetically
+    table.sort(sortedPlayers, function(a, b)
+        local priorityA = ROLL_TYPE_PRIORITY[a.rollType] or 999
+        local priorityB = ROLL_TYPE_PRIORITY[b.rollType] or 999
+        
+        if priorityA ~= priorityB then
+            return priorityA < priorityB
+        end
+        
+        -- Same roll type, sort alphabetically by name
+        return a.name < b.name
+    end)
+    
+    return sortedPlayers
+end
+
+-- Add a single player row to the table
+function GLH:AddPlayerRow(playerNamesTable, playerData, rollID)
+    local miniRoll = playerNamesTable:GetUserData("miniRoll")
+    
+    -- Player name (colorized by class)
+    local nameLabel = AceGUI:Create("Label")
+    nameLabel:SetText(playerData.cname or playerData.name)
+    nameLabel:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
+    playerNamesTable:AddChild(nameLabel)
+    
+    -- Role icon
+    local roleIcon
+    if playerData.roleIcon then
+        roleIcon = AceGUI:Create("Icon")
+        roleIcon:SetImage(playerData.roleIcon)
+        roleIcon:SetWidth(ROLE_ICON_SIZE)
+        roleIcon:SetHeight(ROLE_ICON_SIZE)
+        roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    else 
+        roleIcon = EmptyCell()
+    end
+    playerNamesTable:AddChild(roleIcon)
+    
+    -- Spec icon
+    local specIcon
+    if playerData.specIcon then
+        specIcon = AceGUI:Create("Icon")
+        specIcon:SetImage(playerData.specIcon)
+        specIcon:SetWidth(SPEC_ICON_SIZE)
+        specIcon:SetHeight(SPEC_ICON_SIZE)
+        specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    else
+        specIcon = EmptyCell()
+    end
+    playerNamesTable:AddChild(specIcon)
+    
+    -- Roll icon
+    local rollIcon = AceGUI:Create("Icon")
+    rollIcon:SetImage(playerData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
+    rollIcon:SetWidth(ROLL_BUTTON_SIZE)
+    rollIcon:SetHeight(ROLL_BUTTON_SIZE)
+    rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    playerNamesTable:AddChild(rollIcon)
+    
+    -- Roll value (only for non-mini display)
+    if not miniRoll and playerData.rollValue then
+        local rollValue = AceGUI:Create("Label")
+        rollValue:SetText(tostring(playerData.rollValue))
+        rollValue:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+        playerNamesTable:AddChild(rollValue)
+    end
+end
+
+-- Refresh the roll display for a specific rollID
+function GLH:RefreshRollDisplay(rollID)
+    local uid = rollid_to_uid[rollID]
+    if not uid then 
+        print("WARNING: couldn't find uniqueID for rollID", rollID)
+        return 
+    end
+    
+    local container = loot_container_cache[uid]
+    if not container or not container.loot_container then
+        print("WARNING: couldn't find container for rollID", rollID)
+        return
+    end
+    
+    local playerNamesTable = container.loot_container:GetUserData("playerNamesTable")
+    if not playerNamesTable then
+        print("WARNING: couldn't find playerNamesTable for rollID", rollID)
+        return
+    end
+    
+    -- Clear existing children
+    playerNamesTable:ReleaseChildren()
+    
+    -- Get rolls data for this rollID
+    local rollsData = activeRolls[uid] and activeRolls[uid].rollsData or {}
+    local sortedRolls = SortRolls(rollsData)
+    
+    -- Re-add all players in sorted order
+    for _, playerData in ipairs(sortedRolls) do
+        self:AddPlayerRow(playerNamesTable, playerData, rollID)
+    end
+    
+    playerNamesTable:DoLayout()
+end
+
+-- Refresh mini roll display
+function GLH:RefreshMiniRollDisplay(rollID)
+    if not activeMiniRolls[rollID] then return end
+    
+    local miniContainer = activeMiniRolls[rollID]
+    local playerNamesTable = miniContainer:GetUserData("playerNamesTable")
+    if not playerNamesTable then return end
+    
+    -- Clear existing children
+    playerNamesTable:ReleaseChildren()
+    
+    -- Get rolls data
+    local uid = rollid_to_uid[rollID]
+    if not uid or not activeRolls[uid] then return end
+    
+    local rollsData = activeRolls[uid].rollsData or {}
+    local sortedRolls = SortRolls(rollsData)
+    
+    -- Re-add all players in sorted order
+    for _, playerData in ipairs(sortedRolls) do
+        self:AddPlayerRow(playerNamesTable, playerData, rollID)
+    end
+    
+    playerNamesTable:DoLayout()
+end
+
 local function CreateRoleIcon(parent, role)
     local icon = parent:CreateTexture(nil, "ARTWORK")
     icon:SetTexture(lfgRolesMain)
@@ -2159,13 +2176,15 @@ function GLH:GetDateKey(currDate)
         currDate.day)
 end
 
-function GLH:AddMiniRollInfo(rollID, playerInfoData)
-    -- This is now handled by RefreshMiniRollDisplay via AddRollInfo
-    -- Keep for backwards compatibility but make it call the new method
-    self:RefreshMiniRollDisplay(rollID)
- 
+function GLH:QueueTooltip(uid, entry)
+    tinsert(self._tooltipQueue, { id = uid, data = entry })
 end
 
+function GLH:UPDATE_MOUSEOVER_UNIT()
+    if not playerGCache then
+        return
+    end
+    if not UnitExists("mouseover") then
         return
     end
 
@@ -2654,15 +2673,21 @@ function GLH:TestRolls()
 
 end
 
-function GLH:AddMiniRollInfo(rollID, playerInfoData)
-    local class = playerInfoData.class
-    local name = playerInfoData.name
-    local classColour = self:GetClassColour(class)
-    local cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
-    playerInfoData.cname = cname
-    -- playerInfoData.rollID = rollID
-    GLH:SendMessage("GLH_ROLL_INFO", playerInfoData)
+-- function GLH:AddMiniRollInfo(rollID, playerInfoData)
+--     local class = playerInfoData.class
+--     local name = playerInfoData.name
+--     local classColour = self:GetClassColour(class)
+--     local cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
+--     playerInfoData.cname = cname
+--     -- playerInfoData.rollID = rollID
+--     GLH:SendMessage("GLH_ROLL_INFO", playerInfoData)
  
+-- end
+
+function GLH:AddMiniRollInfo(rollID, playerInfoData)
+    -- This is now handled by RefreshMiniRollDisplay via AddRollInfo
+    -- Keep for backwards compatibility but make it call the new method
+    self:RefreshMiniRollDisplay(rollID)
 end
 
 function GLH:GetTooltipMaxWidth()
@@ -3217,7 +3242,7 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
         active = true,
         player = youName,
         location = self:GetLocation(),
-        rollsData = {},
+        rollsData = {}, 
     }
     uid_to_rollid[uid] = rollID
     rollid_to_uid[rollID] = uid
