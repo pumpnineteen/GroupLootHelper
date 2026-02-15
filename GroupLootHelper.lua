@@ -3038,6 +3038,7 @@ function GLH:GetUID()
 end
 
 function GLH:_ChatMsgLoot(event, msg, ...)
+    Log("ChatMsgLoot:", event, msg)
     -- Don’t do anything in battlegrounds/arenas
     -- local _, instanceType = IsInInstance()
     -- if instanceType == "pvp" or instanceType == "arena" then
@@ -3108,7 +3109,7 @@ function GLH:GetLocation()
 end
 
 function GLH:ProcessLootMessage(patternkey, payloadData)
-    -- print("Processing loot message:", patternkey, payloadData.looter, payloadData.loot)
+    -- Log("Processing loot message:", patternkey, payloadData.looter, payloadData.loot)
     local location = self:GetLocation()
     local looter = payloadData.looter or youName
     local loot   = payloadData.loot
@@ -3140,6 +3141,7 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
 end
 
 function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
+    Log("Processing loot roll message:", patternkey, payloadData.looter, payloadData.loot, "Roll:", payloadData.roll)
     local looter = payloadData.looter
     local loot   = payloadData.loot
     local roll   = payloadData.roll
