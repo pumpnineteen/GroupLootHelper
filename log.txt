@@ -1,0 +1,754 @@
+Storing: [Star Ruby] table: 0000020452DDBA20 1
+Storing: [Tyrant's Greaves] table: 0000020452DDBA20 1
+Storing: [Bonelink Helmet of Defense] table: 0000020452DDBA20 1
+Storing: [Greater Maul of the Eagle] table: 0000020452DDBA20 1
+Storing: [Phytoskin Spaulders] table: 0000020452DDBA20 1
+Storing: [Spiritchaser Staff of the Boar] table: 0000020452DDBA20 1
+Storing: [Windchaser Cloak] table: 0000020452DDBA20 1
+Storing: [Tyrant's Helm] table: 0000020452DDBA20 1
+Storing: [Claw of Celebras] table: 0000020452DDBA20 1
+Storing: [Citrine] table: 0000020452DDBA20 1
+Storing: [Symbolic Pauldrons] table: 0000020452DDBA20 1
+Storing: [Pattern: Red Mageweave Shoulders] table: 0000020452DDBA20 1
+Storing: [Bonelink Cape of the Eagle] table: 0000020452DDBA20 1
+Storing: [Noxxion's Shackles] table: 0000020452DDBA20 1
+Storing: [Brutish Boots of Defense] table: 0000020452DDBA20 1
+Storing: [Satyr's Lash] table: 0000020452DDBA20 1
+Updating player cache for: Turbasyka-Spineshatter Class: SHAMAN
+Updating player cache for: Abaspotki-Spineshatter Class: PALADIN
+Updating player cache for: Jackerròr-Spineshatter Class: PRIEST
+Updating player cache for: Vollvonvorne-Spineshatter Class: PALADIN
+CHAT_MSG_LOOT You receive item: [Recipe: Lean Wolf Steak].
+ChatMsgLoot: CHAT_MSG_LOOT You receive item: [Recipe: Lean Wolf Steak].
+CHAT_MSG: CHAT_MSG_LOOT You receive item: [Recipe: Lean Wolf Steak].
+Storing: [Recipe: Lean Wolf Steak] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive item: [Recipe: Big Bear Steak].
+ChatMsgLoot: CHAT_MSG_LOOT You receive item: [Recipe: Big Bear Steak].
+CHAT_MSG: CHAT_MSG_LOOT You receive item: [Recipe: Big Bear Steak].
+Storing: [Recipe: Big Bear Steak] table: 0000020452DDBA20 1
+Updating player cache for: Bwonsamdy-Spineshatter Class: WARRIOR
+Updating player cache for: Pyaks-Spineshatter Class: WARLOCK
+CHAT_MSG_LOOT Pyaks creates: [Lesser Soulstone].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Lesser Soulstone].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Lesser Soulstone].
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x2.
+CHAT_MSG_LOOT Pyaks receives loot: [Recipe: Mighty Troll's Blood Potion].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x2.
+Storing: [Silk Cloth] table: 0000020452DDBA20 2
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Recipe: Mighty Troll's Blood Potion].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Recipe: Mighty Troll's Blood Potion].
+Storing: [Recipe: Mighty Troll's Blood Potion] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Broad Claymore].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Broad Claymore].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Broad Claymore].
+Storing: [Broad Claymore] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x4.
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth].
+CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth].
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth].
+Storing: [Silk Cloth] table: 0000020452DDBA20 1
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+Storing: [Stormwind Brie] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+CHAT_MSG_LOOT You receive loot: [Mageweave Cloth]x2.
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Mageweave Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Mageweave Cloth]x2.
+Storing: [Mageweave Cloth] table: 0000020452DDBA20 2
+CHAT_MSG_LOOT Pyaks receives loot: [Mageweave Cloth].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Mageweave Cloth].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Mageweave Cloth].
+Storing: [Mageweave Cloth] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Silk Cloth].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Silk Cloth].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Silk Cloth].
+Storing: [Silk Cloth] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Abaspotki receives loot: [Hardened Leather Shoulderpads].
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Hardened Leather Shoulderpads].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Hardened Leather Shoulderpads].
+Storing: [Hardened Leather Shoulderpads] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+CHAT_MSG_LOOT You receive loot: [Silk Cloth]x2.
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x2.
+Storing: [Silk Cloth] table: 0000020452DDBA20 2
+CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth]x3.
+CHAT_MSG_LOOT Turbasyka receives loot: [Stormwind Brie].
+ChatMsgLoot: CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+ChatMsgLoot: CHAT_MSG_LOOT Turbasyka receives loot: [Stormwind Brie].
+CHAT_MSG: CHAT_MSG_LOOT Turbasyka receives loot: [Stormwind Brie].
+Storing: [Stormwind Brie] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+Storing: [Stormwind Brie] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth].
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth].
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth].
+Storing: [Silk Cloth] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Broad Claymore].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Broad Claymore].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Broad Claymore].
+Storing: [Broad Claymore] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Abaspotki receives loot: [Double Mail Coif].
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Double Mail Coif].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Double Mail Coif].
+Storing: [Double Mail Coif] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ActiveMiniRollsPages: created miniRollPaged (scale=0.67)
+mainContainer table: 00000204997C27E0
+CreateMiniRollPages: added rollID 1 itemLink: [Conjurer's Breeches of the Whale] totalPages: 1
+New roll started for:  Conjurer's Breeches of the Whale 1 452 [Conjurer's Breeches of the Whale]
+CHAT_MSG_LOOT [Loot]: [Conjurer's Breeches of the Whale]
+CHAT_MSG_LOOT You receive loot: [Silk Cloth]x4.
+CHAT_MSG_LOOT Pyaks receives loot: [Sweet Nectar].
+CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Conjurer's Breeches of the Whale]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Conjurer's Breeches of the Whale]
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Sweet Nectar].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Sweet Nectar].
+Storing: [Sweet Nectar] table: 0000020452DDBA20 1
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x2.
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x2.
+Storing: [Silk Cloth] table: 0000020452DDBA20 2
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Conjurer's Breeches of the Whale]
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Conjurer's Breeches of the Whale]
+GLH_ROLLED received: 1
+Roll cancelled for:  1 Conjurer's Breeches of the Whale
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Conjurer's Breeches of the Whale]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Conjurer's Breeches of the Whale]
+Not storing loot: [Conjurer's Breeches of the Whale] Jackerròr PATTERN_LOOT_ROLL_GREED
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Conjurer's Breeches of the Whale]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Conjurer's Breeches of the Whale]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Conjurer's Breeches of the Whale]
+Not storing loot: [Conjurer's Breeches of the Whale] Abaspotki PATTERN_LOOT_ROLL_GREED
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Conjurer's Breeches of the Whale]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Conjurer's Breeches of the Whale]
+Not storing loot: [Conjurer's Breeches of the Whale] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Conjurer's Breeches of the Whale]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Conjurer's Breeches of the Whale]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Conjurer's Breeches of the Whale]
+Not storing loot: [Conjurer's Breeches of the Whale] Pyaks PATTERN_LOOT_ROLL_GREED
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Conjurer's Breeches of the Whale]
+CHAT_MSG_LOOT [Loot]: Greed Roll - 14 for [Conjurer's Breeches of the Whale] by Pyaks
+CHAT_MSG_LOOT [Loot]: Greed Roll - 83 for [Conjurer's Breeches of the Whale] by Abaspotki
+CHAT_MSG_LOOT [Loot]: Greed Roll - 68 for [Conjurer's Breeches of the Whale] by Ardennel
+CHAT_MSG_LOOT [Loot]: Greed Roll - 3 for [Conjurer's Breeches of the Whale] by Jackerròr
+CHAT_MSG_LOOT [Loot]: Abaspotki won: [Conjurer's Breeches of the Whale]
+CHAT_MSG_LOOT Abaspotki receives loot: [Conjurer's Breeches of the Whale].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Conjurer's Breeches of the Whale]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Conjurer's Breeches of the Whale]
+Not storing loot: [Conjurer's Breeches of the Whale] Turbasyka PATTERN_LOOT_ROLL_PASSED
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 14 for [Conjurer's Breeches of the Whale] by Pyaks
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 14 for [Conjurer's Breeches of the Whale] by Pyaks
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Conjurer's Breeches of the Whale]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Conjurer's Breeches of the Whale]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 3 for [Conjurer's Breeches of the Whale] by Jackerròr
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 3 for [Conjurer's Breeches of the Whale] by Jackerròr
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 68 for [Conjurer's Breeches of the Whale] by Ardennel
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 68 for [Conjurer's Breeches of the Whale] by Ardennel
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 83 for [Conjurer's Breeches of the Whale] by Abaspotki
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 83 for [Conjurer's Breeches of the Whale] by Abaspotki
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Conjurer's Breeches of the Whale].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Conjurer's Breeches of the Whale].
+Storing: [Conjurer's Breeches of the Whale] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth].
+CHAT_MSG_LOOT Turbasyka receives loot: [Greater Healing Potion].
+ChatMsgLoot: CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth].
+CHAT_MSG: CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth].
+Storing: [Silk Cloth] table: 0000020452DDBA20 1
+ChatMsgLoot: CHAT_MSG_LOOT Turbasyka receives loot: [Greater Healing Potion].
+CHAT_MSG: CHAT_MSG_LOOT Turbasyka receives loot: [Greater Healing Potion].
+Storing: [Greater Healing Potion] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Pyaks creates: [Healthstone].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Healthstone].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Healthstone].
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+mainContainer table: 00000204997F9C40
+CreateMiniRollPages: added rollID 2 itemLink: [Formula: Enchant Boots - Lesser Spirit] totalPages: 1
+New roll started for:  Formula: Enchant Boots - Lesser Spirit 2 453 [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG_LOOT [Loot]: [Formula: Enchant Boots - Lesser Spirit]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Need for: [Formula: Enchant Boots - Lesser Spirit]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Need for: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Need for: [Formula: Enchant Boots - Lesser Spirit]
+Not storing loot: [Formula: Enchant Boots - Lesser Spirit] Jackerròr PATTERN_LOOT_ROLL_NEED
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Formula: Enchant Boots - Lesser Spirit]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Formula: Enchant Boots - Lesser Spirit]
+Not storing loot: [Formula: Enchant Boots - Lesser Spirit] Turbasyka PATTERN_LOOT_ROLL_PASSED
+GLH_ROLLED received: 2
+Roll cancelled for:  2 Formula: Enchant Boots - Lesser Spirit
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Formula: Enchant Boots - Lesser Spirit]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Formula: Enchant Boots - Lesser Spirit]
+Not storing loot: [Formula: Enchant Boots - Lesser Spirit] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+CHAT_MSG_LOOT Pyaks receives loot: [Taut Compound Bow].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Taut Compound Bow].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Taut Compound Bow].
+Storing: [Taut Compound Bow] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Formula: Enchant Boots - Lesser Spirit]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Formula: Enchant Boots - Lesser Spirit]
+Not storing loot: [Formula: Enchant Boots - Lesser Spirit] Pyaks PATTERN_LOOT_ROLL_GREED
+CHAT_MSG_LOOT You receive loot: [Sweet Nectar].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Sweet Nectar].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Sweet Nectar].
+Storing: [Sweet Nectar] table: 0000020452DDBA20 1
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Formula: Enchant Boots - Lesser Spirit]
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Need Roll - 95 for [Formula: Enchant Boots - Lesser Spirit] by Abaspotki
+CHAT_MSG_LOOT [Loot]: Need Roll - 63 for [Formula: Enchant Boots - Lesser Spirit] by Jackerròr
+CHAT_MSG_LOOT [Loot]: Abaspotki won: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG_LOOT Abaspotki receives loot: [Formula: Enchant Boots - Lesser Spirit].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Formula: Enchant Boots - Lesser Spirit]
+Not storing loot: [Formula: Enchant Boots - Lesser Spirit] Abaspotki PATTERN_LOOT_ROLL_NEED
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Formula: Enchant Boots - Lesser Spirit]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Formula: Enchant Boots - Lesser Spirit]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 95 for [Formula: Enchant Boots - Lesser Spirit] by Abaspotki
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 95 for [Formula: Enchant Boots - Lesser Spirit] by Abaspotki
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 63 for [Formula: Enchant Boots - Lesser Spirit] by Jackerròr
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 63 for [Formula: Enchant Boots - Lesser Spirit] by Jackerròr
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Formula: Enchant Boots - Lesser Spirit].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Formula: Enchant Boots - Lesser Spirit].
+Storing: [Formula: Enchant Boots - Lesser Spirit] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+mainContainer table: 000002048D9216E0
+CreateMiniRollPages: added rollID 3 itemLink: [Archer's Trousers of Agility] totalPages: 1
+New roll started for:  Archer's Trousers of Agility 3 454 [Archer's Trousers of Agility]
+CHAT_MSG_LOOT [Loot]: [Archer's Trousers of Agility]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Archer's Trousers of Agility]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Archer's Trousers of Agility]
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Archer's Trousers of Agility]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Archer's Trousers of Agility]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Archer's Trousers of Agility]
+Not storing loot: [Archer's Trousers of Agility] Jackerròr PATTERN_LOOT_ROLL_GREED
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Archer's Trousers of Agility]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Archer's Trousers of Agility]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Archer's Trousers of Agility]
+Not storing loot: [Archer's Trousers of Agility] Pyaks PATTERN_LOOT_ROLL_GREED
+GLH_ROLLED received: 3
+Roll cancelled for:  3 Archer's Trousers of Agility
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Archer's Trousers of Agility]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Archer's Trousers of Agility]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Archer's Trousers of Agility]
+Not storing loot: [Archer's Trousers of Agility] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Archer's Trousers of Agility]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Archer's Trousers of Agility]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Archer's Trousers of Agility]
+Not storing loot: [Archer's Trousers of Agility] Abaspotki PATTERN_LOOT_ROLL_GREED
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka has selected Need for: [Archer's Trousers of Agility]
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Need Roll - 1 for [Archer's Trousers of Agility] by Turbasyka
+CHAT_MSG_LOOT [Loot]: Turbasyka won: [Archer's Trousers of Agility]
+CHAT_MSG_LOOT Turbasyka receives loot: [Archer's Trousers of Agility].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Need for: [Archer's Trousers of Agility]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Need for: [Archer's Trousers of Agility]
+Not storing loot: [Archer's Trousers of Agility] Turbasyka PATTERN_LOOT_ROLL_NEED
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka won: [Archer's Trousers of Agility]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka won: [Archer's Trousers of Agility]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 1 for [Archer's Trousers of Agility] by Turbasyka
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 1 for [Archer's Trousers of Agility] by Turbasyka
+ChatMsgLoot: CHAT_MSG_LOOT Turbasyka receives loot: [Archer's Trousers of Agility].
+CHAT_MSG: CHAT_MSG_LOOT Turbasyka receives loot: [Archer's Trousers of Agility].
+Storing: [Archer's Trousers of Agility] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+mainContainer table: 0000020498779FC0
+CreateMiniRollPages: added rollID 4 itemLink: [Glyphed Buckler] totalPages: 1
+New roll started for:  Glyphed Buckler 4 455 [Glyphed Buckler]
+CHAT_MSG_LOOT [Loot]: [Glyphed Buckler]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Glyphed Buckler]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Glyphed Buckler]
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Glyphed Buckler]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Glyphed Buckler]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Glyphed Buckler]
+Not storing loot: [Glyphed Buckler] Jackerròr PATTERN_LOOT_ROLL_GREED
+Roll cancelled for:  4 Glyphed Buckler
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Glyphed Buckler]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Glyphed Buckler]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Glyphed Buckler]
+Not storing loot: [Glyphed Buckler] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Glyphed Buckler]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Glyphed Buckler]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Glyphed Buckler]
+Not storing loot: [Glyphed Buckler] Turbasyka PATTERN_LOOT_ROLL_GREED
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Glyphed Buckler]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Glyphed Buckler]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Glyphed Buckler]
+Not storing loot: [Glyphed Buckler] Abaspotki PATTERN_LOOT_ROLL_NEED
+Roll history changed for rollID: 4 
+
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Glyphed Buckler]
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Need Roll - 82 for [Glyphed Buckler] by Abaspotki
+CHAT_MSG_LOOT [Loot]: Abaspotki won: [Glyphed Buckler]
+CHAT_MSG_LOOT Abaspotki receives loot: [Glyphed Buckler].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 82 for [Glyphed Buckler] by Abaspotki
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 82 for [Glyphed Buckler] by Abaspotki
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Glyphed Buckler]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Glyphed Buckler]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Glyphed Buckler]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Glyphed Buckler]
+Not storing loot: [Glyphed Buckler] Pyaks PATTERN_LOOT_ROLL_GREED
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Glyphed Buckler].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Glyphed Buckler].
+Storing: [Glyphed Buckler] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+mainContainer table: 000002049A8438C0
+CreateMiniRollPages: added rollID 5 itemLink: [Renegade Circlet of the Tiger] totalPages: 2
+New roll started for:  Renegade Circlet of the Tiger 5 456 [Renegade Circlet of the Tiger]
+CHAT_MSG_LOOT [Loot]: [Renegade Circlet of the Tiger]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Renegade Circlet of the Tiger]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Renegade Circlet of the Tiger]
+CHAT_MSG_LOOT Abaspotki receives loot: [Double Mail Bracers].
+CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x2.
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Double Mail Bracers].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Double Mail Bracers].
+Storing: [Double Mail Bracers] table: 0000020452DDBA20 1
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x2.
+Storing: [Silk Cloth] table: 0000020452DDBA20 2
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Renegade Circlet of the Tiger]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Renegade Circlet of the Tiger]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Renegade Circlet of the Tiger]
+Not storing loot: [Renegade Circlet of the Tiger] Jackerròr PATTERN_LOOT_ROLL_GREED
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Renegade Circlet of the Tiger]
+Roll history changed for rollID: 4 
+
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Renegade Circlet of the Tiger]
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x2.
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Renegade Circlet of the Tiger]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Renegade Circlet of the Tiger]
+Not storing loot: [Renegade Circlet of the Tiger] Abaspotki PATTERN_LOOT_ROLL_NEED
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Renegade Circlet of the Tiger]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Renegade Circlet of the Tiger]
+Not storing loot: [Renegade Circlet of the Tiger] Pyaks PATTERN_LOOT_ROLL_GREED
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x2.
+Storing: [Silk Cloth] table: 0000020452DDBA20 2
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Renegade Circlet of the Tiger]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Renegade Circlet of the Tiger]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Renegade Circlet of the Tiger]
+Not storing loot: [Renegade Circlet of the Tiger] Turbasyka PATTERN_LOOT_ROLL_GREED
+GLH_ROLLED received: 4
+GLH_ROLLED received: 5
+Roll cancelled for:  5 Renegade Circlet of the Tiger
+Roll history changed for rollID: 5 
+
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Renegade Circlet of the Tiger]
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Need Roll - 46 for [Renegade Circlet of the Tiger] by Abaspotki
+CHAT_MSG_LOOT [Loot]: Abaspotki won: [Renegade Circlet of the Tiger]
+CHAT_MSG_LOOT Abaspotki receives loot: [Renegade Circlet of the Tiger].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Renegade Circlet of the Tiger]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Renegade Circlet of the Tiger]
+Not storing loot: [Renegade Circlet of the Tiger] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 46 for [Renegade Circlet of the Tiger] by Abaspotki
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 46 for [Renegade Circlet of the Tiger] by Abaspotki
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Renegade Circlet of the Tiger]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Renegade Circlet of the Tiger]
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Renegade Circlet of the Tiger].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Renegade Circlet of the Tiger].
+Storing: [Renegade Circlet of the Tiger] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Mageweave Cloth].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Mageweave Cloth].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Mageweave Cloth].
+Storing: [Mageweave Cloth] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Silk Cloth]x3.
+CHAT_MSG_LOOT You receive loot: [Stormwind Brie].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Stormwind Brie].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Stormwind Brie].
+Storing: [Stormwind Brie] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Stormwind Brie].
+Storing: [Stormwind Brie] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Silk Cloth].
+Storing: [Silk Cloth] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Silk Cloth]x3.
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x3.
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x3.
+Storing: [Silk Cloth] table: 0000020452DDBA20 3
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG_LOOT Turbasyka receives loot: [Stormwind Brie].
+ChatMsgLoot: CHAT_MSG_LOOT Turbasyka receives loot: [Stormwind Brie].
+CHAT_MSG: CHAT_MSG_LOOT Turbasyka receives loot: [Stormwind Brie].
+Storing: [Stormwind Brie] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x2.
+CHAT_MSG_LOOT Pyaks receives loot: [Taut Compound Bow].
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x2.
+Storing: [Silk Cloth] table: 0000020452DDBA20 2
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Taut Compound Bow].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Taut Compound Bow].
+Storing: [Taut Compound Bow] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Silk Cloth].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Silk Cloth].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Silk Cloth].
+Storing: [Silk Cloth] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+mainContainer table: 000002049A843D70
+CreateMiniRollPages: added rollID 6 itemLink: [Nightsky Sash] totalPages: 1
+New roll started for:  Nightsky Sash 6 457 [Nightsky Sash]
+CHAT_MSG_LOOT [Loot]: [Nightsky Sash]
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Nightsky Sash]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Nightsky Sash]
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Nightsky Sash]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Nightsky Sash]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Greed for: [Nightsky Sash]
+Not storing loot: [Nightsky Sash] Abaspotki PATTERN_LOOT_ROLL_GREED
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Nightsky Sash]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Nightsky Sash]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Nightsky Sash]
+Not storing loot: [Nightsky Sash] Jackerròr PATTERN_LOOT_ROLL_GREED
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Nightsky Sash]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Nightsky Sash]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka has selected Greed for: [Nightsky Sash]
+Not storing loot: [Nightsky Sash] Turbasyka PATTERN_LOOT_ROLL_GREED
+GLH_ROLLED received: 6
+Roll cancelled for:  6 Nightsky Sash
+Roll history changed for rollID: 5 
+
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Nightsky Sash]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Nightsky Sash]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Nightsky Sash]
+Not storing loot: [Nightsky Sash] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+Roll history changed for rollID: 4 
+
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Nightsky Sash]
+Roll history changed for rollID: 4 
+
+CHAT_MSG_LOOT [Loot]: Greed Roll - 84 for [Nightsky Sash] by Pyaks
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Greed Roll - 81 for [Nightsky Sash] by Abaspotki
+Roll history changed for rollID: 5 
+
+CHAT_MSG_LOOT [Loot]: Greed Roll - 88 for [Nightsky Sash] by Ardennel
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Greed Roll - 25 for [Nightsky Sash] by Jackerròr
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Greed Roll - 55 for [Nightsky Sash] by Turbasyka
+CHAT_MSG_LOOT [Loot]: You won: [Nightsky Sash]
+CHAT_MSG_LOOT You receive loot: [Nightsky Sash].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 81 for [Nightsky Sash] by Abaspotki
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 81 for [Nightsky Sash] by Abaspotki
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 55 for [Nightsky Sash] by Turbasyka
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 55 for [Nightsky Sash] by Turbasyka
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 25 for [Nightsky Sash] by Jackerròr
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 25 for [Nightsky Sash] by Jackerròr
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 88 for [Nightsky Sash] by Ardennel
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 88 for [Nightsky Sash] by Ardennel
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You won: [Nightsky Sash]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You won: [Nightsky Sash]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 84 for [Nightsky Sash] by Pyaks
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 84 for [Nightsky Sash] by Pyaks
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Nightsky Sash]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Nightsky Sash]
+Not storing loot: [Nightsky Sash] Pyaks PATTERN_LOOT_ROLL_GREED
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Nightsky Sash].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Nightsky Sash].
+Storing: [Nightsky Sash] table: 0000020452DDBA20 1
+mainContainer table: 000002049A88F2F0
+CreateMiniRollPages: added rollID 7 itemLink: [Scarlet Leggings] totalPages: 1
+New roll started for:  Scarlet Leggings 7 458 [Scarlet Leggings]
+CHAT_MSG_LOOT [Loot]: [Scarlet Leggings]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Scarlet Leggings]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Scarlet Leggings]
+Roll history changed for rollID: 4 
+
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Scarlet Leggings]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Scarlet Leggings]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Scarlet Leggings]
+Not storing loot: [Scarlet Leggings] Pyaks PATTERN_LOOT_ROLL_GREED
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Scarlet Leggings]
+CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Scarlet Leggings]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Scarlet Leggings]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Scarlet Leggings]
+Not storing loot: [Scarlet Leggings] Jackerròr PATTERN_LOOT_ROLL_GREED
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Scarlet Leggings]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Scarlet Leggings]
+Not storing loot: [Scarlet Leggings] Turbasyka PATTERN_LOOT_ROLL_PASSED
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks creates: [Soul Shard].
+mainContainer table: 00000204A01F03D0
+CreateMiniRollPages: added rollID 8 itemLink: [Whitemane's Chapeau] totalPages: 2
+New roll started for:  Whitemane's Chapeau 8 459 [Whitemane's Chapeau]
+CHAT_MSG_LOOT [Loot]: [Whitemane's Chapeau]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Whitemane's Chapeau]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Whitemane's Chapeau]
+CHAT_MSG_LOOT Pyaks receives loot: [Sweet Nectar].
+ChatMsgLoot: CHAT_MSG_LOOT Pyaks receives loot: [Sweet Nectar].
+CHAT_MSG: CHAT_MSG_LOOT Pyaks receives loot: [Sweet Nectar].
+Storing: [Sweet Nectar] table: 0000020452DDBA20 1
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Whitemane's Chapeau]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Whitemane's Chapeau]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Turbasyka passed on: [Whitemane's Chapeau]
+Not storing loot: [Whitemane's Chapeau] Turbasyka PATTERN_LOOT_ROLL_PASSED
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Whitemane's Chapeau]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Whitemane's Chapeau]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Whitemane's Chapeau]
+Not storing loot: [Whitemane's Chapeau] Abaspotki PATTERN_LOOT_ROLL_NEED
+Roll history changed for rollID: 4 
+
+CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Whitemane's Chapeau]
+CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth]x4.
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Whitemane's Chapeau]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Pyaks has selected Greed for: [Whitemane's Chapeau]
+Not storing loot: [Whitemane's Chapeau] Pyaks PATTERN_LOOT_ROLL_GREED
+ChatMsgLoot: CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT Turbasyka receives loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Scarlet Leggings]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Scarlet Leggings]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki has selected Need for: [Scarlet Leggings]
+Not storing loot: [Scarlet Leggings] Abaspotki PATTERN_LOOT_ROLL_NEED
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Need for: [Whitemane's Chapeau]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Need for: [Whitemane's Chapeau]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Need for: [Whitemane's Chapeau]
+Not storing loot: [Whitemane's Chapeau] Jackerròr PATTERN_LOOT_ROLL_NEED
+GLH_ROLLED received: 7
+Roll cancelled for:  7 Scarlet Leggings
+Roll history changed for rollID: 5 
+
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Scarlet Leggings]
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Need Roll - 75 for [Scarlet Leggings] by Abaspotki
+CHAT_MSG_LOOT [Loot]: Abaspotki won: [Scarlet Leggings]
+CHAT_MSG_LOOT Abaspotki receives loot: [Scarlet Leggings].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Scarlet Leggings]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Scarlet Leggings]
+Not storing loot: [Scarlet Leggings] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 75 for [Scarlet Leggings] by Abaspotki
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 75 for [Scarlet Leggings] by Abaspotki
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Scarlet Leggings]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Scarlet Leggings]
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Scarlet Leggings].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Scarlet Leggings].
+Storing: [Scarlet Leggings] table: 0000020452DDBA20 1
+GLH_ROLLED received: 8
+Roll cancelled for:  8 Whitemane's Chapeau
+Roll history changed for rollID: 5 
+
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Whitemane's Chapeau]
+Roll history changed for rollID: 3 
+
+CHAT_MSG_LOOT [Loot]: Need Roll - 53 for [Whitemane's Chapeau] by Jackerròr
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Need Roll - 75 for [Whitemane's Chapeau] by Abaspotki
+CHAT_MSG_LOOT [Loot]: Abaspotki won: [Whitemane's Chapeau]
+CHAT_MSG_LOOT Abaspotki receives loot: [Whitemane's Chapeau].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 75 for [Whitemane's Chapeau] by Abaspotki
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 75 for [Whitemane's Chapeau] by Abaspotki
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Whitemane's Chapeau]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Whitemane's Chapeau]
+Not storing loot: [Whitemane's Chapeau] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Whitemane's Chapeau]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Abaspotki won: [Whitemane's Chapeau]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Need Roll - 53 for [Whitemane's Chapeau] by Jackerròr
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Need Roll - 53 for [Whitemane's Chapeau] by Jackerròr
+ChatMsgLoot: CHAT_MSG_LOOT Abaspotki receives loot: [Whitemane's Chapeau].
+CHAT_MSG: CHAT_MSG_LOOT Abaspotki receives loot: [Whitemane's Chapeau].
+Storing: [Whitemane's Chapeau] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive loot: [Sweet Nectar].
+CHAT_MSG_LOOT You receive loot: [Silk Cloth]x4.
+CHAT_MSG_LOOT You receive loot: [Interlaced Cowl].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Sweet Nectar].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Sweet Nectar].
+Storing: [Sweet Nectar] table: 0000020452DDBA20 1
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Interlaced Cowl].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Interlaced Cowl].
+Storing: [Interlaced Cowl] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+ChatMsgLoot: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+CHAT_MSG: CHAT_MSG_LOOT Jackerròr receives loot: [Silk Cloth]x4.
+Storing: [Silk Cloth] table: 0000020452DDBA20 4
+CHAT_MSG_LOOT You receive loot: [Wool Cloth]x2.
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Wool Cloth]x2.
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Wool Cloth]x2.
+Storing: [Wool Cloth] table: 0000020452DDBA20 2
+mainContainer table: 00000204A01F0880
+CreateMiniRollPages: added rollID 9 itemLink: [Branded Leather Bracers] totalPages: 1
+New roll started for:  Branded Leather Bracers 9 460 [Branded Leather Bracers]
+CHAT_MSG_LOOT [Loot]: [Branded Leather Bracers]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: [Branded Leather Bracers]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: [Branded Leather Bracers]
+CHAT_MSG_LOOT You receive loot: [Light Scimitar].
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Light Scimitar].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Light Scimitar].
+Storing: [Light Scimitar] table: 0000020452DDBA20 1
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Branded Leather Bracers]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Branded Leather Bracers]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Jackerròr has selected Greed for: [Branded Leather Bracers]
+Not storing loot: [Branded Leather Bracers] Jackerròr PATTERN_LOOT_ROLL_GREED
+GLH_ROLLED received: 9
+Roll cancelled for:  9 Branded Leather Bracers
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Branded Leather Bracers]
+Roll history changed for rollID: 2 
+
+CHAT_MSG_LOOT [Loot]: Greed Roll - 15 for [Branded Leather Bracers] by Ardennel
+Roll history changed for rollID: 1 
+
+CHAT_MSG_LOOT [Loot]: Greed Roll - 13 for [Branded Leather Bracers] by Jackerròr
+CHAT_MSG_LOOT [Loot]: You won: [Branded Leather Bracers]
+CHAT_MSG_LOOT You receive loot: [Branded Leather Bracers].
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Branded Leather Bracers]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You have selected Greed for: [Branded Leather Bracers]
+Not storing loot: [Branded Leather Bracers] Ardennel-Spineshatter PATTERN_LOOT_ROLL_GREED_SELF
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: You won: [Branded Leather Bracers]
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: You won: [Branded Leather Bracers]
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 13 for [Branded Leather Bracers] by Jackerròr
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 13 for [Branded Leather Bracers] by Jackerròr
+ChatMsgLoot: CHAT_MSG_LOOT [Loot]: Greed Roll - 15 for [Branded Leather Bracers] by Ardennel
+CHAT_MSG: CHAT_MSG_LOOT [Loot]: Greed Roll - 15 for [Branded Leather Bracers] by Ardennel
+ChatMsgLoot: CHAT_MSG_LOOT You receive loot: [Branded Leather Bracers].
+CHAT_MSG: CHAT_MSG_LOOT You receive loot: [Branded Leather Bracers].
+Storing: [Branded Leather Bracers] table: 0000020452DDBA20 1
+CHAT_MSG_LOOT You receive item: [Coin of Ancestry].
+ChatMsgLoot: CHAT_MSG_LOOT You receive item: [Coin of Ancestry].
+CHAT_MSG: CHAT_MSG_LOOT You receive item: [Coin of Ancestry].
+Storing: [Coin of Ancestry] table: 0000020452DDBA20 1
