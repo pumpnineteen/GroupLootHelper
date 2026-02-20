@@ -3060,6 +3060,7 @@ function GLH:_ChatMsgLoot(event, msg, ...)
     for _, key in ipairs(rollpatternKeys) do
         local patternDef = L[key]
         local captures = { string.match(msg, patternDef.pattern) }
+        Log("Trying pattern:", key, patternDef.pattern, "Captures:", unpack(captures))
         if #captures > 0 then
             local payloadData = {}
             for i, field in ipairs(patternDef.payload) do
@@ -3221,7 +3222,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     
     -- Update the UI row for this player’s roll.
     self:AddRollInfo(rollID, playerInfoData)
-    self:AddMiniRollInfo(rollID, playerInfoData)
+    -- self:AddMiniRollInfo(rollID, playerInfoData)
     if loot_winner then
         local uid = rollid_to_uid[rollID]
         if uid and activeRolls[uid] then
