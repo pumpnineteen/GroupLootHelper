@@ -3069,6 +3069,7 @@ function GLH:_ChatMsgLoot(event, msg, ...)
             
             local rollID = itemNameToRollID[payloadData.loot] or itemLinkToRollID[payloadData.loot]
             local uid = rollid_to_uid[rollID]
+            Log("Pattern matched:", key, "Payload:", payloadData.loot, "RollID:", rollID, "UID:", uid, "ActiveRolls:", activeRolls[uid])
             -- print(key, rollID, uid)
             if rollID and activeRolls[uid] then
                 self:ProcessLootRollMessage(rollID, key, payloadData)
