@@ -1521,6 +1521,7 @@ end
 
 
 function GLH:AddRollInfo(rollID, playerInfoData)
+    Log("Adding roll info for rollID:", rollID, "player:", playerInfoData.name, "cname:", playerInfoData.cname, "rollValue:", tostring(playerInfoData.rollValue))
     local uid = rollid_to_uid[rollID]
     if not uid then 
         print("WARNING: couldn't find uniqueID for rollID", rollID)
