@@ -410,8 +410,8 @@ local playerGCache
 local serverIDCache
 local uid_to_rollid = {}
 local rollid_to_uid = {}
-local itemNameToRollID = {} -- Map item names to roll IDs
-local itemLinkToRollID = {} -- Map item links to roll IDs
+local itemNameToUID = {} -- Map item names to roll IDs
+local itemLinkToUID = {} -- Map item links to roll IDs
 local pendingInspectRequests = {} -- Global table for caching pending inspect requests (keyed by player name)
 local tooltipIndex = 1
 
@@ -2820,10 +2820,10 @@ function GLH:OnEnable()
             rollid_to_uid[activeRoll.rollID] = uID
         end
         if activeRoll.itemLink then
-            itemLinkToRollID[activeRoll.itemLink] = uID
+            itemLinkToUID[activeRoll.itemLink] = uID
         end
         if activeRoll.itemName then
-            itemNameToRollID[activeRoll.itemName] = uID
+            itemNameToUID[activeRoll.itemName] = uID
         end
     end
 
@@ -3060,15 +3060,15 @@ function GLH:_ChatMsgLoot(event, msg, ...)
     for _, key in ipairs(rollpatternKeys) do
         local patternDef = L[key]
         local captures = { string.match(msg, patternDef.pattern) }
-        Log("Trying pattern:", key, patternDef.pattern, "Captures:", unpack(captures))
+        -- Log("Trying pattern:", key, patternDef.pattern, "Captures:", unpack(captures))
         if #captures > 0 then
             local payloadData = {}
             for i, field in ipairs(patternDef.payload) do
                 payloadData[field] = captures[i]
             end
             
-            local rollID = itemNameToRollID[payloadData.loot] or itemLinkToRollID[payloadData.loot]
-            local uid = rollid_to_uid[rollID]
+            local uid = itemNameToUID[payloadData.loot] or itemLinkToUID[payloadData.loot]
+            local rollID = uid_to_rollid[uid]
             Log("Pattern matched:", key, "Payload:", payloadData.loot, "RollID:", rollID, "UID:", uid, "ActiveRolls:", activeRolls[uid])
             -- print(key, rollID, uid)
             if rollID and activeRolls[uid] then
@@ -3264,8 +3264,8 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
     }
     uid_to_rollid[uid] = rollID
     rollid_to_uid[rollID] = uid
-    itemNameToRollID[name] = uid
-    itemLinkToRollID[itemlink] = uid
+    itemNameToUID[name] = uid
+    itemLinkToUID[itemlink] = uid
     loot_container_cache[uid] = self:AddTooltipContainer(itemlink, texture, timeEnd)
     self:ActiveMiniRollsPages()
     self:CreateMiniRollPages(rollID, itemlink, texture)
