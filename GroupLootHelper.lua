@@ -90,6 +90,9 @@ local loot_container_cache = {}
 
 local miniRollWindow
 local miniRollPaged
+local activeMiniRolls = {}
+local activeMiniRollIDs = {}
+local miniRollsActiveIndex = 1
 
 local qualities = {
         poor = "|cff9d9d9d",
@@ -2622,11 +2625,6 @@ function GLH:FullNameGCache()
     end
 end
 
-local activeMiniRolls = {}
-local activeMiniRollIDs = {}
-local miniRollsActiveIndex = 1
-
-
 function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
     mainContainer.rollID = rollID
@@ -2676,7 +2674,7 @@ function GLH:ActiveMiniRollsPages()
         
         miniRollPaged = paged
 
-        miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)
+        miniRollPaged:SetScale(MINI_TOOLTIP_SCALE)
         Log("ActiveMiniRollsPages: created miniRollPaged (scale=" .. tostring(MINI_TOOLTIP_SCALE) .. ")")
 
     end
