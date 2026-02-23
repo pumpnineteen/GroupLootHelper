@@ -1525,6 +1525,7 @@ function GLH:AddRollInfo(rollID, playerInfoData)
     local uid = rollid_to_uid[rollID]
     if not uid then 
         print("WARNING: couldn't find uniqueID for rollID", rollID)
+        Log("WARNING: couldn't find uniqueID for rollID", rollID)
         return 
     end
 
@@ -2004,7 +2005,7 @@ end
 
 -- Refresh mini roll display
 function GLH:RefreshMiniRollDisplay(rollID)
-    Log("RefreshMiniRollDisplay: called for rollID", rollID, "activeMiniRolls:", activeMiniRolls[rollID] and "yes" or "no")
+    Log("RefreshMiniRollDisplay: called for rollID", rollID, "activeMiniRolls:", activeMiniRolls[rollID])
     if not activeMiniRolls[rollID] then return end
     
     local miniContainer = activeMiniRolls[rollID]
