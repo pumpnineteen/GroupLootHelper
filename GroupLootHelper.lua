@@ -47,7 +47,7 @@ local defaults = {
         spacing = 5,
         role_icon_size = 16,
         spec_icon_size = 16,
-        ROLL_BUTTON_SIZE = 24,
+        roll_button_size = 24,
         item_tooltip_width = 0,  -- 0 = auto-size based on content
         player_name_width = 0,   -- auto-width for name column
         roll_value_width = 0,    -- auto-width for roll value
@@ -81,6 +81,8 @@ local MINI_TOOLTIP_SCALE
 local LIST_TOOLTIP_SCALE
 local PLAYER_NAME_WIDTH
 local ROLL_VALUE_WIDTH
+local PLAYER_NAME_FONT_SIZE
+local PLAYER_NAME_FONT_SIZE_MINI
 
 local LOOT_EXPIRATION = 4 * 60 * 60
 
@@ -100,6 +102,8 @@ local miniRollPaged
 local activeMiniRolls = {}
 local activeMiniRollIDs = {}
 local miniRollsActiveIndex = 1
+
+local cnameCache = {}
 
 local qualities = {
         poor = "|cff9d9d9d",
@@ -1918,12 +1922,29 @@ local function SortRolls(rolls)
 end
 
 -- Add a single player row to the table
-function GLH:AddPlayerRow(playerNamesTable, playerData, rollID)
+function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
     local miniRoll = playerNamesTable:GetUserData("miniRoll")
     
     -- Player name (colorized by class)
     local nameLabel = AceGUI:Create("Label")
+    if not playerData.cname then
+        local class = playerData.class
+        local name = playerData.name
+        if not class and name then
+            local guid = guidCache[name]
+            if not guid then
+                Log("WARNING: no GUID found for player", name)
+            else
+                playerData.cname = cnameCache[guid]
+            end
+        end
+        if not playerData.cname then
+             Log("WARNING: no cname found for player", name)
+        end
+        playerData.cname = playerData.cname or name or "Unknown"
+    end
     nameLabel:SetText(playerData.cname or playerData.name)
+    nameLabel:SetFont(GameFontNormal:GetFont(), fontsize or 12, "OUTLINE")
     nameLabel:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
     playerNamesTable:AddChild(nameLabel)
     
@@ -1999,7 +2020,7 @@ function GLH:RefreshRollDisplay(rollID)
     
     -- Re-add all players in sorted order
     for _, playerData in ipairs(sortedRolls) do
-        self:AddPlayerRow(playerNamesTable, playerData, rollID)
+        self:AddPlayerRow(playerNamesTable, playerData, rollID, PLAYER_NAME_FONT_SIZE)
     end
     
     playerNamesTable:DoLayout()
@@ -2033,7 +2054,7 @@ function GLH:RefreshMiniRollDisplay(rollID)
     
     -- Re-add all players in sorted order
     for _, playerData in ipairs(sortedRolls) do
-        self:AddPlayerRow(playerNamesTable, playerData, rollID)
+        self:AddPlayerRow(playerNamesTable, playerData, rollID, PLAYER_NAME_FONT_SIZE_MINI)
     end
     
     playerNamesTable:DoLayout()
@@ -2761,6 +2782,8 @@ function GLH:OnEnable()
     LIST_TOOLTIP_SCALE = db.global.list_tooltip_scale or 1.0
     PLAYER_NAME_WIDTH  = db.global.player_name_width or 0      -- auto-width for name column
     ROLL_VALUE_WIDTH   = db.global.roll_value_width or 0      -- auto-width for roll value
+    PLAYER_NAME_FONT_SIZE = db.global.player_name_font_size or 12
+    PLAYER_NAME_FONT_SIZE_MINI = db.global.player_name_font_size_mini or 16
 
     GROW_UP = db.global.grow_up or false
 
@@ -2793,7 +2816,9 @@ function GLH:OnEnable()
     db.global.serverIDCache = serverIDCache
     db.global.item_tooltip_width = ITEM_TOOLTIP_WIDTH
     db.global.mini_tooltip_scale = MINI_TOOLTIP_SCALE 
-    db.global.list_tooltip_scale = LIST_TOOLTIP_SCALE 
+    db.global.list_tooltip_scale = LIST_TOOLTIP_SCALE
+    db.global.player_name_font_size = PLAYER_NAME_FONT_SIZE
+    db.global.player_name_font_size_mini = PLAYER_NAME_FONT_SIZE_MINI
 
     playerGCache[youGUID] = playerGCache[youGUID] or { name = youFullName, class = youClass }
 
@@ -2870,8 +2895,9 @@ function GLH:UpdatePlayerCacheGroup()
             
             -- Update or create an entry in the cache.
             local guid = guidCache[name]
-            -- local classColour = self:GetClassColour(class)
-            -- playerGCache[guid].cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
+            local classColour = self:GetClassColour(class)
+            cnameCache[guid] = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
+            Log("Player:", name,"is", class, "GUID:", guid, "cname:", cnameCache[guid])
             playerGCache[guid].class = class or "Unknown"
             -- playerCache[name].classIcon = classIcon
             -- playerCache[name].roleIcon = "Interface\\Icons\\INV_Misc_QuestionMark"  -- You may later update this when you learn a player’s actual role.
@@ -3014,7 +3040,7 @@ function GLH:FillPlayerInfo(playerName, unit)
     if not info or not playerGCache[guid] then
         local name = UnitFullName(unit)
         local class = UnitClass(unit)
-        local classColour = self:GetClassColour(class)
+        -- local classColour = self:GetClassColour(class)
 
         self:RequestPlayerInspect(playerName)
         info = {
