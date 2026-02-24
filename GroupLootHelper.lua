@@ -2250,7 +2250,7 @@ function GLH:_ProcessTooltipQueue(now)
             entry.timeEnd,
             entry.rollID
             )
-            loot_container_cache[uid] = loot_container
+            loot_container_cache[uid] = {loot_container = loot_container}
         end
         
         
@@ -3265,7 +3265,7 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
     rollid_to_uid[rollID] = uid
     itemNameToUID[name] = uid
     itemLinkToUID[itemlink] = uid
-    loot_container_cache[uid] = self:AddTooltipContainer(itemlink, texture, timeEnd)
+    loot_container_cache[uid] = { loot_container =self:AddTooltipContainer(itemlink, texture, timeEnd)}
     self:ActiveMiniRollsPages()
     self:CreateMiniRollPages(rollID, itemlink, texture)
     Log("New roll started for: " , name, rollID, uid, itemlink)
