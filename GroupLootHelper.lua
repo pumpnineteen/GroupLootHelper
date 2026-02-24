@@ -2870,7 +2870,7 @@ function GLH:UpdatePlayerCacheGroup()
             
             -- Update or create an entry in the cache.
             local guid = guidCache[name]
-            local classColour = self:GetClassColour(class)
+            -- local classColour = self:GetClassColour(class)
             -- playerGCache[guid].cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
             playerGCache[guid].class = class or "Unknown"
             -- playerCache[name].classIcon = classIcon
