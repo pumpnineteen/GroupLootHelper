@@ -4,6 +4,13 @@ local crayon = LibStub("Crayon-3.0")
 local AceTimer = LibStub("AceTimer-3.0")
 local AceEvent = LibStub("AceEvent-3.0")
 
+GLH_Log = GLH_Log or {}
+-- Initialize localization
+local L = LibStub("AceLocale-3.0"):GetLocale("GroupLootHelper")
+
+local AceGUI = LibStub("AceGUI-3.0")
+local LibSpec = LibStub("LibClassicSpecs", true) or LibStub("LibSpec")
+
 local dummyFunc = function() end
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned or dummyFunc
 local select = select
@@ -383,7 +390,7 @@ local function GetGUID(name, unit)
     local guid = guidCache[name]
     if not guid then
         if not unit then
-            unit = GetUnit(playerName)
+            unit = GetUnit(name)
         end
         guid = UnitGUID(unit)
         local fullName = UnitFullName(unit)
@@ -397,14 +404,6 @@ local function EmptyCell()
   lbl:SetText("")
   return lbl
 end
-
-
-GLH_Log = GLH_Log or {}
--- Initialize localization
-local L = LibStub("AceLocale-3.0"):GetLocale("GroupLootHelper")
-
-local AceGUI = LibStub("AceGUI-3.0")
-local LibSpec = LibStub("LibClassicSpecs", true) or LibStub("LibSpec")
 
 local activeRolls
 local historyRolls
@@ -1476,7 +1475,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
                 AceEvent:Embed(rollValue)
                 function rollValue:OnRollValue(event, info)
                     local _rollID = self:GetUserData("rollID")
-                    local _name = self:GetUserDate("name")
+                    local _name = self:GetUserData("name")
                     if info.rollID == _rollID and info.name == _name then
                         self:SetText(info.rollValue)
                     end
@@ -1552,98 +1551,98 @@ function GLH:AddRollInfo(rollID, playerInfoData)
     self:RefreshRollDisplay(rollID)
     self:RefreshMiniRollDisplay(rollID)
 
-    local playerNamesTable = loot_container_cache[uid].loot_container:GetUserData("playerNamesTable")
-    if not playerNamesTable then return end
-    local firstGreedOrDisenchant = playerNamesTable:GetUserData("FirstGreedOrDisenchant")
-    local firstPass = playerNamesTable:GetUserData("FirstPass")
-    local rollType = playerInfoData.rollType
-    if not rollType then
-        errormsg("playerInfoData.rollType is nil for rollID: " .. tostring(uid))
-        rollType = "PASSED"
-    end
+    -- local playerNamesTable = loot_container_cache[uid].loot_container:GetUserData("playerNamesTable")
+    -- if not playerNamesTable then return end
+    -- local firstGreedOrDisenchant = playerNamesTable:GetUserData("FirstGreedOrDisenchant")
+    -- local firstPass = playerNamesTable:GetUserData("FirstPass")
+    -- local rollType = playerInfoData.rollType
+    -- if not rollType then
+    --     errormsg("playerInfoData.rollType is nil for rollID: " .. tostring(uid))
+    --     rollType = "PASSED"
+    -- end
 
-    local function AddName(before)
-        local playerName = AceGUI:Create("Label")
-        playerName:SetText(playerInfoData.name or "Unknown")
-        playerName:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
-        playerNamesTable:AddChild(playerName, before)
-        return playerName
-    end
+    -- local function AddName(before)
+    --     local playerName = AceGUI:Create("Label")
+    --     playerName:SetText(playerInfoData.name or "Unknown")
+    --     playerName:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
+    --     playerNamesTable:AddChild(playerName, before)
+    --     return playerName
+    -- end
     
-    local function AddRole(before)
-        local roleIcon = AceGUI:Create("Icon")
-        roleIcon:SetImage(playerInfoData.roleIcon or "Interface\\Icons\\INV_Shield_04")
-        roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-        playerNamesTable:AddChild(roleIcon, before)
-        return roleIcon
-    end
+    -- local function AddRole(before)
+    --     local roleIcon = AceGUI:Create("Icon")
+    --     roleIcon:SetImage(playerInfoData.roleIcon or "Interface\\Icons\\INV_Shield_04")
+    --     roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    --     playerNamesTable:AddChild(roleIcon, before)
+    --     return roleIcon
+    -- end
 
-    local function AddSpec(before)
-        local specIcon = AceGUI:Create("Icon")
-        specIcon:SetImage(playerInfoData.specIcon or "Interface\\Icons\\INV_Sword_04")
-        specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-        playerNamesTable:AddChild(specIcon, before)
-        return specIcon
-    end
+    -- local function AddSpec(before)
+    --     local specIcon = AceGUI:Create("Icon")
+    --     specIcon:SetImage(playerInfoData.specIcon or "Interface\\Icons\\INV_Sword_04")
+    --     specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    --     playerNamesTable:AddChild(specIcon, before)
+    --     return specIcon
+    -- end
     
-    local function AddRollIcon(before)
-        local rollIcon = AceGUI:Create("Icon")
-        rollIcon:SetImage(playerInfoData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
-        rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-        playerNamesTable:AddChild(rollIcon, before)
-        return rollIcon
-    end
+    -- local function AddRollIcon(before)
+    --     local rollIcon = AceGUI:Create("Icon")
+    --     rollIcon:SetImage(playerInfoData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
+    --     rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    --     playerNamesTable:AddChild(rollIcon, before)
+    --     return rollIcon
+    -- end
     
-    local function AddRollValue(before)
-        local rollValue = AceGUI:Create("Label")
-        rollValue:SetText(playerInfoData.rollValue or "")
-        rollValue:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-        playerNamesTable:AddChild(rollValue, before)
-        return rollValue
-    end
+    -- local function AddRollValue(before)
+    --     local rollValue = AceGUI:Create("Label")
+    --     rollValue:SetText(playerInfoData.rollValue or "")
+    --     rollValue:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    --     playerNamesTable:AddChild(rollValue, before)
+    --     return rollValue
+    -- end
 
-    local function AddForward()
-        local nameLabel = AddName()
-        AddRole()
-        AddSpec()
-        AddRollIcon()
-        AddRollValue()
-        return nameLabel
-    end
+    -- local function AddForward()
+    --     local nameLabel = AddName()
+    --     AddRole()
+    --     AddSpec()
+    --     AddRollIcon()
+    --     AddRollValue()
+    --     return nameLabel
+    -- end
 
-    local function AddBackward(before)
-        local before = AddRollValue(before)
-        before = AddRollIcon(before)
-        before = AddSpec(before)
-        before = AddRole(before)
-        local nameLabel = AddName(before)
-        return nameLabel
-    end
+    -- local function AddBackward(before)
+    --     local before = AddRollValue(before)
+    --     before = AddRollIcon(before)
+    --     before = AddSpec(before)
+    --     before = AddRole(before)
+    --     local nameLabel = AddName(before)
+    --     return nameLabel
+    -- end
 
-    local function InsertInfo()
-        if rollType == "NEED"  and firstGreedOrDisenchant then
-            AddBackward(firstGreedOrDisenchant)
+    -- local function InsertInfo()
+    --     if rollType == "NEED"  and firstGreedOrDisenchant then
+    --         AddBackward(firstGreedOrDisenchant)
         
-        elseif (rollType == "NEED" or rollType == "GREED" or rollType == "DISENCHANT") and firstPass then
-            local insert = AddBackward(firstPass)
-            -- Store firstGreedOrDisenchant if it doesn't exist
-            if rollType == "GREED" or rollType == "DISENCHANT" then
-                if not firstGreedOrDisenchant then
-                    playerNamesTable:SetUserData("FirstGreedOrDisenchant", insert)
-                end
-            end
-        else
-            local insert = AddForward()
-            -- Store firstPass if it doesn't exist
-            if rollType == "PASSED" then
-                if not firstPass then
-                    playerNamesTable:SetUserData("FirstPass", insert)
-                end
-            end
-        end
-    end
+    --     elseif (rollType == "NEED" or rollType == "GREED" or rollType == "DISENCHANT") and firstPass then
+    --         local insert = AddBackward(firstPass)
+    --         -- Store firstGreedOrDisenchant if it doesn't exist
+    --         if rollType == "GREED" or rollType == "DISENCHANT" then
+    --             if not firstGreedOrDisenchant then
+    --                 playerNamesTable:SetUserData("FirstGreedOrDisenchant", insert)
+    --             end
+    --         end
+    --     else
+    --         local insert = AddForward()
+    --         -- Store firstPass if it doesn't exist
+    --         if rollType == "PASSED" then
+    --             if not firstPass then
+    --                 playerNamesTable:SetUserData("FirstPass", insert)
+    --             end
+    --         end
+    --     end
+    -- end
 
-    playerNamesTable:DoLayout()
+    -- playerNamesTable:DoLayout()
 end
 
 -- Function to get player's spec
@@ -1796,11 +1795,11 @@ function GLH:CreateOSNeedButton(size, rollID)
         if IsGargulRoll(rollID) then
             Log("OS Need clicked")
             RandomRoll(1, 99)
-            disableButton(self, 3)
+            disableButton(widget, 3)
         elseif rollID and type(rollID) == "number" then
             Log("OS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
-            disableButton(self, 3)
+            disableButton(widget, 3)
             -- GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
@@ -1818,11 +1817,11 @@ function GLH:CreateGreedButton(size, rollID)
         print("Greed clicked", rollID)
         if IsGargulRoll(rollID) then
             RandomRoll(1, 100)
-            disableButton(self)
+            disableButton(widget)
         elseif rollID and type(rollID) == "number" then
             print("Attempting to roll on loot", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 2)
-            disableButton(self, 3)
+            disableButton(widget, 3)
             -- GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
@@ -1839,7 +1838,7 @@ function GLH:CreateDisenchantButton(size, rollID)
         print("Disenchant clicked", rollID)
         if rollID and type(rollID) == "number" then
             RollOnLoot(rollID, 3)
-            disableButton(self, 3)
+            disableButton(widget, 3)
         end
         -- GLH:RemoveRollID(rollID)
     end)
@@ -1855,7 +1854,7 @@ function GLH:CreatePassButton(size, rollID)
         print("Pass clicked", rollID)
         if rollID and type(rollID) == "number" then
             RollOnLoot(rollID, 0)
-            disableButton(self, 3)
+            disableButton(widget, 3)
         end
         -- GLH:RemoveRollID(rollID)
     end)
