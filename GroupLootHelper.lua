@@ -239,17 +239,25 @@ local function GetServerIDFromGUID(guid)
     return serverID
 end
 
+local function GetFullName(name)
+    local fullName = name
+    if not string.find(fullName, "-") then
+        fullName = fullName .. "-" .. realmName
+    end
+    return fullName
+end
+
 local function UnitFullName(unit)
     local fullName = _UnitFullName(unit)
     cleanName(fullName)
     if not fullName then
         return nil
     end
-    if not string.find(fullName, "-") then
-        fullName = fullName .. "-" .. realmName
-    end
+    fullName = GetFullName(fullName)
     return fullName
 end
+
+
 
 local itemLinkCache
 local itemIDCache
@@ -392,14 +400,23 @@ end
 
 local function GetGUID(name, unit)
     local guid = guidCache[name]
-    if not guid then
-        if not unit then
-            unit = GetUnit(name)
-        end
-        guid = UnitGUID(unit)
-        local fullName = UnitFullName(unit)
-        guidCache[fullName] = guid
+    if guid then
+        return guid
     end
+
+    local fullName = GetFullName(name)
+    guid = guidCache[fullName]
+    if guid then
+        return guid
+    end
+
+    if not unit then
+        unit = GetUnit(name)
+    end
+    guid = UnitGUID(unit)
+    fullName = UnitFullName(unit)
+    guidCache[fullName] = guid
+
     return guid
 end
 
@@ -1931,7 +1948,7 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
         local class = playerData.class
         local name = playerData.name
         if not class and name then
-            local guid = guidCache[name]
+            local guid = GetGUID(name)
             if not guid then
                 Log("WARNING: no GUID found for player", name)
             else
@@ -2366,8 +2383,8 @@ function GLH:AddEntryToHistoryTbl(history, entry, dateKey, link, winner, locatio
     link, link_amount = GLH:GetAmount(link)
     local itemID = GetItemID(link)
 
-    winner = (playerGCache[winner] and winner) or guidCache[winner] or (entry.winner and playerGCache[entry.winner] and entry.winner) or (entry.winner and guidCache[entry.winner]) or youGUID
-    local player = (entry.player and playerGCache[entry.player] and entry.player) or (entry.player and guidCache[entry.player]) or youGUID
+    winner = (playerGCache[winner] and winner) or GetGUID(winner) or (entry.winner and playerGCache[entry.winner] and entry.winner) or (entry.winner and guidCache[entry.winner]) or youGUID
+    local player = (entry.player and playerGCache[entry.player] and entry.player) or (entry.player and GetGUID(entry.player)) or youGUID
 
     local amount = link_amount
     location = location or entry.location
@@ -2596,8 +2613,8 @@ function GLH:HistoryRollsTableFormat()
                             itemID = itemID,
                             amount = winnerData.amount or 1,
                             player = entry.player,
-                            winner = guidCache[winner],
-                            winnerName = not guidCache[winner] and winner or nil,
+                            winner = GetGUID(winner),
+                            winnerName = not GetGUID(winner) and winner or nil,
                             mapID = mapID,
                             instanceID = instanceID
                         }
@@ -2620,12 +2637,12 @@ end
 
 function GLH:WinnerNameHistoryTable()
     for _, entry in ipairs(historyTable) do
-        if entry.winnerName and guidCache[entry.winnerName] then
-            entry.winner = guidCache[entry.winnerName]
+        if entry.winnerName and GetGUID(entry.winnerName) then
+            entry.winner = GetGUID(entry.winnerName)
             entry.winnerName = nil -- Remove winnerName after updating winner
         end
-        if entry.player and guidCache[entry.player] then
-            entry.player = guidCache[entry.player]
+        if entry.player and GetGUID(entry.player) then
+            entry.player = GetGUID(entry.player)
         end
     end
     print("Updated historyTable with winner names.")
@@ -2884,7 +2901,7 @@ function GLH:UpdatePlayerCacheGroup()
     for i = 1, numGroupMembers do
         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
         local name = UnitFullName(unit)
-        if name and not guidCache[name] then
+        if name and not GetGUID(name) then
             self:FillPlayerInfo(name, unit)
             -- We can get class info via UnitClass.
             local _, class = UnitClass(unit)
@@ -2894,7 +2911,7 @@ function GLH:UpdatePlayerCacheGroup()
             -- local specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
             
             -- Update or create an entry in the cache.
-            local guid = guidCache[name]
+            local guid = GetGUID(name)
             local classColour = self:GetClassColour(class)
             cnameCache[guid] = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
             Log("Player:", name,"is", class, "GUID:", guid, "cname:", cnameCache[guid])
@@ -3144,7 +3161,7 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
     GetItemData(loot)
 
     looter = cleanName(looter)
-    local looterGUID = guidCache[looter]
+    local looterGUID = GetGUID(looter)
     -- print("Looter GUID:", looterGUID, "Name:", looter)
 
     if patternkey == "PATTERN_LOOT_ITEM" or 
