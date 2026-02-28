@@ -1560,6 +1560,7 @@ function GLH:AddRollInfo(rollID, playerInfoData)
     -- Get class info and colorize name
     local class = playerInfoData.class
     local name = playerInfoData.name
+    Log("AddRollInfo: name=", name, "class=", tostring(class), "guid=", tostring(GetGUID(name)))
     if class then
         local classColour = self:GetClassColour(class)
         playerInfoData.cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
@@ -1955,6 +1956,7 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
                 playerData.cname = cnameCache[guid]
             end
         end
+        Log("AddPlayerRow: name=", name, "class=", playerData.class, "guid=", GetGUID(name), "cname=", tostring(playerData.cname), "guidCache[name]=", tostring(guidCache[name]), "guidCache[fullname]=", tostring(guidCache[GetFullName(name)]))
         if not playerData.cname then
              Log("WARNING: no cname found for player", name)
         end
@@ -1993,6 +1995,7 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
     
     -- Roll icon
     local rollIcon = AceGUI:Create("Icon")
+    Log("Adding roll icon for player", playerData.name, "rollIcon:", tostring(playerData.rollIcon))
     rollIcon:SetImage(playerData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
     rollIcon:SetWidth(ROLL_BUTTON_SIZE)
     rollIcon:SetHeight(ROLL_BUTTON_SIZE)
@@ -2891,6 +2894,7 @@ end
 
 
 function GLH:UpdatePlayerCacheGroup()
+    Log("UpdatePlayerCacheGroup...")
     local _, instanceType = IsInInstance()
     if instanceType == "pvp" or instanceType == "arena" then 
         -- Do not cache or process player info in battlegrounds arenas.
@@ -2905,7 +2909,7 @@ function GLH:UpdatePlayerCacheGroup()
             self:FillPlayerInfo(name, unit)
             -- We can get class info via UnitClass.
             local _, class = UnitClass(unit)
-            Log("Updating player cache for:", name, "Class:", class)
+            Log("UpdatePlayerCacheGroup Updating player cache for:", name, "Class:", class)
 
             -- local classIcon = classIcons[class] or "Interface\\Icons\\INV_Misc_QuestionMark"
             -- local specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -2914,7 +2918,7 @@ function GLH:UpdatePlayerCacheGroup()
             local guid = GetGUID(name)
             local classColour = self:GetClassColour(class)
             cnameCache[guid] = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
-            Log("Player:", name,"is", class, "GUID:", guid, "cname:", cnameCache[guid])
+            Log("UpdatePlayerCacheGroup Player:", name,"is", class, "GUID:", guid, "cname:", cnameCache[guid], "guidCache key=", GetFullName(name))
             playerGCache[guid].class = class or "Unknown"
             -- playerCache[name].classIcon = classIcon
             -- playerCache[name].roleIcon = "Interface\\Icons\\INV_Misc_QuestionMark"  -- You may later update this when you learn a player’s actual role.
@@ -3261,7 +3265,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
                     "Interface\\Buttons\\UI-GroupLoot-Dice-Up",
         rollValue = roll or "",  -- Set default; you can update this as roll values become known.
         }
-    
+    Log("ProcessLootRollMessage:", rollID, playerInfoData.name, "Roll Type:", playerInfoData.rollType, "Roll Value:", playerInfoData.rollValue)
     -- Update the UI row for this player’s roll.
     self:AddRollInfo(rollID, playerInfoData)
     -- self:AddMiniRollInfo(rollID, playerInfoData)
