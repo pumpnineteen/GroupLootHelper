@@ -403,23 +403,28 @@ local function GetUnit(name)
 end
 
 local function GetGUID(name, unit)
-    local guid = guidCache[name]
-    if guid then
-        return guid
+    local guid = nil
+    if name then
+        guid = guidCache[name]
+        if guid then
+            return guid
+        end
+
+        local fullName = GetFullName(name)
+        guid = guidCache[fullName]
+        if guid then
+            return guid
+        end
     end
 
-    local fullName = GetFullName(name)
-    guid = guidCache[fullName]
-    if guid then
-        return guid
-    end
-
-    if not unit then
+    if name and (not unit) then
         unit = GetUnit(name)
     end
-    guid = UnitGUID(unit)
-    fullName = UnitFullName(unit)
-    guidCache[fullName] = guid
+    if unit then
+        guid = UnitGUID(unit)
+        fullName = UnitFullName(unit)
+        guidCache[fullName] = guid
+    end
 
     return guid
 end
