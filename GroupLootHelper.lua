@@ -241,6 +241,10 @@ end
 
 local function GetFullName(name)
     local fullName = name
+    if not fullName then
+        Log("GetFullName: No name provided!")
+        return nil
+    end
     if not string.find(fullName, "-") then
         fullName = fullName .. "-" .. realmName
     end
