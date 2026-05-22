@@ -51,6 +51,8 @@ end
 local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
         assert(sourceFrame and targetFrame, "Source and target frames must be provided.")
 
+        local fullWidth = self:GetUserData("tooltipWidth") or sourceFrame:GetWidth()
+        print("Source frame width:", sourceFrame:GetWidth(), "Full width:", fullWidth)  
         -- clear out any old children so we don’t stack textures & strings forever
         for _, child in ipairs({ targetFrame:GetChildren() }) do
             child:Hide()
@@ -64,13 +66,14 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
 
         local topTextOffset = -6
         local nameFontString = nil
-        local tooltipWidth = self.tooltipWidth
+        local fontStringsList = {}  -- Collect non-right-aligned fontstrings for deferred sizing
         -- local itemIcon = self:GetUserData("itemIcon") or targetFrame
         local icon = self:GetUserData("itemButton")
         local width = sourceFrame:GetWidth()
-        local height = sourceFrame:GetHeight()
-        targetFrame:SetWidth(width)
-        targetFrame:SetHeight(height)
+        -- local height = sourceFrame:GetHeight()
+        -- local height = 0
+        targetFrame:SetWidth(fullWidth)
+        -- targetFrame:SetHeight(height)
 
         local lastText = self.icon
         for i, region in ipairs({ sourceFrame:GetRegions() }) do
@@ -119,7 +122,7 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
                     text:SetJustifyH(region:GetJustifyH())
                     text:SetJustifyV(region:GetJustifyV())
                     
-                    -- if (not tooltipWidth) and str and nameFontString then
+                    -- if (not fullWidth) and str and nameFontString then
                     --     print("trying to adjust tooltip width...", self:GetUserData("tooltipWidth"))
                     --     text:SetText("1000 - 1000 Damage   Speed 3.00")
                     --     tooltipWidth = text:GetWidth() + 6 + 6
@@ -147,37 +150,132 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
                     if point == "TOP" then
                         text:SetPoint("TOP", lastText, "BOTTOM", 0 , -2)
                         text:SetPoint("LEFT", lastText, "LEFT", 0, 0)
-                        if text:GetWidth() > (tooltipWidth or sourceFrame:GetWidth()) then
+                        if text:GetWidth() > (fullWidth or sourceFrame:GetWidth()) then
                             text:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
                         else
                             text:SetPoint("RIGHT", lastText, "LEFT", text:GetWidth() + 6, 0)
                         end
-                        topTextOffset = topTextOffset - region:GetHeight() - 1
+                        -- Collect non-right-aligned fontstring for deferred height calculation
+                        table.insert(fontStringsList, text)
+                        topTextOffset = topTextOffset - text:GetHeight() - 1
+                        -- height = height + text:GetHeight() + 1
                         lastText = text
                     elseif point == "RIGHT" then
                         text:SetJustifyH("RIGHT")
                         text:SetPoint("TOP", lastText, "TOP", 0 , 0)
                         text:SetPoint("LEFT", lastText, "RIGHT", 0, 0)
                         text:SetPoint("RIGHT", targetFrame, "RIGHT", -6, 0)
+                        -- RIGHT-aligned fontstrings are not included in deferred height calculation
                         topTextOffset = topTextOffset - 1
-                    end    
+                    else
+                        print("GLHTooltip: Unhandled region point:", point)
+                    end
+                    -- if text:GetWidth() > (fullWidth or sourceFrame:GetWidth()) then
+                    --     fullWidth = text:GetStringWidth() + 12
+                    --     self:SetUserData("tooltipWidth", fullWidth)
+                    --     targetFrame:SetWidth(fullWidth)
+                    -- end
                 end
             end
         end
         topTextOffset = topTextOffset - 6 
         self:SetUserData("nameFontString", nameFontString)
-
-        
-        local fullHeight = (-1 * topTextOffset)
-        local fullWidth = self:GetUserData("tooltipWidth") or sourceFrame:GetWidth()
-        -- print("Height:", sourceFrame:GetHeight(), "Full Height:", fullHeight)
-        targetFrame:SetWidth(fullWidth)
-        targetFrame:SetHeight(fullHeight)
-
+        self:SetUserData("fontStringsList", fontStringsList)
         self:SetUserData("fullWidth", fullWidth)
-        self:SetUserData("fullHeight", fullHeight)
-        print("W H:", fullWidth, fullHeight, nameFontString:GetWidth(), self:GetUserData("tooltipWidth"))
+        
+        -- Position tooltip frame off-screen initially to allow rendering
+        targetFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
+        targetFrame:SetWidth(fullWidth)
+        
+        -- Defer height calculation until next frame when rendering is complete
+        C_Timer.After(0, function()
+            self:_CalculateAndApplySizes(targetFrame, link, texture)
+        end)
     end
+
+-- Calculate actual tooltip heights using rendered fontstring measurements and apply final sizing
+local function _CalculateAndApplySizes(self, targetFrame, link, texture)
+    local fontStringsList = self:GetUserData("fontStringsList") or {}
+    local fullWidth = self:GetUserData("fullWidth") or ITEM_TOOLTIP_WIDTH
+    local nameFontString = self:GetUserData("nameFontString")
+    
+    if not nameFontString then
+        print("GLHTooltip._CalculateAndApplySizes: nameFontString not found, deferring...")
+        C_Timer.After(0, function()
+            self:_CalculateAndApplySizes(targetFrame, link, texture)
+        end)
+        return
+    end
+    
+    local totalHeight = 6  -- Top padding
+    local lineSpacing = 0
+    
+    -- Iterate through collected fontstrings and measure actual heights
+    for i, fontStr in ipairs(fontStringsList) do
+        if fontStr and fontStr:GetText() then
+            local strHeight = fontStr:GetStringHeight()
+            if strHeight > 0 then
+                if i > 1 then
+                    -- Add line spacing between fontstrings
+                    lineSpacing = fontStr:GetLineSpacing() or 0
+                    if lineSpacing == 0 then lineSpacing = 1 end
+                    totalHeight = totalHeight + lineSpacing
+                end
+                totalHeight = totalHeight + strHeight
+            end
+        end
+    end
+    
+    -- Add icon height to total
+    totalHeight = totalHeight + LOOT_ICON_SIZE
+    totalHeight = totalHeight + 6  -- Bottom padding
+    
+    print("GLHTooltip._CalculateAndApplySizes: calculated height:", totalHeight, "width:", fullWidth)
+    
+    targetFrame:SetWidth(fullWidth)
+    targetFrame:SetHeight(totalHeight)
+    
+    self:SetUserData("fullHeight", totalHeight)
+    
+    -- Move frame back to visible area after sizing
+    targetFrame:ClearAllPoints()
+    targetFrame:SetPoint("TOPLEFT", self.icon, "BOTTOMLEFT", 0, -6)
+    
+    -- Update expandedBackground size for proper display
+    self.expandedBackground:SetWidth(fullWidth)
+    self.expandedBackground:SetHeight(totalHeight)
+    
+    -- Setup compact frame label (for collapsed view)
+    if not self.compactFrame.label then
+        self.compactFrame.label = self.compactFrame:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
+    end
+    
+    self.compactFrame.label:SetPoint("TOPLEFT")
+    self.compactFrame.label:SetPoint("BOTTOMRIGHT")
+    self.compactFrame.label:SetJustifyH("LEFT")
+    self.compactFrame.label:SetJustifyV("MIDDLE")
+    self.compactFrame.label:SetText(nameFontString:GetText())
+    self.compactFrame.label:SetVertexColor(nameFontString:GetTextColor())
+    self.compactFrame.label:SetShadowColor(nameFontString:GetShadowColor())
+    self.compactFrame.label:SetShadowOffset(nameFontString:GetShadowOffset())
+    self.compactFrame.label:SetFontObject(nameFontString:GetFontObject())
+    
+    local compactHeight = LOOT_ICON_SIZE + 6 + 6
+    self.compactFrame:SetWidth(fullWidth)
+    self.compactFrame:SetHeight(self.compactFrame.label:GetHeight())
+    
+    self.compactBackground:SetWidth(fullWidth)
+    self.compactBackground:SetHeight(compactHeight)
+    
+    self:SetUserData("compactWidth", fullWidth)
+    
+    -- Now expand and show
+    self.expanded = true
+    self:ExpandTooltip()
+    self.frame:Show()
+    self:Show()
+    AceEvent:SendMessage("GLH_TOOLTIP_NEW_ITEMINFO", link)
+end
 
 local methods = {
 	["OnAcquire"] = function(self)
@@ -231,7 +329,7 @@ local methods = {
         else
             print("No layoutParent set!")
         end
-      end,     
+    end,
 
     ["ToggleExpansion"] = function(self)
         -- print("expanded", expanded)
@@ -279,64 +377,17 @@ local methods = {
             tpframe:SetHyperlink(link)
             tpframe:Show()
 
-            do
-                self:SetUserData("Hyperlink_set", true)
-                _copyFrameRegions(self, tpframe, self.expandedFrame, link, texture)
-                self.expanded = true
-
-                self.expandedFrame:Show()
-                
-                local width = self.expandedFrame:GetWidth() 
-                width = width + LOOT_ICON_SIZE + 6 + 6 + 6
-                local height = self.expandedFrame:GetHeight() 
-                height = height + LOOT_ICON_SIZE + 6 + 6
-
-                self.expandedBackground:SetWidth(width)
-                self.expandedBackground:SetHeight(height)
-                self.expandedBackground:Show()
-            end
-
-            do
-                local nameFontString = self:GetUserData("nameFontString")
-                if not self.compactFrame.label then
-                    self.compactFrame.label = self.compactFrame:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
-                end
-
-                self.compactFrame.label:SetPoint("TOPLEFT")
-                self.compactFrame.label:SetPoint("BOTTOMRIGHT")
-
-                self.compactFrame.label:SetJustifyH("LEFT")
-                self.compactFrame.label:SetJustifyV("MIDDLE")
-                self.compactFrame.label:SetText(nameFontString:GetText())
-                self.compactFrame.label:SetVertexColor(nameFontString:GetTextColor())
-                self.compactFrame.label:SetShadowColor(nameFontString:GetShadowColor())
-                self.compactFrame.label:SetShadowOffset(nameFontString:GetShadowOffset())
-                self.compactFrame.label:SetFontObject(nameFontString:GetFontObject())
-                self.compactFrame:Show()
-                self.compactFrame.label:Show()
-                self.compactFrame:SetWidth(self.compactFrame.label:GetWidth())
-                self.compactFrame:SetHeight(self.compactFrame.label:GetHeight())
-
-                local width = self.compactFrame.label:GetWidth() 
-                width = width + LOOT_ICON_SIZE + 6 + 6 + 6
-                local height = LOOT_ICON_SIZE + 6 + 6
-
-                width = math.max(self.expandedBackground:GetWidth(), width)
-
-                self.compactBackground:SetWidth(width)
-                self.compactBackground:SetHeight(height)
-                self.compactBackground:Hide()
-
-                self:SetUserData("compactWidth", width)
-            end
+            self:SetUserData("Hyperlink_set", true)
+            -- Copy regions and defer sizing calculation via C_Timer
+            _copyFrameRegions(self, tpframe, self.expandedFrame, link, texture)
+            
+            -- Create the icon immediately
             CreateIcon(self, link, texture)
+            
+            -- Setup will be completed by _CalculateAndApplySizes after rendering
         else
             frame:Hide()
         end
-        self:ExpandTooltip()
-        frame:Show()
-        self:Show()
-        AceEvent:SendMessage("GLH_TOOLTIP_NEW_ITEMINFO", link)
     end,
 
     ["SetTooltipFrame"] = function(self, tooltipFrame)

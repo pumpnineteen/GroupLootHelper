@@ -76,7 +76,7 @@ local ROLE_ICON_SIZE
 local SPEC_ICON_SIZE
 local ROLL_BUTTON_SIZE
 local ITEM_TOOLTIP_WIDTH
-local DEFAULT_ITEM_TOOLTIP_WIDTH = 160
+local DEFAULT_ITEM_TOOLTIP_WIDTH = 220
 local MINI_TOOLTIP_SCALE
 local LIST_TOOLTIP_SCALE
 local PLAYER_NAME_WIDTH
@@ -102,6 +102,8 @@ local miniRollPaged
 local activeMiniRolls = {}
 local activeMiniRollIDs = {}
 local miniRollsActiveIndex = 1
+
+local miniroll_status
 
 local cnameCache = {}
 
@@ -806,41 +808,19 @@ local function AddBackdropToFrame(frame, backdrop, colour)
     end
 end
 
---[[
-local function CreateLootWindow()
-    local frameWidget = AceGUI:Create("Frame")
-    local frame = frameWidget.frame
-    frameWidget.GLH_Name = "GLH_LootWindow"
-    frameWidget:SetTitle("Loot")
-    frameWidget:SetStatusText("Ready to Roll")
-    frameWidget:SetLayout("List")
-    
-    GLH:FrameSetPoint(frameWidget.frame, frameWidget.GLH_Name)
+local DEBUG_ROW_BACKGROUND = {
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    edgeSize = 8,
+    insets = { left = 2, right = 2, top = 2, bottom = 2 },
+}
 
-    AddBackdropToFrame(frame, backdrop, {0, 0, 0, 0.6})
-
-    frame:SetScript("OnDragStart", function(self)
-        self:StartMoving()
-    end)
-
-    frame:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        saveButtonPosition(frame, frameWidget.GLH_Name)
-    end)
-    
-    local lootList = AceGUI:Create("ScrollFrame")
-    lootList:SetLayout("List")
-    lootList:SetFullWidth(true)
-    lootList:SetFullHeight(true)
-    lootList:SetAutoAdjustHeight(true)
-    frameWidget:AddChild(lootList)
-    frameWidget:SetUserData("lootList", lootList)
-
-    frameWidget:Hide()
-    return frameWidget
+local function ApplyDebugRowBackground(widget)
+    if not widget or not widget.frame then
+        return
+    end
+    AddBackdropToFrame(widget.frame, DEBUG_ROW_BACKGROUND, { 1, 1, 1, 0.25 })
 end
-
-]]--
 
 function GLH:CreateChildScrollList(frameWidget, parentWidget, childName, frameType)
     frameType = frameType or "ScrollFrame"
@@ -1325,8 +1305,6 @@ end
 
 function GLH:CreateItemRollContainerTable(itemLink)
     local mainContainer = AceGUI:Create("SimpleGroup")
-    -- print("Creating main container for item: " , itemLink)
-    -- AddBackdropToFrame(mainContainer.frame, backdrop, {1, 1, 1, 0.4})
     mainContainer:SetUserData("itemLink", itemLink)
     mainContainer:SetUserData("rollIntentions", {})
     mainContainer:SetUserData("rolls", {})
@@ -1341,11 +1319,11 @@ function GLH:CreateItemRollContainerTable(itemLink)
     mainContainer:SetUserData("table", {
         columns = {
             ITEM_TOOLTIP_WIDTH,  -- Column 1: Tooltip
-            1,                   -- Column 2: Player info container – using a flexible placeholder (weight 1)
+            3,                   -- Column 2: Player info container – using a flexible placeholder (weight 1)
             ROLL_BUTTON_SIZE,   -- Column 3: Roll Buttons (absolute width)
         },
         space = DEFAULT_SPACING,
-        alignH = "CENTER",
+        alignH = "LEFT",
         alignV = "TOP",
     })
     mainContainer:SetLayout("Table")
@@ -1353,36 +1331,50 @@ function GLH:CreateItemRollContainerTable(itemLink)
 end
 
 function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID, miniRoll, tooltip_scale)
------------------------------------------
+    -----------------------------------------
     -- Column 1: Item Tooltip
     -----------------------------------------
+    tooltip_scale = tooltip_scale or 1.0
     local colTooltip = AceGUI:Create("SimpleGroup")
-    colTooltip:SetLayout("Flow")
+    colTooltip:SetLayout("Fill")
     colTooltip:SetAutoAdjustHeight(true)
     colTooltip:SetUserData("cell", { alignH = "LEFT", alignV = "TOP" })
+    mainContainer:SetUserData("colTooltip", colTooltip)
 
     do
         local tooltipFrame = GLH:CreateTooltipFrame()
-        print(ITEM_TOOLTIP_WIDTH, "setting tooltip width, scale", tooltip_scale)
+        -- print(ITEM_TOOLTIP_WIDTH, "setting tooltip width, scale", tooltip_scale)
         local tooltipWidget = AceGUI:Create("GLHTooltip")
+        tooltipWidget:SetUserData("tooltipWidth", ITEM_TOOLTIP_WIDTH)
         -- tooltipWidget.frame:SetScale(tooltip_scale or 1.0)
-        tooltipWidget.tooltipWidth = ITEM_TOOLTIP_WIDTH
+        -- tooltipWidget.tooltipWidth = ITEM_TOOLTIP_WIDTH
+        -- tooltipWidget.tooltipScale = tooltip_scale or 1.0
+        -- local scaledTooltipWidth = (ITEM_TOOLTIP_WIDTH) * (tooltip_scale or 1.0)
         if lootList then
             tooltipWidget:SetUserData("layoutParent", lootList)
         end
         tooltipWidget:SetUserData("tooltipWidth", ITEM_TOOLTIP_WIDTH)
+        
+        -- local tableData = mainContainer:GetUserData("table")
+        -- tableData.columns[1] = scaledTooltipWidth
+        -- mainContainer:SetUserData("table" , tableData)
+        -- mainContainer:DoLayout()
+
         tooltipWidget:SetTooltipFrame(tooltipFrame)
         tooltipWidget:SetHyperlink(itemLink, texture)
         tooltipFrame:Show()
         local tooltip = tooltipWidget.frame
 
         -- AddBackdropToFrame(tooltipWidget.compactBackground, edgelessBackdrop, {0, 0, 0, 0.6})
-        -- AddBackdropToFrame(tooltipWidget.expandedBackground, edgelessBackdrop, {0, 0, 0, 0.6})
+        -- AddBackdropToFrame(tooltipWidget.expandedBackground, edgelessBackdrop, {0.5, 0.5, 1.0, 0.4})
+        Log("Tooltip width:", tooltipWidget.expandedBackground:GetWidth(), tooltip:GetWidth(), ITEM_TOOLTIP_WIDTH)
         
         tooltip:SetClampedToScreen(false)
         tooltip:Show()
 
         colTooltip:AddChild(tooltipWidget)
+        -- AddBackdropToFrame(colTooltip.frame, edgelessBackdrop, {0.5, 1.0, 0.5, 0.4})
+        colTooltip:SetWidth(ITEM_TOOLTIP_WIDTH / tooltip_scale)
     end
     mainContainer:AddChild(colTooltip)
     AceEvent:Embed(colTooltip)
@@ -1400,14 +1392,22 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     -- Column 2: Player Info Table wrapped in a vertical scroll frame
     -----------------------------------------
     local colPlayerInfoScroll = AceGUI:Create("ScrollFrame")
+    mainContainer:SetUserData("colPlayerInfoScroll", colPlayerInfoScroll)
+    -- AddBackdropToFrame(colPlayerInfoScroll.frame, edgelessBackdrop, {1, 0.5, 0.5, 0.4})
     -- Force a desired fixed width here so that no horizontal scroll appears.
     local PLAYER_INFO_SCROLL_WIDTH = 200  -- Adjust as needed
-    colPlayerInfoScroll:SetWidth(PLAYER_INFO_SCROLL_WIDTH)
-    -- colPlayerInfoScroll:SetFullHeight(true)
+    -- colPlayerInfoScroll:SetWidth(PLAYER_INFO_SCROLL_WIDTH)
+    colPlayerInfoScroll:SetFullWidth(true)
+    colPlayerInfoScroll:SetFullHeight(true)
     colPlayerInfoScroll:SetAutoAdjustHeight(true)
+    colPlayerInfoScroll:SetLayout("Fill")
     -- Note: AceGUI's ScrollFrame typically scrolls vertically. By fixing the width of the content,
     -- horizontal scrolling shouldn’t be needed.
+    print("mainContainer children before scroll:", #mainContainer.children)
     mainContainer:AddChild(colPlayerInfoScroll)
+    print("mainContainer children after scroll:", #mainContainer.children)
+    print("columns:", ITEM_TOOLTIP_WIDTH, 1, ROLL_BUTTON_SIZE)
+    print("space:", DEFAULT_SPACING)
 
     -- Configure the nested table within the scroll frame.
     -- This nested table has five sub-columns:
@@ -1419,15 +1419,17 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
 
     -- Populate the player info table with one row as an example.
     local playerNamesTable = AceGUI:Create("SimpleGroup")
+    -- AddBackdropToFrame(playerNamesTable.frame, edgelessBackdrop, {1, 1, 0.5, 0.4})
     playerNamesTable:SetAutoAdjustHeight(true)
+    -- playerNamesTable:SetFullWidth(true)
     mainContainer:SetUserData("playerNamesTable", playerNamesTable)
-    playerNamesTable:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    playerNamesTable:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
 
     local tableLayout
     if miniRoll then
         tableLayout = {
             columns = {
-                0, -- player name
+                1, -- player name
                 ROLE_ICON_SIZE,
                 SPEC_ICON_SIZE,
                 ROLL_BUTTON_SIZE,               
@@ -1439,7 +1441,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     else
         tableLayout = {
             columns = {
-                0, -- player name
+                1, -- player name
                 ROLE_ICON_SIZE,
                 SPEC_ICON_SIZE,
                 ROLL_BUTTON_SIZE,               
@@ -1470,31 +1472,40 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
             table.insert(row, nameLabel)
 
             local roleIcon
+            Log("Creating role icon for player:", info.name, "roleIcon:", tostring(info.roleIcon))
             if info.roleIcon then
                 roleIcon = AceGUI:Create("Icon")
                 roleIcon:SetImage(info.roleIcon)
-                roleIcon:SetWidth(ROLE_ICON_SIZE)
-                roleIcon:SetHeight(ROLE_ICON_SIZE)
+                roleIcon:SetWidth(32)
+                roleIcon:SetHeight(32)
+                -- roleIcon:SetImageSize(32, 32)
+                -- roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
             else 
                 roleIcon = EmptyCell()
             end
             table.insert(row, roleIcon)
 
             local specIcon
+            Log("Creating spec icon for player:", info.name, "specIcon:", tostring(info.specIcon))
             if info.specIcon then
                 specIcon = AceGUI:Create("Icon")
                 specIcon:SetImage(info.specIcon)
-                specIcon:SetWidth(SPEC_ICON_SIZE)
-                specIcon:SetHeight(SPEC_ICON_SIZE)
+                specIcon:SetWidth(32)
+                specIcon:SetHeight(32)
+                -- specIcon:SetImageSize(32, 32)
+                -- specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
             else
                 specIcon = EmptyCell()
             end
             table.insert(row, specIcon)
 
             local rollIcon = AceGUI:Create("Icon")
-            rollIcon:SetImage(info.rollIcon)
-            rollIcon:SetWidth(ROLL_BUTTON_SIZE)
-            rollIcon:SetHeight(ROLL_BUTTON_SIZE)
+            rollIcon:SetImage(info.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
+            Log("Creating roll icon for player:", info.name, "rollIcon:", tostring(info.rollIcon))
+            rollIcon:SetWidth(32)
+            rollIcon:SetHeight(32)
+            -- rollIcon:SetImageSize(32, 32)
+            -- rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
             table.insert(row, rollIcon)
 
             if not _miniRoll then
@@ -1531,6 +1542,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     -- Column 3: Roll Buttons (using Flow Layout)
     -----------------------------------------
     local colRoll = AceGUI:Create("SimpleGroup")
+    -- AddBackdropToFrame(colRoll.frame, edgelessBackdrop, {1.0, 1.0, 1.0, 0.4})
     colRoll:SetAutoAdjustHeight(true)
     colRoll:SetLayout("Flow")
     colRoll:SetUserData("cell", { alignH = "CENTER", alignV = "TOP" })
@@ -1549,6 +1561,10 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     -- colRoll:AddChild(disenchantButton)
     colRoll:AddChild(greedButton)
     colRoll:AddChild(passButton)
+
+    mainContainer:DoLayout()
+    print("mainContainer width:", mainContainer.frame:GetWidth())
+    print("content width:", mainContainer.content:GetWidth())
 end
 
 
@@ -1975,41 +1991,50 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
     nameLabel:SetFont(GameFontNormal:GetFont(), fontsize or 12, "OUTLINE")
     nameLabel:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
     playerNamesTable:AddChild(nameLabel)
+    -- ApplyDebugRowBackground(nameLabel)
     
     -- Role icon
     local roleIcon
     if playerData.roleIcon then
+        -- Log("APR: Adding role icon for player:", playerData.name, "roleIcon:", tostring(playerData.roleIcon), ROLE_ICON_SIZE)
         roleIcon = AceGUI:Create("Icon")
         roleIcon:SetImage(playerData.roleIcon)
         roleIcon:SetWidth(ROLE_ICON_SIZE)
         roleIcon:SetHeight(ROLE_ICON_SIZE)
+        roleIcon:SetImageSize(ROLE_ICON_SIZE, ROLE_ICON_SIZE)
         roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
     else 
         roleIcon = EmptyCell()
     end
     playerNamesTable:AddChild(roleIcon)
+    -- ApplyDebugRowBackground(roleIcon)
     
     -- Spec icon
     local specIcon
     if playerData.specIcon then
+        -- Log("APR:Adding spec icon for player:", playerData.name, "specIcon:", tostring(playerData.specIcon), SPEC_ICON_SIZE)
         specIcon = AceGUI:Create("Icon")
         specIcon:SetImage(playerData.specIcon)
         specIcon:SetWidth(SPEC_ICON_SIZE)
         specIcon:SetHeight(SPEC_ICON_SIZE)
+        specIcon:SetImageSize(SPEC_ICON_SIZE, SPEC_ICON_SIZE)
         specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
     else
         specIcon = EmptyCell()
     end
     playerNamesTable:AddChild(specIcon)
+    -- ApplyDebugRowBackground(specIcon)
     
     -- Roll icon
     local rollIcon = AceGUI:Create("Icon")
-    Log("Adding roll icon for player", playerData.name, "rollIcon:", tostring(playerData.rollIcon))
+    -- Log("APR: Adding roll icon for player", playerData.name, "rollIcon:", tostring(playerData.rollIcon), ROLL_BUTTON_SIZE)
     rollIcon:SetImage(playerData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
     rollIcon:SetWidth(ROLL_BUTTON_SIZE)
     rollIcon:SetHeight(ROLL_BUTTON_SIZE)
+    rollIcon:SetImageSize(ROLL_BUTTON_SIZE, ROLL_BUTTON_SIZE)
     rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
     playerNamesTable:AddChild(rollIcon)
+    -- ApplyDebugRowBackground(rollIcon)
     
     -- Roll value (only for non-mini display)
     if not miniRoll and playerData.rollValue then
@@ -2017,6 +2042,7 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
         rollValue:SetText(tostring(playerData.rollValue))
         rollValue:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
         playerNamesTable:AddChild(rollValue)
+        -- ApplyDebugRowBackground(rollValue)
     end
 end
 
@@ -2184,7 +2210,11 @@ local function HandleSlashCommand(_msg)
         local targetFrame = miniRollPaged.pages[miniRollPaged.currentIndex]
         ShowBoundingBox(targetFrame, GLH.testBB)
 
-
+    elseif msg == "clearlog" then
+        GLH_Log = {}
+    elseif msg == "testrolls" then
+        PRINTLOG = true
+        GLH:TestRolls()
     else
         print("Unknown command. Use /glh to open the loot window.")
     end
@@ -2677,7 +2707,7 @@ end
 function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     local mainContainer = self:CreateItemRollContainerTable(itemLink)
     mainContainer.rollID = rollID
-    Log("mainContainer", mainContainer)
+    -- Log("mainContainer", mainContainer)
     local miniRoll = true
     self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID, miniRoll, MINI_TOOLTIP_SCALE)
     activeMiniRolls[rollID] = mainContainer
@@ -2710,6 +2740,7 @@ end
 function GLH:ActiveMiniRollsPages()
     if not miniRollPaged then
         local paged = AceGUI:Create("PagedWindow")
+        paged:SetStatusTable(miniroll_status)
         paged:SetLayout("Fill")
         paged:SetWidth(400)
         paged:SetHeight(200)
@@ -2732,19 +2763,77 @@ function GLH:ActiveMiniRollsPages()
 end
 
 function GLH:TestRolls()
+    local itemName, itemLink, texture
+    for _, link in pairs(testLinks) do
+        itemLink = link[1]
+        texture = link[2]
+        itemName = string.match(itemLink, "%[(.-)%]") or itemLink
+        break
+    end
+    if not itemLink then
+        print("GLH:TestRolls: no testLinks available")
+        return
+    end
 
+    local rollID = 9999
+    local rollTime = 300
+
+    local GetLootRollItemInfo_orig = GetLootRollItemInfo
+    local GetLootRollItemLink_orig = GetLootRollItemLink
+
+    GetLootRollItemInfo = function(id)
+        if id == rollID then
+            return texture or "Interface\\Icons\\INV_Misc_QuestionMark", itemName, 1, 1, false
+        end
+        if GetLootRollItemInfo_orig then
+            return GetLootRollItemInfo_orig(id)
+        end
+    end
+    GetLootRollItemLink = function(id)
+        if id == rollID then
+            return itemLink
+        end
+        if GetLootRollItemLink_orig then
+            return GetLootRollItemLink_orig(id)
+        end
+    end
+
+    self:START_LOOT_ROLL("START_LOOT_ROLL", rollID, rollTime)
+
+    GetLootRollItemInfo = GetLootRollItemInfo_orig
+    GetLootRollItemLink = GetLootRollItemLink_orig
+
+    local fakeRollers = {
+        { name = "Auric", class = "PALADIN", roleIcon = "Interface\\Icons\\Spell_Holy_AuraMastery", specIcon = "Interface\\Icons\\Ability_Paladin_JudgementBlue" },
+        { name = "Zara", class = "HUNTER", roleIcon = "Interface\\Icons\\Ability_Hunter_RunningShot", specIcon = "Interface\\Icons\\Ability_Hunter_FocusedAim" },
+        { name = "Nox", class = "MAGE", roleIcon = "Interface\\Icons\\Spell_Frost_IceStorm", specIcon = "Interface\\Icons\\Spell_Frost_FrostBolt02" },
+    }
+
+    for _, player in ipairs(fakeRollers) do
+        local guid = "TESTGUID-" .. player.name
+        playerGCache[guid] = {
+            class = player.class,
+            spec = "Unknown",
+            specTree = "Unknown",
+            roleIcon = player.roleIcon,
+            specIcon = player.specIcon,
+            name = player.name,
+        }
+        guidCache[player.name] = guid
+    end
+
+    local fakeMessages = {
+        string.format("%s has selected Need for: %s", fakeRollers[1].name, itemLink),
+        string.format("%s has selected Greed for: %s", fakeRollers[2].name, itemLink),
+        string.format("%s passed on: %s", fakeRollers[3].name, itemLink),
+    }
+
+    for _, msg in ipairs(fakeMessages) do
+        Log("TestRolls: firing fake loot chat:", msg)
+        self:_ChatMsgLoot("CHAT_MSG_LOOT", msg)
+    end
 end
 
--- function GLH:AddMiniRollInfo(rollID, playerInfoData)
---     local class = playerInfoData.class
---     local name = playerInfoData.name
---     local classColour = self:GetClassColour(class)
---     local cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name)
---     playerInfoData.cname = cname
---     -- playerInfoData.rollID = rollID
---     GLH:SendMessage("GLH_ROLL_INFO", playerInfoData)
- 
--- end
 
 function GLH:AddMiniRollInfo(rollID, playerInfoData)
     -- This is now handled by RefreshMiniRollDisplay via AddRollInfo
@@ -2784,6 +2873,7 @@ function GLH:OnEnable()
     db.global.instanceID_list = instanceID_list
 
     GLH.LootWindow = GLH:CreateLootWindow()
+    GLH.LootWindow:Hide()
     for event, func in pairs(eventHandlers) do
         -- self:RegisterEvent(event, func) -- not using direct binding to keep the logging inject
         self:RegisterEvent(event)
@@ -2806,7 +2896,7 @@ function GLH:OnEnable()
     ROLE_ICON_SIZE     = db.global.role_icon_size or 16
     SPEC_ICON_SIZE     = db.global.spec_icon_size or 16
     ROLL_BUTTON_SIZE   = db.global.roll_button_size or 24
-    ITEM_TOOLTIP_WIDTH = db.global.item_tooltip_width or 130
+    ITEM_TOOLTIP_WIDTH = db.global.item_tooltip_width or 220
     MINI_TOOLTIP_SCALE = db.global.mini_tooltip_scale or 0.8
     LIST_TOOLTIP_SCALE = db.global.list_tooltip_scale or 1.0
     PLAYER_NAME_WIDTH  = db.global.player_name_width or 0      -- auto-width for name column
@@ -2826,10 +2916,13 @@ function GLH:OnEnable()
     itemLinkCache = db.global.itemLinkCache or {} -- Cache for item links
     itemIDCache = db.global.itemIDCache or {} -- Cache for item IDs
     serverIDCache = db.global.serverIDCache or {} -- Cache for server IDs
+    miniroll_status = db.global.miniroll_status or {}
 
     self:FillPlayerInfo(youName, "player")
     
     self:ConsolidateItemIDCache()
+
+
 
     -- Make sure DB tables exist
     db.global.activeRolls  = activeRolls
@@ -2848,6 +2941,7 @@ function GLH:OnEnable()
     db.global.list_tooltip_scale = LIST_TOOLTIP_SCALE
     db.global.player_name_font_size = PLAYER_NAME_FONT_SIZE
     db.global.player_name_font_size_mini = PLAYER_NAME_FONT_SIZE_MINI
+    db.global.miniroll_status = miniroll_status
 
     playerGCache[youGUID] = playerGCache[youGUID] or { name = youFullName, class = youClass }
 
@@ -2888,7 +2982,8 @@ function GLH:CreateTooltipFrame()
     local name = "GLH_Tooltip" .. tooltipIndex
     tooltipIndex = tooltipIndex + 1
     local tooltip = CreateFrame("GameTooltip", name, UIParent, "GameTooltipTemplate")
-    debugmsg("Creating tooltip: " , name , tooltip, tooltip:GetName())
+    -- AddBackdropToFrame(tooltip, edgelessBackdrop, {1.0, 0.5, 1.0, 0.4})
+    Log("Creating tooltip: " , name , tooltip, tooltip:GetName(), tooltip:GetWidth(), tooltip:GetHeight())
     -- self:AddTooltipHooks(tooltip)
     return tooltip
 end
@@ -3103,8 +3198,9 @@ function GLH:_ChatMsgLoot(event, msg, ...)
     -- print("Instance:", instance, "Type:", instanceType)
 
     for _, key in ipairs(rollTypeChanged) do
+        -- Log("key:", key, "msg:", msg)
         if msg == key then
-            Log("Roll type changed: ", key)
+            -- Log("Roll type changed: ", key)
             return
         end
     end
@@ -3123,12 +3219,12 @@ function GLH:_ChatMsgLoot(event, msg, ...)
             
             local uid = itemNameToUID[payloadData.loot] or itemLinkToUID[payloadData.loot]
             local rollID = uid_to_rollid[uid]
-            Log("Pattern matched:", key, "Payload:", payloadData.loot, "RollID:", rollID, "UID:", uid, "ActiveRolls:", activeRolls[uid])
+            -- Log("Pattern matched:", key, "Payload:", payloadData.loot, "RollID:", rollID, "UID:", uid, "ActiveRolls:", activeRolls[uid])
             -- print(key, rollID, uid)
             if rollID and activeRolls[uid] then
                 self:ProcessLootRollMessage(rollID, key, payloadData)
             else
-                debugmsg(payloadData.loot, " -  couldn't find rollID")
+                Log(payloadData.loot, " -  couldn't find rollID")
                 self:ProcessLootMessage(key, payloadData)
             end
             return
@@ -3138,7 +3234,7 @@ function GLH:_ChatMsgLoot(event, msg, ...)
 end
 
 function GLH:CHAT_MSG_LOOT(event, msg, ...)
-    Log(event, msg)
+    -- Log("CHAT_MSG_LOOT",event, msg)
     C_Timer.After(0.5, function()
         self:_ChatMsgLoot(event, msg)
     end)
@@ -3198,7 +3294,7 @@ function GLH:ProcessLootMessage(patternkey, payloadData)
 end
 
 function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
-    Log("Processing loot roll message:", patternkey, payloadData.looter, payloadData.loot, "Roll:", payloadData.roll)
+    -- Log("Processing loot roll message:", patternkey, payloadData.looter, payloadData.loot, "Roll:", payloadData.roll)
     local looter = payloadData.looter
     local loot   = payloadData.loot
     local roll   = payloadData.roll
