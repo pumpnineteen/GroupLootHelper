@@ -823,7 +823,7 @@ local function ApplyDebugRowBackground(widget)
 end
 
 function GLH:CreateChildScrollList(frameWidget, parentWidget, childName, frameType)
-    frameType = frameType or "ScrollFrame"
+    frameType = frameType or "OverlayScrollFrame"
     local listFrame = AceGUI:Create(frameType)
     listFrame:SetLayout("List")
     listFrame:SetFullWidth(true)
@@ -1108,7 +1108,7 @@ end
 function GLH:RefreshRolesTab()
     self.rolesContainer:ReleaseChildren()
 
-    local scrollFrame = AceGUI:Create("ScrollFrame")
+    local scrollFrame = AceGUI:Create("OverlayScrollFrame")
     scrollFrame:SetLayout("Table")
     scrollFrame:SetUserData("table", {
         columns = {
@@ -1391,7 +1391,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     -----------------------------------------
     -- Column 2: Player Info Table wrapped in a vertical scroll frame
     -----------------------------------------
-    local colPlayerInfoScroll = AceGUI:Create("ScrollFrame")
+    local colPlayerInfoScroll = AceGUI:Create("OverlayScrollFrame")
     mainContainer:SetUserData("colPlayerInfoScroll", colPlayerInfoScroll)
     -- AddBackdropToFrame(colPlayerInfoScroll.frame, edgelessBackdrop, {1, 0.5, 0.5, 0.4})
     -- Force a desired fixed width here so that no horizontal scroll appears.

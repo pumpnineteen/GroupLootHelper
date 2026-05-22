@@ -47,6 +47,9 @@ local function CreateIcon(self, link, texture)
     self.iconSet = true
 end
 
+-- Calculate actual tooltip heights using rendered fontstring measurements and apply final sizing
+   
+
 -- Copies visual regions from sourceFrame to targetFrame.
 local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
         assert(sourceFrame and targetFrame, "Source and target frames must be provided.")
@@ -193,89 +196,7 @@ local function _copyFrameRegions(self, sourceFrame, targetFrame, link, texture)
         end)
     end
 
--- Calculate actual tooltip heights using rendered fontstring measurements and apply final sizing
-local function _CalculateAndApplySizes(self, targetFrame, link, texture)
-    local fontStringsList = self:GetUserData("fontStringsList") or {}
-    local fullWidth = self:GetUserData("fullWidth") or ITEM_TOOLTIP_WIDTH
-    local nameFontString = self:GetUserData("nameFontString")
-    
-    if not nameFontString then
-        print("GLHTooltip._CalculateAndApplySizes: nameFontString not found, deferring...")
-        C_Timer.After(0, function()
-            self:_CalculateAndApplySizes(targetFrame, link, texture)
-        end)
-        return
-    end
-    
-    local totalHeight = 6  -- Top padding
-    local lineSpacing = 0
-    
-    -- Iterate through collected fontstrings and measure actual heights
-    for i, fontStr in ipairs(fontStringsList) do
-        if fontStr and fontStr:GetText() then
-            local strHeight = fontStr:GetStringHeight()
-            if strHeight > 0 then
-                if i > 1 then
-                    -- Add line spacing between fontstrings
-                    lineSpacing = fontStr:GetLineSpacing() or 0
-                    if lineSpacing == 0 then lineSpacing = 1 end
-                    totalHeight = totalHeight + lineSpacing
-                end
-                totalHeight = totalHeight + strHeight
-            end
-        end
-    end
-    
-    -- Add icon height to total
-    totalHeight = totalHeight + LOOT_ICON_SIZE
-    totalHeight = totalHeight + 6  -- Bottom padding
-    
-    print("GLHTooltip._CalculateAndApplySizes: calculated height:", totalHeight, "width:", fullWidth)
-    
-    targetFrame:SetWidth(fullWidth)
-    targetFrame:SetHeight(totalHeight)
-    
-    self:SetUserData("fullHeight", totalHeight)
-    
-    -- Move frame back to visible area after sizing
-    targetFrame:ClearAllPoints()
-    targetFrame:SetPoint("TOPLEFT", self.icon, "BOTTOMLEFT", 0, -6)
-    
-    -- Update expandedBackground size for proper display
-    self.expandedBackground:SetWidth(fullWidth)
-    self.expandedBackground:SetHeight(totalHeight)
-    
-    -- Setup compact frame label (for collapsed view)
-    if not self.compactFrame.label then
-        self.compactFrame.label = self.compactFrame:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
-    end
-    
-    self.compactFrame.label:SetPoint("TOPLEFT")
-    self.compactFrame.label:SetPoint("BOTTOMRIGHT")
-    self.compactFrame.label:SetJustifyH("LEFT")
-    self.compactFrame.label:SetJustifyV("MIDDLE")
-    self.compactFrame.label:SetText(nameFontString:GetText())
-    self.compactFrame.label:SetVertexColor(nameFontString:GetTextColor())
-    self.compactFrame.label:SetShadowColor(nameFontString:GetShadowColor())
-    self.compactFrame.label:SetShadowOffset(nameFontString:GetShadowOffset())
-    self.compactFrame.label:SetFontObject(nameFontString:GetFontObject())
-    
-    local compactHeight = LOOT_ICON_SIZE + 6 + 6
-    self.compactFrame:SetWidth(fullWidth)
-    self.compactFrame:SetHeight(self.compactFrame.label:GetHeight())
-    
-    self.compactBackground:SetWidth(fullWidth)
-    self.compactBackground:SetHeight(compactHeight)
-    
-    self:SetUserData("compactWidth", fullWidth)
-    
-    -- Now expand and show
-    self.expanded = true
-    self:ExpandTooltip()
-    self.frame:Show()
-    self:Show()
-    AceEvent:SendMessage("GLH_TOOLTIP_NEW_ITEMINFO", link)
-end
+
 
 local methods = {
 	["OnAcquire"] = function(self)
@@ -384,7 +305,6 @@ local methods = {
             -- Create the icon immediately
             CreateIcon(self, link, texture)
             
-            -- Setup will be completed by _CalculateAndApplySizes after rendering
         else
             frame:Hide()
         end
@@ -429,8 +349,90 @@ local methods = {
             table.insert(result, word:match("^%s*(.-)%s*$")) -- trim surrounding spaces
         end
         return result
-    end
-    
+    end,
+
+    ["_CalculateAndApplySizes"] = function (self, targetFrame, link, texture)
+        local fontStringsList = self:GetUserData("fontStringsList") or {}
+        local fullWidth = self:GetUserData("fullWidth") or ITEM_TOOLTIP_WIDTH
+        local nameFontString = self:GetUserData("nameFontString")
+        
+        if not nameFontString then
+            print("_CalculateAndApplySizes: nameFontString not found, deferring...")
+            C_Timer.After(0, function()
+                self:_CalculateAndApplySizes(targetFrame, link, texture)
+            end)
+            return
+        end
+        
+        local totalHeight = 6  -- Top padding
+        local lineSpacing = 0
+        
+        -- Iterate through collected fontstrings and measure actual heights
+        for i, fontStr in ipairs(fontStringsList) do
+            if fontStr and fontStr:GetText() then
+                local strHeight = fontStr:GetStringHeight()
+                if strHeight > 0 then
+                    if i > 1 then
+                        -- Add line spacing between fontstrings
+                        lineSpacing = (fontStr.GetLineSpacing and fontStr:GetLineSpacing()) or 0
+                        if lineSpacing == 0 then lineSpacing = 1 end
+                        totalHeight = totalHeight + lineSpacing
+                    end
+                    totalHeight = totalHeight + strHeight
+                end
+            end
+        end
+        
+        -- Add icon height to total
+        totalHeight = totalHeight + LOOT_ICON_SIZE
+        totalHeight = totalHeight + 6  -- Bottom padding
+        
+        print("GLHT_CalculateAndApplySizes: calculated height:", totalHeight, "width:", fullWidth)
+        
+        targetFrame:SetWidth(fullWidth)
+        targetFrame:SetHeight(totalHeight)
+        
+        self:SetUserData("fullHeight", totalHeight)
+        
+        -- Move frame back to visible area after sizing
+        targetFrame:ClearAllPoints()
+        targetFrame:SetPoint("TOPLEFT", self.icon, "BOTTOMLEFT", 0, -6)
+        
+        -- Update expandedBackground size for proper display
+        self.expandedBackground:SetWidth(fullWidth)
+        self.expandedBackground:SetHeight(totalHeight)
+        
+        -- Setup compact frame label (for collapsed view)
+        if not self.compactFrame.label then
+            self.compactFrame.label = self.compactFrame:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
+        end
+        
+        self.compactFrame.label:SetPoint("TOPLEFT")
+        self.compactFrame.label:SetPoint("BOTTOMRIGHT")
+        self.compactFrame.label:SetJustifyH("LEFT")
+        self.compactFrame.label:SetJustifyV("MIDDLE")
+        self.compactFrame.label:SetText(nameFontString:GetText())
+        self.compactFrame.label:SetVertexColor(nameFontString:GetTextColor())
+        self.compactFrame.label:SetShadowColor(nameFontString:GetShadowColor())
+        self.compactFrame.label:SetShadowOffset(nameFontString:GetShadowOffset())
+        self.compactFrame.label:SetFontObject(nameFontString:GetFontObject())
+        
+        local compactHeight = LOOT_ICON_SIZE + 6 + 6
+        self.compactFrame:SetWidth(fullWidth)
+        self.compactFrame:SetHeight(self.compactFrame.label:GetHeight())
+        
+        self.compactBackground:SetWidth(fullWidth)
+        self.compactBackground:SetHeight(compactHeight)
+        
+        self:SetUserData("compactWidth", fullWidth)
+        
+        -- Now expand and show
+        self.expanded = true
+        self:ExpandTooltip()
+        self.frame:Show()
+        self:Show()
+        AceEvent:SendMessage("GLH_TOOLTIP_NEW_ITEMINFO", link)
+    end,
 
 }
 
