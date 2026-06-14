@@ -1310,8 +1310,8 @@ function GLH:CreateItemRollContainerTable(itemLink)
     mainContainer:SetUserData("rolls", {})
 
     mainContainer:SetFullWidth(true)
-    mainContainer:SetAutoAdjustHeight(true)
-    -- mainContainer:SetFullHeight(true)
+    -- mainContainer:SetAutoAdjustHeight(true)
+    mainContainer:SetFullHeight(true)
     -- Configure three main columns:
     -- Column 1: Item Tooltip (auto-size)
     -- Column 2: Player Info (complex table, see below)
@@ -1393,21 +1393,31 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     -----------------------------------------
     local colPlayerInfoScroll = AceGUI:Create("OverlayScrollFrame")
     mainContainer:SetUserData("colPlayerInfoScroll", colPlayerInfoScroll)
-    -- AddBackdropToFrame(colPlayerInfoScroll.frame, edgelessBackdrop, {1, 0.5, 0.5, 0.4})
+    -- AddBackdropToFrame(colPlayerInfoScroll.frame, edgelessBackdrop, {1, 0, 0, 0.4})
     -- Force a desired fixed width here so that no horizontal scroll appears.
     local PLAYER_INFO_SCROLL_WIDTH = 200  -- Adjust as needed
     -- colPlayerInfoScroll:SetWidth(PLAYER_INFO_SCROLL_WIDTH)
     colPlayerInfoScroll:SetFullWidth(true)
-    colPlayerInfoScroll:SetFullHeight(true)
-    colPlayerInfoScroll:SetAutoAdjustHeight(true)
+
+    local height = 0
+    if mainContainer.GetHeight then
+        height = mainContainer:GetHeight()
+        colPlayerInfoScroll:SetHeight(height)
+    elseif mainContainer.frame.GetHeight then
+        height = mainContainer.frame:GetHeight()
+        colPlayerInfoScroll:SetHeight(height)
+    end
+    -- print("Setting player info scroll height to:", height)
+
+    colPlayerInfoScroll:SetAutoAdjustHeight(false)
     colPlayerInfoScroll:SetLayout("Fill")
     -- Note: AceGUI's ScrollFrame typically scrolls vertically. By fixing the width of the content,
     -- horizontal scrolling shouldn’t be needed.
-    print("mainContainer children before scroll:", #mainContainer.children)
+    -- print("mainContainer children before scroll:", #mainContainer.children)
     mainContainer:AddChild(colPlayerInfoScroll)
-    print("mainContainer children after scroll:", #mainContainer.children)
-    print("columns:", ITEM_TOOLTIP_WIDTH, 1, ROLL_BUTTON_SIZE)
-    print("space:", DEFAULT_SPACING)
+    -- print("mainContainer children after scroll:", #mainContainer.children)
+    -- print("columns:", ITEM_TOOLTIP_WIDTH, 1, ROLL_BUTTON_SIZE)
+    -- print("space:", DEFAULT_SPACING)
 
     -- Configure the nested table within the scroll frame.
     -- This nested table has five sub-columns:
@@ -1434,7 +1444,7 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
                 SPEC_ICON_SIZE,
                 ROLL_BUTTON_SIZE,               
             },
-            space = DEFAULT_SPACING,
+            space = 2,
             alignH = "LEFT",
             alignV = "CENTER",
         }
@@ -1459,6 +1469,9 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     playerNamesTable:SetUserData("miniRoll", miniRoll)
     
     function playerNamesTable:OnRollInfo(event, info)
+        -- if not info.cname then return end
+        print(">>>", info.cname)
+
         if info.rollID == self.rollID then
             print("RollInfo received!")
             local _miniRoll = self:GetUserData("miniRoll")
@@ -1597,99 +1610,6 @@ function GLH:AddRollInfo(rollID, playerInfoData)
     -- Refresh the entire display with sorted data
     self:RefreshRollDisplay(rollID)
     self:RefreshMiniRollDisplay(rollID)
-
-    -- local playerNamesTable = loot_container_cache[uid].loot_container:GetUserData("playerNamesTable")
-    -- if not playerNamesTable then return end
-    -- local firstGreedOrDisenchant = playerNamesTable:GetUserData("FirstGreedOrDisenchant")
-    -- local firstPass = playerNamesTable:GetUserData("FirstPass")
-    -- local rollType = playerInfoData.rollType
-    -- if not rollType then
-    --     errormsg("playerInfoData.rollType is nil for rollID: " .. tostring(uid))
-    --     rollType = "PASSED"
-    -- end
-
-    -- local function AddName(before)
-    --     local playerName = AceGUI:Create("Label")
-    --     playerName:SetText(playerInfoData.name or "Unknown")
-    --     playerName:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
-    --     playerNamesTable:AddChild(playerName, before)
-    --     return playerName
-    -- end
-    
-    -- local function AddRole(before)
-    --     local roleIcon = AceGUI:Create("Icon")
-    --     roleIcon:SetImage(playerInfoData.roleIcon or "Interface\\Icons\\INV_Shield_04")
-    --     roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    --     playerNamesTable:AddChild(roleIcon, before)
-    --     return roleIcon
-    -- end
-
-    -- local function AddSpec(before)
-    --     local specIcon = AceGUI:Create("Icon")
-    --     specIcon:SetImage(playerInfoData.specIcon or "Interface\\Icons\\INV_Sword_04")
-    --     specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    --     playerNamesTable:AddChild(specIcon, before)
-    --     return specIcon
-    -- end
-    
-    -- local function AddRollIcon(before)
-    --     local rollIcon = AceGUI:Create("Icon")
-    --     rollIcon:SetImage(playerInfoData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
-    --     rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    --     playerNamesTable:AddChild(rollIcon, before)
-    --     return rollIcon
-    -- end
-    
-    -- local function AddRollValue(before)
-    --     local rollValue = AceGUI:Create("Label")
-    --     rollValue:SetText(playerInfoData.rollValue or "")
-    --     rollValue:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    --     playerNamesTable:AddChild(rollValue, before)
-    --     return rollValue
-    -- end
-
-    -- local function AddForward()
-    --     local nameLabel = AddName()
-    --     AddRole()
-    --     AddSpec()
-    --     AddRollIcon()
-    --     AddRollValue()
-    --     return nameLabel
-    -- end
-
-    -- local function AddBackward(before)
-    --     local before = AddRollValue(before)
-    --     before = AddRollIcon(before)
-    --     before = AddSpec(before)
-    --     before = AddRole(before)
-    --     local nameLabel = AddName(before)
-    --     return nameLabel
-    -- end
-
-    -- local function InsertInfo()
-    --     if rollType == "NEED"  and firstGreedOrDisenchant then
-    --         AddBackward(firstGreedOrDisenchant)
-        
-    --     elseif (rollType == "NEED" or rollType == "GREED" or rollType == "DISENCHANT") and firstPass then
-    --         local insert = AddBackward(firstPass)
-    --         -- Store firstGreedOrDisenchant if it doesn't exist
-    --         if rollType == "GREED" or rollType == "DISENCHANT" then
-    --             if not firstGreedOrDisenchant then
-    --                 playerNamesTable:SetUserData("FirstGreedOrDisenchant", insert)
-    --             end
-    --         end
-    --     else
-    --         local insert = AddForward()
-    --         -- Store firstPass if it doesn't exist
-    --         if rollType == "PASSED" then
-    --             if not firstPass then
-    --                 playerNamesTable:SetUserData("FirstPass", insert)
-    --             end
-    --         end
-    --     end
-    -- end
-
-    -- playerNamesTable:DoLayout()
 end
 
 -- Function to get player's spec
@@ -1991,6 +1911,11 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
     nameLabel:SetFont(GameFontNormal:GetFont(), fontsize or 12, "OUTLINE")
     nameLabel:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
     playerNamesTable:AddChild(nameLabel)
+    print(">>> Adding player row for", playerData.cname or playerData.name)
+    local r = math.random()
+    AddBackdropToFrame(nameLabel.frame, edgelessBackdrop, {1.0, r, 1.0, 0.4})
+    local size = nameLabel.frame:GetHeight()
+    print(">>> nameLabel height:", size)
     -- ApplyDebugRowBackground(nameLabel)
     
     -- Role icon
@@ -1999,13 +1924,14 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
         -- Log("APR: Adding role icon for player:", playerData.name, "roleIcon:", tostring(playerData.roleIcon), ROLE_ICON_SIZE)
         roleIcon = AceGUI:Create("Icon")
         roleIcon:SetImage(playerData.roleIcon)
-        roleIcon:SetWidth(ROLE_ICON_SIZE)
-        roleIcon:SetHeight(ROLE_ICON_SIZE)
-        roleIcon:SetImageSize(ROLE_ICON_SIZE, ROLE_ICON_SIZE)
-        roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+        roleIcon:SetImageSize(size, size)
+        AddBackdropToFrame(roleIcon.frame, edgelessBackdrop, {1.0, r, 0, 0.4})
     else 
         roleIcon = EmptyCell()
     end
+    roleIcon:SetWidth(size)
+    roleIcon:SetHeight(size)
+    roleIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
     playerNamesTable:AddChild(roleIcon)
     -- ApplyDebugRowBackground(roleIcon)
     
@@ -2015,13 +1941,14 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
         -- Log("APR:Adding spec icon for player:", playerData.name, "specIcon:", tostring(playerData.specIcon), SPEC_ICON_SIZE)
         specIcon = AceGUI:Create("Icon")
         specIcon:SetImage(playerData.specIcon)
-        specIcon:SetWidth(SPEC_ICON_SIZE)
-        specIcon:SetHeight(SPEC_ICON_SIZE)
-        specIcon:SetImageSize(SPEC_ICON_SIZE, SPEC_ICON_SIZE)
-        specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+        specIcon:SetImageSize(size, size)
+        AddBackdropToFrame(specIcon.frame, edgelessBackdrop, {0, r, 0, 0.4})
     else
         specIcon = EmptyCell()
     end
+    specIcon:SetWidth(size)
+    specIcon:SetHeight(size)
+    specIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
     playerNamesTable:AddChild(specIcon)
     -- ApplyDebugRowBackground(specIcon)
     
@@ -2029,10 +1956,11 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
     local rollIcon = AceGUI:Create("Icon")
     -- Log("APR: Adding roll icon for player", playerData.name, "rollIcon:", tostring(playerData.rollIcon), ROLL_BUTTON_SIZE)
     rollIcon:SetImage(playerData.rollIcon or "Interface\\Buttons\\UI-GroupLoot-Dice-Up")
-    rollIcon:SetWidth(ROLL_BUTTON_SIZE)
-    rollIcon:SetHeight(ROLL_BUTTON_SIZE)
-    rollIcon:SetImageSize(ROLL_BUTTON_SIZE, ROLL_BUTTON_SIZE)
+    rollIcon:SetWidth(size)
+    rollIcon:SetHeight(size)
+    rollIcon:SetImageSize(size, size)
     rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
+    AddBackdropToFrame(rollIcon.frame, edgelessBackdrop, {0, r, 1.0, 0.4})
     playerNamesTable:AddChild(rollIcon)
     -- ApplyDebugRowBackground(rollIcon)
     
@@ -2712,7 +2640,23 @@ function GLH:CreateMiniRollPages(rollID, itemLink, texture)
     self:AddItemRollCells(mainContainer, miniRollPaged, itemLink, texture, rollID, miniRoll, MINI_TOOLTIP_SCALE)
     activeMiniRolls[rollID] = mainContainer
     table.insert(activeMiniRollIDs, rollID)
+
+    -- Is this the best way?
+    -- print(">>>", mainContainer.status, mainContainer.status and mainContainer.status.height, mainContainer.SetHeight, mainContainer.ApplyStatus)
+    -- print(">>>", miniRollPaged.status.height)
+    mainContainer:SetHeight(miniRollPaged.status and miniRollPaged.status.height or 100)
+    local colPlayerInfoScroll = mainContainer:GetUserData("colPlayerInfoScroll")
+    if colPlayerInfoScroll then
+        local height = mainContainer.frame:GetHeight()
+        -- print(">>> Setting colPlayerInfoScroll height to:", height)
+        colPlayerInfoScroll.content:SetHeight(height)
+        colPlayerInfoScroll.frame:SetHeight(height)
+    end
     miniRollPaged:AddPage(mainContainer)
+    -- miniRollPaged:DoLayout()
+    -- mainContainer:DoLayout()
+    -- print(">>>", mainContainer.frame:GetHeight(), miniRollPaged.status and miniRollPaged.status.height, colPlayerInfoScroll and colPlayerInfoScroll.content:GetHeight()) 
+
     Log("CreateMiniRollPages: added rollID", rollID, "itemLink:", itemLink, "totalPages:", (#miniRollPaged.pages or 0))
 
 end
@@ -2848,6 +2792,69 @@ function GLH:GetTooltipMaxWidth()
     print("Calculated tooltip width:", ITEM_TOOLTIP_WIDTH)
 end
 
+-- Auto-accept bind on pickup confirmation dialog
+function GLH:SetupBindConfirmationAutoAccept()
+    if self._bindConfirmationHooked then
+        return  -- Already hooked
+    end
+    self._bindConfirmationHooked = true
+    
+    -- Create patterns from locale-specific strings by replacing %s with .+ (matches anything)
+    local function MakePattern(str)
+        if not str then return nil end
+        -- Escape magic regex characters first
+        local escaped = ""
+        -- local escaped = str:gsub("([%.%*%+%?%[%]%(%)%^%$%-])", "%%%1")
+        -- Replace %s with .+ to match any item name/link
+        -- escaped = escaped:gsub("%%%%s", ".+")
+        escaped = str:gsub("%%s", ".+")
+        print("Made pattern from string:", str, "Pattern:", escaped)
+        return escaped
+    end
+    
+    local noDropPattern = MakePattern(LOOT_NO_DROP or "")
+    local noDropRollNeedPattern = MakePattern(LOOT_NO_DROP_ROLL_NEED or "")
+    
+    -- Hook StaticPopupDialog_Show to catch bind confirmations
+    hooksecurefunc("StaticPopup_OnShow", function(which, text)
+        -- Check if this is a bind confirmation dialog using locale-specific patterns
+        print("StaticPopupDialog_Show called with:", which, text)
+        if text then
+            local isBindDialog = false
+            if noDropPattern ~= "" and text:match(noDropPattern) then
+                isBindDialog = true
+            elseif noDropRollNeedPattern ~= "" and text:match(noDropRollNeedPattern) then
+                isBindDialog = true
+            end
+            print("Is bind confirmation dialog:", isBindDialog)
+            if isBindDialog then
+                -- Schedule the click for the next frame to ensure dialog is ready
+                C_Timer.After(0, function()
+                    -- Look for the dialog in StaticPopup slots 1-4
+                    for i = 1, 4 do
+                        local dialog = _G["StaticPopup" .. i]
+                        if dialog and dialog:IsShown() then
+                            local dialogText = dialog.text and dialog.text:GetText() or ""
+                            
+                            -- Verify this is a bind dialog using the locale patterns
+                            if (noDropPattern ~= "" and dialogText:match(noDropPattern)) or
+                               (noDropRollNeedPattern ~= "" and dialogText:match(noDropRollNeedPattern)) then
+                                -- Click the "Yes" button (button1) to auto-accept
+                                local button = dialog.button1
+                                if button and button:IsEnabled() then
+                                    Log("Auto-accepting bind confirmation dialog")
+                                    button:Click()
+                                end
+                                break
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+end
+
 function GLH:OnEnable()
     db = LibStub("AceDB-3.0"):New("GroupLootHelperDB", defaults, true)
     realmName = GetRealmName()
@@ -2974,6 +2981,7 @@ function GLH:OnEnable()
     end
 
     -- GLH:GetTooltipMaxWidth()
+    self:SetupBindConfirmationAutoAccept()
 
     self:SpawnAllTooltipContainers()
 end
