@@ -79,16 +79,26 @@ local function SizerE_OnMouseDown(frame)
 end
 
 local function HideWidget(widget)
+    if not widget then return end
+    if widget.isQueuedForRelease then return end
     if widget.Hide then
-        widget:Hide()
-    else
-        widget.frame:Hide()
+        pcall(widget.Hide, widget)
+    elseif widget.frame and widget.frame.Hide then
+        pcall(widget.frame.Hide, widget.frame)
     end
 end
 
 local function ReleaseWidget(widget)
+    if not widget or widget.isQueuedForRelease then return end
     if widget.Release then
-        widget:Release()
+        local ok = pcall(function()
+            widget:Release()
+        end)
+        if not ok and widget.frame and widget.frame.Hide then
+            pcall(widget.frame.Hide, widget.frame)
+        end
+    elseif widget.frame and widget.frame.Hide then
+        pcall(widget.frame.Hide, widget.frame)
     end
 end
 
@@ -233,11 +243,31 @@ local methods = {
     end,
 
     ["RemovePage"] = function(self, widget)
+        if not widget then return end
+        print("Removing page", widget, "from", #self.pages, "pages")
+        local removing = self:GetUserData("removingPage")
+        if removing then
+            self:SetUserData("PagesToRemove", self:GetUserData("PagesToRemove") or {})
+            local pagesToRemove = self:GetUserData("PagesToRemove")
+            tinsert(pagesToRemove, widget)
+            return
+        end
+        local removedPages = self:GetUserData("RemovedPages") or {}
+        for _, removedWidget in ipairs(removedPages) do
+            if removedWidget == widget then
+                return
+            end
+        end
+        self:SetUserData("removingPage", true)
         ReleaseWidget(widget)
         for i = #self.pages, 1, -1 do
             if self.pages[i] == widget then
                 HideWidget(widget)
                 tremove(self.pages, i)
+                -- widget = nil
+                removedPages = self:GetUserData("RemovedPages") or {}
+                tinsert(removedPages, widget)
+                self:SetUserData("RemovedPages", removedPages)
                 if self.currentIndex > i then
                     self.currentIndex = self.currentIndex - 1
                 elseif self.currentIndex == i then
@@ -247,28 +277,38 @@ local methods = {
             end
         end
         self:UpdateNavControls()
+        self:SetUserData("removingPage", false)
+        if self:GetUserData("PagesToRemove") then
+            local pagesToRemove = self:GetUserData("PagesToRemove")
+            local nextPageToRemove = tremove(pagesToRemove, 1)
+            self:RemovePage(nextPageToRemove)
+        end
     end,
 
     ["RemovePageRollID"] = function(self, rollID)
+        if not rollID or not self.pages then return end
+
         local removedIndex = nil
         local numPages = #self.pages
-        -- print("Attempting to remove page with rollID:", rollID, "from", numPages, "pages")
-        -- Find and remove the page with matching rollID
+        local removedPages = self:GetUserData("RemovedPages") or {}
+
         for i = numPages, 1, -1 do
             local widget = self.pages[i]
-            if widget.rollID and widget.rollID == rollID then
+            print("RemovePageRollID: checking widget with rollID", widget.rollID)
+            if widget and widget.rollID and widget.rollID == rollID then
+                for _, removedWidget in ipairs(removedPages) do
+                    if removedWidget == widget then
+                        return
+                    end
+                end
+
                 removedIndex = i
-                
-                -- print("Removing page with rollID:", rollID, "at index:", i)
-                
-                -- Hide the widget first
                 HideWidget(widget)
                 ReleaseWidget(widget)
-                
-                -- Remove from pages array
-                -- print("Pages before removal:", #self.pages)
                 tremove(self.pages, i)
-                -- print("Pages after removal:", #self.pages)
+
+                self:SetUserData("RemovedPages", removedPages)
+                tinsert(removedPages, widget)
                 break
             end
         end

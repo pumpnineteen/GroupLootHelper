@@ -26,7 +26,7 @@ local C_Timer = C_Timer
 local print = print
 local date = date
 local time = time
-local YOU = YOU
+local YOU = _G.YOU
 
 local UnitExists = UnitExists
 local UnitName = UnitName
@@ -178,6 +178,7 @@ local function cleanName(name)
     local nametbl = split(name, "%:%s+")
     if name == YOU then
         name = youName
+        debugmsg("cleanName: Replacing ".. name .." with your name:", youName)
     end
     return nametbl[#nametbl]
 end
@@ -1554,30 +1555,30 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     -----------------------------------------
     -- Column 3: Roll Buttons (using Flow Layout)
     -----------------------------------------
-    local colRoll = AceGUI:Create("SimpleGroup")
-    -- AddBackdropToFrame(colRoll.frame, edgelessBackdrop, {1.0, 1.0, 1.0, 0.4})
-    colRoll:SetAutoAdjustHeight(true)
-    colRoll:SetLayout("Flow")
-    colRoll:SetUserData("cell", { alignH = "CENTER", alignV = "TOP" })
-    mainContainer:AddChild(colRoll)
+    -- local colRoll = AceGUI:Create("SimpleGroup")
+    -- -- AddBackdropToFrame(colRoll.frame, edgelessBackdrop, {1.0, 1.0, 1.0, 0.4})
+    -- colRoll:SetAutoAdjustHeight(true)
+    -- colRoll:SetLayout("Flow")
+    -- colRoll:SetUserData("cell", { alignH = "CENTER", alignV = "TOP" })
+    -- mainContainer:AddChild(colRoll)
 
-    -- Create roll buttons using your existing functions.
-    local msNeedButton = self:CreateMSNeedButton(ROLL_BUTTON_SIZE, rollID)
-    local osNeedButton = self:CreateOSNeedButton(ROLL_BUTTON_SIZE, rollID)
-    -- local disenchantButton = self:CreateDisenchantButton(ROLL_BUTTON_SIZE)
-    local greedButton = self:CreateGreedButton(ROLL_BUTTON_SIZE, rollID)
-    local passButton = self:CreatePassButton(ROLL_BUTTON_SIZE, rollID)
+    -- -- Create roll buttons using your existing functions.
+    -- local msNeedButton = self:CreateMSNeedButton(ROLL_BUTTON_SIZE, rollID)
+    -- local osNeedButton = self:CreateOSNeedButton(ROLL_BUTTON_SIZE, rollID)
+    -- -- local disenchantButton = self:CreateDisenchantButton(ROLL_BUTTON_SIZE)
+    -- local greedButton = self:CreateGreedButton(ROLL_BUTTON_SIZE, rollID)
+    -- local passButton = self:CreatePassButton(ROLL_BUTTON_SIZE, rollID)
 
-    -- Add buttons to the roll column.
-    colRoll:AddChild(msNeedButton)
-    colRoll:AddChild(osNeedButton)
-    -- colRoll:AddChild(disenchantButton)
-    colRoll:AddChild(greedButton)
-    colRoll:AddChild(passButton)
+    -- -- Add buttons to the roll column.
+    -- colRoll:AddChild(msNeedButton)
+    -- colRoll:AddChild(osNeedButton)
+    -- -- colRoll:AddChild(disenchantButton)
+    -- colRoll:AddChild(greedButton)
+    -- colRoll:AddChild(passButton)
 
-    mainContainer:DoLayout()
-    print("mainContainer width:", mainContainer.frame:GetWidth())
-    print("content width:", mainContainer.content:GetWidth())
+    -- mainContainer:DoLayout()
+    -- print("mainContainer width:", mainContainer.frame:GetWidth())
+    -- print("content width:", mainContainer.content:GetWidth())
 end
 
 
@@ -1911,11 +1912,11 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
     nameLabel:SetFont(GameFontNormal:GetFont(), fontsize or 12, "OUTLINE")
     nameLabel:SetUserData("cell", { alignH = "LEFT", alignV = "CENTER" })
     playerNamesTable:AddChild(nameLabel)
-    print(">>> Adding player row for", playerData.cname or playerData.name)
-    local r = math.random()
-    AddBackdropToFrame(nameLabel.frame, edgelessBackdrop, {1.0, r, 1.0, 0.4})
+    -- print(">>> Adding player row for", playerData.cname or playerData.name)
+    -- local r = math.random()
+    -- AddBackdropToFrame(nameLabel.frame, edgelessBackdrop, {1.0, r, 1.0, 0.4})
     local size = nameLabel.frame:GetHeight()
-    print(">>> nameLabel height:", size)
+    -- print(">>> nameLabel height:", size)
     -- ApplyDebugRowBackground(nameLabel)
     
     -- Role icon
@@ -1925,7 +1926,7 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
         roleIcon = AceGUI:Create("Icon")
         roleIcon:SetImage(playerData.roleIcon)
         roleIcon:SetImageSize(size, size)
-        AddBackdropToFrame(roleIcon.frame, edgelessBackdrop, {1.0, r, 0, 0.4})
+        -- AddBackdropToFrame(roleIcon.frame, edgelessBackdrop, {1.0, r, 0, 0.4})
     else 
         roleIcon = EmptyCell()
     end
@@ -1942,7 +1943,7 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
         specIcon = AceGUI:Create("Icon")
         specIcon:SetImage(playerData.specIcon)
         specIcon:SetImageSize(size, size)
-        AddBackdropToFrame(specIcon.frame, edgelessBackdrop, {0, r, 0, 0.4})
+        -- AddBackdropToFrame(specIcon.frame, edgelessBackdrop, {0, r, 0, 0.4})
     else
         specIcon = EmptyCell()
     end
@@ -1960,7 +1961,7 @@ function GLH:AddPlayerRow(playerNamesTable, playerData, rollID, fontsize)
     rollIcon:SetHeight(size)
     rollIcon:SetImageSize(size, size)
     rollIcon:SetUserData("cell", { alignH = "CENTER", alignV = "CENTER" })
-    AddBackdropToFrame(rollIcon.frame, edgelessBackdrop, {0, r, 1.0, 0.4})
+    -- AddBackdropToFrame(rollIcon.frame, edgelessBackdrop, {0, r, 1.0, 0.4})
     playerNamesTable:AddChild(rollIcon)
     -- ApplyDebugRowBackground(rollIcon)
     
@@ -2674,10 +2675,12 @@ function GLH:RemoveRollID(rollID)
             end
         end
     end
-    if #activeMiniRollIDs == 0 then
-        miniRollWindow:Hide()
-    else
-        miniRollWindow:SelectTab("current")
+    if miniRollWindow then
+        if #activeMiniRollIDs == 0 then
+            miniRollWindow:Hide()
+        else
+            miniRollWindow:SelectTab("current")
+        end
     end
 end
 
@@ -2692,6 +2695,7 @@ function GLH:ActiveMiniRollsPages()
         AceEvent:Embed(paged)
         function paged:GLH_ROLLED(msg, info)
             Log("GLH_ROLLED received:", info.rollID)
+            print("GLH_ROLLED received:", info.rollID)
             paged:RemovePageRollID(info.rollID)
         end
         paged:RegisterMessage("GLH_ROLLED", "GLH_ROLLED")
@@ -3357,6 +3361,7 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     
     -- Retrieve or update player info from the cache.
     looter = cleanName(looter)
+    local isPlayerRoll = looter == cleanName(youName) or looter == YOU or looter == UnitName("player") or (youGUID and GetGUID(looter) == youGUID)
     local info = self:FillPlayerInfo(looter)
     
     -- Build a player info table for UI purposes.
@@ -3381,6 +3386,11 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     Log("ProcessLootRollMessage:", rollID, playerInfoData.name, "Roll Type:", playerInfoData.rollType, "Roll Value:", playerInfoData.rollValue)
     -- Update the UI row for this player’s roll.
     self:AddRollInfo(rollID, playerInfoData)
+
+    if isPlayerRoll and rollID and activeMiniRolls[rollID] then
+        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+    end
+
     -- self:AddMiniRollInfo(rollID, playerInfoData)
     if loot_winner then
         local uid = rollid_to_uid[rollID]
@@ -3407,6 +3417,7 @@ function GLH:START_LOOT_ROLL(event, rollID, rollTime)
     local uid = self:GetUID()
     activeRolls[uid] = {
         rollID = rollID,
+        uid = uid,
         name = name,
         texture = texture,
         quality = quality,
