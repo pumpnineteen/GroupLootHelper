@@ -294,7 +294,7 @@ local methods = {
 
         for i = numPages, 1, -1 do
             local widget = self.pages[i]
-            print("RemovePageRollID: checking widget with rollID", widget.rollID)
+            print("RemovePageRollID: checking widget with rollID", widget and widget.rollID)
             if widget and widget.rollID and widget.rollID == rollID then
                 for _, removedWidget in ipairs(removedPages) do
                     if removedWidget == widget then

@@ -245,6 +245,8 @@ local function Constructor()
         OnHeightSet    = OnHeightSet,
         LayoutFinished = LayoutFinished,
         SetStatusTable = SetStatusTable,
+
+        type = Type,
     }
 
     -- RegisterAsContainer:

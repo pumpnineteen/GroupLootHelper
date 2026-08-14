@@ -1736,7 +1736,7 @@ function GLH:CreateMSNeedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "MSNeed")
     button:SetCallback("OnClick", function(widget, event, ...)
-        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+        -- GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         if IsGargulRoll(rollID) then
             print("MS Need clicked")
             RandomRoll(1, 100)
@@ -1746,7 +1746,7 @@ function GLH:CreateMSNeedButton(size, rollID)
             print("MS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
             disableButton(widget)
-            -- GLH:RemoveRollID(rollID)
+            GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
         end
@@ -1759,7 +1759,7 @@ function GLH:CreateOSNeedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "OSNeed")
     button:SetCallback("OnClick", function(widget, event, ...)
-        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+        -- GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         if IsGargulRoll(rollID) then
             Log("OS Need clicked")
             RandomRoll(1, 99)
@@ -1768,7 +1768,7 @@ function GLH:CreateOSNeedButton(size, rollID)
             Log("OS Need clicked", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 1)
             disableButton(widget, 3)
-            -- GLH:RemoveRollID(rollID)
+            GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
         end
@@ -1781,7 +1781,7 @@ function GLH:CreateGreedButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "Greed")
     button:SetCallback("OnClick", function(widget, event, ...)
-        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+        -- GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         print("Greed clicked", rollID)
         if IsGargulRoll(rollID) then
             RandomRoll(1, 100)
@@ -1790,7 +1790,7 @@ function GLH:CreateGreedButton(size, rollID)
             print("Attempting to roll on loot", rollID, rollid_to_uid[rollID])
             RollOnLoot(rollID, 2)
             disableButton(widget, 3)
-            -- GLH:RemoveRollID(rollID)
+            GLH:RemoveRollID(rollID)
         else 
             print("RollID missing...")
         end
@@ -1808,7 +1808,7 @@ function GLH:CreateDisenchantButton(size, rollID)
             RollOnLoot(rollID, 3)
             disableButton(widget, 3)
         end
-        -- GLH:RemoveRollID(rollID)
+        GLH:RemoveRollID(rollID)
     end)
     return button
 end
@@ -1818,13 +1818,13 @@ function GLH:CreatePassButton(size, rollID)
     button:SetUserData("rollID", rollID)
     button:SetUserData("rollType", "Pass")
     button:SetCallback("OnClick", function(widget, event, ...)
-        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+        -- GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
         print("Pass clicked", rollID)
         if rollID and type(rollID) == "number" then
             RollOnLoot(rollID, 0)
             disableButton(widget, 3)
         end
-        -- GLH:RemoveRollID(rollID)
+        GLH:RemoveRollID(rollID)
     end)
     return button
 end
@@ -2663,12 +2663,13 @@ function GLH:CreateMiniRollPages(rollID, itemLink, texture)
 end
 
 function GLH:RemoveRollID(rollID)
+    GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
     for i, id in ipairs(activeMiniRollIDs) do
         if id == rollID then
             local widget = table.remove(activeMiniRollIDs, i)
             if widget then
-                widget:ReleaseChildren()
-                widget:Hide()
+                -- widget:ReleaseChildren()
+                -- widget:Hide()
                 widget = nil
                 activeMiniRolls[rollID] = nil
                 break
@@ -3388,7 +3389,8 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     self:AddRollInfo(rollID, playerInfoData)
 
     if isPlayerRoll and rollID and activeMiniRolls[rollID] then
-        GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+        -- GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+        GLH:RemoveRollID(rollID)
     end
 
     -- self:AddMiniRollInfo(rollID, playerInfoData)
