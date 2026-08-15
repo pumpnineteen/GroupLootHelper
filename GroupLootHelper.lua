@@ -2671,6 +2671,7 @@ function GLH:RemoveRollID(rollID)
     for i, id in ipairs(activeMiniRollIDs) do
         if id == rollID then
             table.remove(activeMiniRollIDs, i)
+            activeMiniRolls[rollID] = nil
             break
             -- if widget then
             --     widget = nil
