@@ -3181,7 +3181,7 @@ function GLH:FillPlayerInfo(playerName, unit)
 
     if not info or not playerGCache[guid] then
         local name = UnitFullName(unit)
-        local class = UnitClass(unit)
+        local _, class = UnitClass(unit)
         -- local classColour = self:GetClassColour(class)
 
         self:RequestPlayerInspect(playerName)
