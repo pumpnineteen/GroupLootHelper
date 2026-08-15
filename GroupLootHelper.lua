@@ -258,6 +258,9 @@ local function GetFullName(name)
 end
 
 local function UnitFullName(unit)
+    if not unit then
+        return nil
+    end
     local fullName = _UnitFullName(unit)
     fullName = cleanName(fullName)
     if not fullName then
