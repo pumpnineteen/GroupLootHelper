@@ -2226,7 +2226,7 @@ function GLH:UPDATE_MOUSEOVER_UNIT()
         return
     end
     local fullName = UnitFullName("mouseover")
-    local class = UnitClass("mouseover")
+    local _, class = UnitClass("mouseover")
     print("Mouseover unit:", fullName, "GUID:", guid, "Class:", class)
     playerGCache[guid] = playerGCache[guid] or {}
     playerGCache[guid].name = fullName
@@ -3140,7 +3140,7 @@ function GLH:RequestPlayerInspect(playerName)
             return
         end
     end
-    if #pendingInspectRequests > 0 then
+    if next(pendingInspectRequests)  then
         self.inspectTicker = AceTimer:NewTicker(0.1, self.OnInspectTick, false)
     else
         self:CancelInspectTicker()
@@ -3148,7 +3148,7 @@ function GLH:RequestPlayerInspect(playerName)
 end
 
 function GLH:CancelInspectTicker()
-    if #pendingInspectRequests == 0 then
+    if not next(pendingInspectRequests) then
         if self.inspectTicker then
             self.inspectTicker:Cancel()
             self.inspectTicker = nil
@@ -3157,7 +3157,6 @@ function GLH:CancelInspectTicker()
 end
 
 function GLH:OnInspectTick()
-    print("Inspect ticker:", #pendingInspectRequests)
     for playerName, unit in pairs(pendingInspectRequests) do
         if UnitName(unit) == playerName then
             if CanInspect(unit, true) then
