@@ -261,7 +261,7 @@ local function UnitFullName(unit)
     if not unit then
         return nil
     end
-    local fullName = _UnitFullName(unit)
+    local fullName = GetUnitName(unit, true)
     fullName = cleanName(fullName)
     if not fullName then
         return nil
@@ -2676,11 +2676,6 @@ function GLH:RemoveRollID(rollID)
             table.remove(activeMiniRollIDs, i)
             activeMiniRolls[rollID] = nil
             break
-            -- if widget then
-            --     widget = nil
-            --     activeMiniRolls[rollID] = nil
-            --     break
-            -- end
         end
     end
     if miniRollWindow then
@@ -3524,8 +3519,8 @@ function GLH:CANCEL_LOOT_ROLL(event, rollID)
     if activeRolls[uid] then
         Log("Roll cancelled for: ", rollID , activeRolls[uid].name)
         activeRolls[uid].active = false
-
     end
+    GLH:RemoveRollID(rollID)
 end
 
 
