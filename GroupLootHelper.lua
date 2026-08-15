@@ -393,6 +393,7 @@ local function GetZoneID()
 end
 
 local function GetUnit(name)
+    local numGroupMembers = GetNumGroupMembers()
     if not numGroupMembers then
         return "player"
     end
