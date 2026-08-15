@@ -3188,7 +3188,7 @@ function GLH:FillPlayerInfo(playerName, unit)
 
         self:RequestPlayerInspect(playerName)
         info = {
-        class = UnitClass(unit) or "Unknown",
+        class = class or "Unknown",
         spec = "Unknown",
         specTree = "Unknown",
         -- cname = crayon:ColorizeRGB(classColour.r, classColour.g, classColour.b, name),
