@@ -175,6 +175,9 @@ end
 
 local function cleanName(name)
     -- print("Cleaning name:", name)
+    if not name or type(name) ~= "string" then
+        return nil
+    end
     local nametbl = split(name, "%:%s+")
     if name == YOU then
         name = youName
@@ -256,7 +259,7 @@ end
 
 local function UnitFullName(unit)
     local fullName = _UnitFullName(unit)
-    cleanName(fullName)
+    fullName = cleanName(fullName)
     if not fullName then
         return nil
     end
