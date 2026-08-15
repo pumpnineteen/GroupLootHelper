@@ -2667,17 +2667,16 @@ function GLH:CreateMiniRollPages(rollID, itemLink, texture)
 end
 
 function GLH:RemoveRollID(rollID)
-    GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
+    
     for i, id in ipairs(activeMiniRollIDs) do
         if id == rollID then
-            local widget = table.remove(activeMiniRollIDs, i)
-            if widget then
-                -- widget:ReleaseChildren()
-                -- widget:Hide()
-                widget = nil
-                activeMiniRolls[rollID] = nil
-                break
-            end
+            table.remove(activeMiniRollIDs, i)
+            break
+            -- if widget then
+            --     widget = nil
+            --     activeMiniRolls[rollID] = nil
+            --     break
+            -- end
         end
     end
     if miniRollWindow then
@@ -2687,6 +2686,8 @@ function GLH:RemoveRollID(rollID)
             miniRollWindow:SelectTab("current")
         end
     end
+
+    GLH:SendMessage("GLH_ROLLED", {rollID = rollID})
 end
 
 function GLH:ActiveMiniRollsPages()
