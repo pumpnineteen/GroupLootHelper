@@ -295,7 +295,9 @@ local itemDataCache
 
 local function GetItemData(itemLink)
     local itemID = GetItemID(itemLink)
-
+    if not itemID then
+        return nil
+    end
     if itemDataCache[itemID] then
         return itemDataCache[itemID]
     end
@@ -1478,6 +1480,10 @@ function GLH:AddItemRollCells(mainContainer, lootList, itemLink, texture, rollID
     
     function playerNamesTable:OnRollInfo(event, info)
         -- if not info.cname then return end
+        if not info then
+            print("OnRollInfo received nil info", event)
+            return
+        end
         print(">>>", info.cname)
 
         if info.rollID == self.rollID then
@@ -3174,11 +3180,28 @@ end
 
 -- Retrieve info for a player; if not known, request an inspect and use default values.
 function GLH:FillPlayerInfo(playerName, unit)
+    if playerName == nil and unit == nil then
+        print("FillPlayerInfo: both playerName and unit are nil. Cannot proceed.")
+        return nil
+    end 
     local guid = GetGUID(playerName, unit)
     print("Filling player info for:", playerName, "GUID:", guid)
+    if not guid then
+        print("Could not determine GUID for player:", playerName, "unit:", unit)
+        return nil
+    end
     local info = playerGCache[guid]
 
     if not info or not playerGCache[guid] then
+        if not unit and playerName then
+            unit = GetUnit(playerName)
+        end
+
+        if not unit then 
+            print("Could not find unit for player:", playerName)
+            return nil 
+        end
+
         local name = UnitFullName(unit)
         local _, class = UnitClass(unit)
         -- local classColour = self:GetClassColour(class)
@@ -3372,9 +3395,9 @@ function GLH:ProcessLootRollMessage(rollID, patternkey, payloadData)
     local playerInfoData = {
         rollID   = rollID,
         name     = looter,
-        class    = info.class,
-        roleIcon = info.roleIcon,
-        specIcon = info.specIcon,
+        class    = info and info.class,
+        roleIcon = info and info.roleIcon,
+        specIcon = info and info.specIcon,
         rollType = (patternkey:find("NEED") and "NEED") or 
                     (patternkey:find("GREED") and "GREED") or
                     (patternkey:find("DISENCHANT") and "DISENCHANT") or 
