@@ -2680,10 +2680,14 @@ function GLH:RemoveRollID(rollID)
     for i, id in ipairs(activeMiniRollIDs) do
         if id == rollID then
             table.remove(activeMiniRollIDs, i)
-            activeMiniRolls[rollID] = nil
             break
         end
     end
+
+    if rollID and activeMiniRolls[rollID] then
+        activeMiniRolls[rollID] = nil
+    end
+
     if miniRollWindow then
         if #activeMiniRollIDs == 0 then
             miniRollWindow:Hide()
