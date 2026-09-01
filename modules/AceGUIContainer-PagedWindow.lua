@@ -295,6 +295,7 @@ local methods = {
             local widget = self.pages[i]
             print("RemovePageRollID: checking widget with rollID", widget and widget.rollID)
             if widget and widget.rollID and widget.rollID == rollID then
+                widget.rollID = nil
                 removedIndex = i
                 HideWidget(widget)
                 ReleaseWidget(widget)
